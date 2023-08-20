@@ -1,0 +1,24 @@
+name: Run Tests and Lint
+
+on: push
+
+jobs:
+  test-and-lint:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Setup Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: 1.21
+    - name: Install Task
+      run: |
+        curl -sL https://taskfile.dev/install.sh | sh
+        sudo mv ./bin/task /usr/local/bin
+    - name: Run Tests
+      run: task test
+    - name: Setup golangci-lint
+      uses: golangci/golangci-lint-action@v2
+    - name: Run Lint
+      run: task lint
