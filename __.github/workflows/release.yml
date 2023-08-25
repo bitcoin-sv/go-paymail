@@ -1,37 +1,28 @@
-# From: https://goreleaser.com/ci/actions/#usage
 name: release
-
-env:
-  GO111MODULE: on
 
 on:
   push:
     tags:
       - '*'
 
-permissions:
-  contents: write
-
 jobs:
-  goreleaser:
+  syndicate:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - name: Set up Go
-        uses: actions/setup-go@v4.1.0
-        with:
-          go-version: 1.19
-      - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v4.4.0
-        with:
-          distribution: goreleaser
-          version: latest
-          args: release --rm-dist --debug
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-      - name: Syndicate to GoDocs
-        run: make godocs
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Install Task
+      run: |
+        curl -sL https://taskfile.dev/install.sh | sh
+        sudo mv ./bin/task /usr/local/bin
+    - name: Setup Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: 1.21
+    - name: Sync with GoDocs using Taskfile
+      run: task godocs
+      env:
+        GIT_DOMAIN: ${{ secrets.GIT_DOMAIN }}
+        REPO_OWNER: ${{ secrets.REPO_OWNER }}
+        REPO_NAME: ${{ secrets.REPO_NAME }}
+        VERSION_SHORT: ${{ github.ref }}
