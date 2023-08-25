@@ -3,10 +3,9 @@ package server
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
-
-	"github.com/mrz1836/go-logger"
 )
 
 // CreateServer will create a basic Paymail Server
@@ -22,8 +21,8 @@ func CreateServer(c *Configuration) *http.Server {
 
 // StartServer will run the Paymail server
 func StartServer(srv *http.Server) {
-	logger.Data(2, logger.DEBUG, "starting go paymail server...", logger.MakeParameter("address", srv.Addr))
-	logger.Fatalln(srv.ListenAndServe())
+	log.Println("starting go paymail server...", "address", srv.Addr)
+	log.Fatal(srv.ListenAndServe())
 }
 
 // getHost tries its best to return the request host
