@@ -1,4 +1,4 @@
-module github.com/tonicpow/go-paymail
+module github.com/bitcoin-sv/go-paymail
 
 go 1.18
 
@@ -16,6 +16,7 @@ require (
 	github.com/mrz1836/go-validate v0.2.0
 	github.com/newrelic/go-agent/v3/integrations/nrhttprouter v1.0.2
 	github.com/stretchr/testify v1.8.4
+	github.com/tonicpow/go-paymail v0.9.3
 	golang.org/x/net v0.14.0
 )
 
