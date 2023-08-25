@@ -72,7 +72,6 @@ Client Packages:
 
 Server Packages:
 - [julienschmidt/httprouter](https://github.com/julienschmidt/httprouter)
-- [mrz1836/go-api-router](https://github.com/mrz1836/go-api-router)
 - [mrz1836/go-logger](https://github.com/mrz1836/go-logger)
 </details>
 

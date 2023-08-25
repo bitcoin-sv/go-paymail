@@ -1,11 +1,12 @@
 package server
 
 import (
+	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/bitcoin-sv/go-paymail"
 	"github.com/julienschmidt/httprouter"
-	apirouter "github.com/mrz1836/go-api-router"
 )
 
 /*
@@ -21,27 +22,33 @@ Incoming Data Object Example:
 func (c *Configuration) p2pDestination(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
 
 	// Get the params & paymail address submitted via URL request
-	params := apirouter.GetParams(req)
-	incomingPaymail := params.GetString("paymailAddress")
+	params := req.URL.Query()
+	incomingPaymail := params.Get("paymailAddress")
 
 	// Parse, sanitize and basic validation
 	alias, domain, paymailAddress := paymail.SanitizePaymail(incomingPaymail)
 	if len(paymailAddress) == 0 {
-		ErrorResponse(w, req, ErrorInvalidParameter, "invalid paymail: "+incomingPaymail, http.StatusBadRequest)
+		ErrorResponse(w, ErrorInvalidParameter, "invalid paymail: "+incomingPaymail, http.StatusBadRequest)
 		return
 	} else if !c.IsAllowedDomain(domain) {
-		ErrorResponse(w, req, ErrorUnknownDomain, "domain unknown: "+domain, http.StatusBadRequest)
+		ErrorResponse(w, ErrorUnknownDomain, "domain unknown: "+domain, http.StatusBadRequest)
+		return
+	}
+
+	satoshis, err := strconv.ParseUint(params.Get("satoshis"), 10, 64)
+	if err != nil {
+		ErrorResponse(w, ErrorInvalidParameter, "invalid satoshis: "+params.Get("satoshis"), http.StatusBadRequest)
 		return
 	}
 
 	// Start the PaymentRequest
 	paymentRequest := &paymail.PaymentRequest{
-		Satoshis: params.GetUint64("satoshis"),
+		Satoshis: satoshis,
 	}
 
 	// Did we get some satoshis?
 	if paymentRequest.Satoshis == 0 {
-		ErrorResponse(w, req, ErrorMissingSatoshis, "missing parameter: satoshis", http.StatusBadRequest)
+		ErrorResponse(w, ErrorMissingSatoshis, "missing parameter: satoshis", http.StatusBadRequest)
 		return
 	}
 
@@ -52,10 +59,10 @@ func (c *Configuration) p2pDestination(w http.ResponseWriter, req *http.Request,
 	// Get from the data layer
 	foundPaymail, err := c.actions.GetPaymailByAlias(req.Context(), alias, domain, md)
 	if err != nil {
-		ErrorResponse(w, req, ErrorFindingPaymail, err.Error(), http.StatusExpectationFailed)
+		ErrorResponse(w, ErrorFindingPaymail, err.Error(), http.StatusExpectationFailed)
 		return
 	} else if foundPaymail == nil {
-		ErrorResponse(w, req, ErrorPaymailNotFound, "paymail not found", http.StatusNotFound)
+		ErrorResponse(w, ErrorPaymailNotFound, "paymail not found", http.StatusNotFound)
 		return
 	}
 
@@ -64,10 +71,17 @@ func (c *Configuration) p2pDestination(w http.ResponseWriter, req *http.Request,
 	if response, err = c.actions.CreateP2PDestinationResponse(
 		req.Context(), alias, domain, paymentRequest.Satoshis, md,
 	); err != nil {
-		ErrorResponse(w, req, ErrorScript, "error creating output script(s): "+err.Error(), http.StatusExpectationFailed)
+		ErrorResponse(w, ErrorScript, "error creating output script(s): "+err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
-	// Return the response
-	apirouter.ReturnResponse(w, req, http.StatusOK, response)
+	// Set the response
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	err = json.NewEncoder(w).Encode(response)
+
+	if err != nil {
+		ErrorResponse(w, ErrorEncodingResponse, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }

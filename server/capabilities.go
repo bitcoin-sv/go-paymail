@@ -1,11 +1,11 @@
 package server
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/bitcoin-sv/go-paymail"
 	"github.com/julienschmidt/httprouter"
-	apirouter "github.com/mrz1836/go-api-router"
 )
 
 // GenericCapabilities will make generic capabilities
@@ -40,10 +40,19 @@ func (c *Configuration) showCapabilities(w http.ResponseWriter, req *http.Reques
 	// todo: bake this into middleware? This is protecting the "req" domain name (like CORs)
 	domain := getHost(req)
 	if !c.IsAllowedDomain(domain) {
-		ErrorResponse(w, req, ErrorUnknownDomain, "domain unknown: "+domain, http.StatusBadRequest)
+		ErrorResponse(w, ErrorUnknownDomain, "domain unknown: "+domain, http.StatusBadRequest)
 		return
 	}
 
 	// Set the service URL
-	apirouter.ReturnResponse(w, req, http.StatusOK, c.EnrichCapabilities(domain))
+	capabilities := c.EnrichCapabilities(domain)
+	jsonData, err := json.Marshal(capabilities)
+	if err != nil {
+		ErrorResponse(w, ErrorFailedMarshalJSON, "failed to marshal JSON response", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(jsonData)
 }

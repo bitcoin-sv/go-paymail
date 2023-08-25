@@ -1,11 +1,11 @@
 package server
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 
 	"github.com/bitcoin-sv/go-paymail"
-	apirouter "github.com/mrz1836/go-api-router"
 )
 
 // Error codes for server response errors
@@ -25,6 +25,8 @@ const (
 	ErrorRequestNotFound     = "request-404"
 	ErrorScript              = "script-error"
 	ErrorUnknownDomain       = "unknown-domain"
+	ErrorFailedMarshalJSON   = "failed-marshal-json"
+	ErrorEncodingResponse    = "error-encoding-response"
 )
 
 var (
@@ -45,11 +47,24 @@ var (
 
 	// ErrBsvAliasMissing is when the bsv alias version is missing
 	ErrBsvAliasMissing = errors.New("missing bsv alias version")
+
+	// ErrFailedMarshalJSON is when the JSON marshal fails
+	ErrFailedMarshalJSON = errors.New("failed to marshal JSON response")
 )
 
 // ErrorResponse is a standard way to return errors to the client
 //
 // Specs: http://bsvalias.org/99-01-recommendations.html
-func ErrorResponse(w http.ResponseWriter, req *http.Request, code, message string, statusCode int) {
-	apirouter.ReturnResponse(w, req, statusCode, &paymail.ServerError{Code: code, Message: message})
+func ErrorResponse(w http.ResponseWriter, code, message string, statusCode int) {
+	srvErr := &paymail.ServerError{Code: code, Message: message}
+
+	jsonData, err := json.Marshal(srvErr)
+	if err != nil {
+		http.Error(w, ErrorFailedMarshalJSON, http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	_, _ = w.Write(jsonData)
 }

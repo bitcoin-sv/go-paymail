@@ -1,13 +1,13 @@
 package server
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/bitcoin-sv/go-paymail"
 	"github.com/bitcoinschema/go-bitcoin/v2"
 	"github.com/julienschmidt/httprouter"
 	"github.com/libsv/go-bt/v2/bscript"
-	apirouter "github.com/mrz1836/go-api-router"
 )
 
 /*
@@ -30,49 +30,54 @@ Incoming Data Object Example:
 func (c *Configuration) p2pReceiveTx(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
 
 	// Get the params & paymail address submitted via URL request
-	params := apirouter.GetParams(req)
-	incomingPaymail := params.GetString("paymailAddress")
+	parms := req.URL.Query()
+	hex := parms.Get("hex")
+	reference := parms.Get("reference")
+	metaDataString := parms.Get("metadata")
+	incomingPaymail := parms.Get("paymailAddress")
 
 	// Start the P2PTransaction
 	p2pTransaction := &paymail.P2PTransaction{
-		Hex:       params.GetString("hex"),
+		Hex:       hex,
 		MetaData:  &paymail.P2PMetaData{},
-		Reference: params.GetString("reference"),
+		Reference: reference,
 	}
 
 	// Parse the metadata JSON into the P2PTransaction struct
-	metaData := params.GetJSON("metadata")
-	if len(metaData) > 0 {
-		// Parse the JSON object into p2pTransaction (little hackish)
-		p2pTransaction.MetaData.Note, _ = metaData["note"].(string)
-		p2pTransaction.MetaData.PubKey, _ = metaData["pubkey"].(string)
-		p2pTransaction.MetaData.Sender, _ = metaData["sender"].(string)
-		p2pTransaction.MetaData.Signature, _ = metaData["signature"].(string)
+	if len(metaDataString) > 0 {
+		var metaData map[string]interface{}
+		err := json.Unmarshal([]byte(metaDataString), &metaData)
+		if err == nil {
+			p2pTransaction.MetaData.Note, _ = metaData["note"].(string)
+			p2pTransaction.MetaData.PubKey, _ = metaData["pubkey"].(string)
+			p2pTransaction.MetaData.Sender, _ = metaData["sender"].(string)
+			p2pTransaction.MetaData.Signature, _ = metaData["signature"].(string)
+		}
 	}
 
 	// Parse, sanitize and basic validation
 	alias, domain, paymailAddress := paymail.SanitizePaymail(incomingPaymail)
 	if len(paymailAddress) == 0 {
-		ErrorResponse(w, req, ErrorInvalidParameter, "invalid paymail: "+incomingPaymail, http.StatusBadRequest)
+		ErrorResponse(w, ErrorInvalidParameter, "invalid paymail: "+incomingPaymail, http.StatusBadRequest)
 		return
 	} else if !c.IsAllowedDomain(domain) {
-		ErrorResponse(w, req, ErrorUnknownDomain, "domain unknown: "+domain, http.StatusBadRequest)
+		ErrorResponse(w, ErrorUnknownDomain, "domain unknown: "+domain, http.StatusBadRequest)
 		return
 	}
 
 	// Check for required fields
 	if len(p2pTransaction.Hex) == 0 {
-		ErrorResponse(w, req, ErrorMissingHex, "missing parameter: hex", http.StatusBadRequest)
+		ErrorResponse(w, ErrorMissingHex, "missing parameter: hex", http.StatusBadRequest)
 		return
 	} else if len(p2pTransaction.Reference) == 0 {
-		ErrorResponse(w, req, ErrorMissingReference, "missing parameter: reference", http.StatusBadRequest)
+		ErrorResponse(w, ErrorMissingReference, "missing parameter: reference", http.StatusBadRequest)
 		return
 	}
 
 	// Convert the raw tx into a transaction
 	transaction, err := bitcoin.TxFromHex(p2pTransaction.Hex)
 	if err != nil {
-		ErrorResponse(w, req, ErrorInvalidParameter, "invalid parameter: hex", http.StatusBadRequest)
+		ErrorResponse(w, ErrorInvalidParameter, "invalid parameter: hex", http.StatusBadRequest)
 		return
 	}
 
@@ -87,23 +92,23 @@ func (c *Configuration) p2pReceiveTx(w http.ResponseWriter, req *http.Request, _
 
 		// Check required fields for signature validation
 		if len(p2pTransaction.MetaData.Signature) == 0 {
-			ErrorResponse(w, req, ErrorInvalidSignature, "missing parameter: signature", http.StatusBadRequest)
+			ErrorResponse(w, ErrorInvalidSignature, "missing parameter: signature", http.StatusBadRequest)
 			return
 		} else if len(p2pTransaction.MetaData.PubKey) == 0 {
-			ErrorResponse(w, req, ErrorInvalidPubKey, "missing parameter: pubkey", http.StatusBadRequest)
+			ErrorResponse(w, ErrorInvalidPubKey, "missing parameter: pubkey", http.StatusBadRequest)
 			return
 		}
 
 		// Get the address from pubKey
 		var rawAddress *bscript.Address
 		if rawAddress, err = bitcoin.GetAddressFromPubKeyString(p2pTransaction.MetaData.PubKey, true); err != nil {
-			ErrorResponse(w, req, ErrorInvalidPubKey, "invalid pubkey: "+err.Error(), http.StatusBadRequest)
+			ErrorResponse(w, ErrorInvalidPubKey, "invalid pubkey: "+err.Error(), http.StatusBadRequest)
 			return
 		}
 
 		// Validate the signature of the tx id
 		if err = bitcoin.VerifyMessage(rawAddress.AddressString, p2pTransaction.MetaData.Signature, response.TxID); err != nil {
-			ErrorResponse(w, req, ErrorInvalidSignature, "invalid signature: "+err.Error(), http.StatusBadRequest)
+			ErrorResponse(w, ErrorInvalidSignature, "invalid signature: "+err.Error(), http.StatusBadRequest)
 			return
 		}
 	}
@@ -115,10 +120,10 @@ func (c *Configuration) p2pReceiveTx(w http.ResponseWriter, req *http.Request, _
 	var foundPaymail *paymail.AddressInformation
 	foundPaymail, err = c.actions.GetPaymailByAlias(req.Context(), alias, domain, md)
 	if err != nil {
-		ErrorResponse(w, req, ErrorFindingPaymail, err.Error(), http.StatusExpectationFailed)
+		ErrorResponse(w, ErrorFindingPaymail, err.Error(), http.StatusExpectationFailed)
 		return
 	} else if foundPaymail == nil {
-		ErrorResponse(w, req, ErrorPaymailNotFound, "paymail not found", http.StatusNotFound)
+		ErrorResponse(w, ErrorPaymailNotFound, "paymail not found", http.StatusNotFound)
 		return
 	}
 
@@ -126,10 +131,17 @@ func (c *Configuration) p2pReceiveTx(w http.ResponseWriter, req *http.Request, _
 	if response, err = c.actions.RecordTransaction(
 		req.Context(), p2pTransaction, md,
 	); err != nil {
-		ErrorResponse(w, req, ErrorRecordingTx, err.Error(), http.StatusExpectationFailed)
+		ErrorResponse(w, ErrorRecordingTx, err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
-	// Return the response
-	apirouter.ReturnResponse(w, req, http.StatusOK, response)
+	// Set the response
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	err = json.NewEncoder(w).Encode(response)
+
+	if err != nil {
+		ErrorResponse(w, ErrorEncodingResponse, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
