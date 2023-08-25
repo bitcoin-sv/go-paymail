@@ -27,4 +27,3 @@ clean: ## Remove previous builds and any test cache data
 .PHONY: release
 release:: ## Runs common.release then runs godocs
 	@$(MAKE) godocs
-	

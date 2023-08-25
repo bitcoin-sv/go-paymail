@@ -20,4 +20,3 @@ tasks:
       - test $(REPO_NAME)
       - test $(VERSION_SHORT)
       - curl https://proxy.golang.org/$(GIT_DOMAIN)/$(REPO_OWNER)/$(REPO_NAME)/@v/$(VERSION_SHORT).info
-      
