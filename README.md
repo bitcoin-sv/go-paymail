@@ -1,27 +1,16 @@
 # go-paymail
 > Paymail client & server library for Golang
 
-[![Release](https://img.shields.io/github/release-pre/tonicpow/go-paymail.svg?logo=github&style=flat&v=4)](https://github.com/tonicpow/go-paymail/releases)
-[![Build Status](https://img.shields.io/github/actions/workflow/status/tonicpow/go-paymail/run-tests.yml?branch=master&logo=github&v=4)](https://github.com/tonicpow/go-paymail/actions)
-[![Report](https://goreportcard.com/badge/github.com/tonicpow/go-paymail?style=flat&v=4)](https://goreportcard.com/report/github.com/tonicpow/go-paymail)
-[![codecov](https://codecov.io/gh/tonicpow/go-paymail/branch/master/graph/badge.svg?v=4)](https://codecov.io/gh/tonicpow/go-paymail)
-[![Go](https://img.shields.io/github/go-mod/go-version/tonicpow/go-paymail?v=4)](https://golang.org/)
-<br>
-[![Mergify Status](https://img.shields.io/endpoint.svg?url=https://api.mergify.com/v1/badges/tonicpow/go-paymail&style=flat&v=4)](https://mergify.io)
-[![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod&v=4)](https://gitpod.io/#https://github.com/tonicpow/go-paymail)
-
-<br/>
-
 ## Table of Contents
-- [Installation](#installation)
-- [Documentation](#documentation)
-- [Examples & Tests](#examples--tests)
-- [Benchmarks](#benchmarks)
-- [Code Standards](#code-standards)
-- [Usage](#usage)
-- [Maintainers](#maintainers)
-- [Contributing](#contributing)
-- [License](#license)
+- [go-paymail](#go-paymail)
+  - [Table of Contents](#table-of-contents)
+  - [Installation](#installation)
+  - [Documentation](#documentation)
+    - [Features](#features)
+  - [Examples \& Tests](#examples--tests)
+  - [Benchmarks](#benchmarks)
+  - [Code Standards](#code-standards)
+  - [Usage](#usage)
 
 <br/>
 
@@ -29,15 +18,15 @@
 
 **go-paymail** requires a [supported release of Go](https://golang.org/doc/devel/release.html#policy).
 ```shell script
-go get -u github.com/tonicpow/go-paymail
+go get -u github.com/bitcoin-sv/go-paymail
 ```
 
 <br/>
 
 ## Documentation
-View the generated [documentation](https://pkg.go.dev/github.com/tonicpow/go-paymail)
+View the generated [documentation](https://pkg.go.dev/github.com/bitcoin-sv/go-paymail)
 
-[![GoDoc](https://godoc.org/github.com/tonicpow/go-paymail?status.svg&style=flat&v=4)](https://pkg.go.dev/github.com/tonicpow/go-paymail)
+[![GoDoc](https://godoc.org/github.com/bitcoin-sv/go-paymail?status.svg&style=flat&v=4)](https://pkg.go.dev/github.com/bitcoin-sv/go-paymail)
 
 ### Features
 - [Paymail Client](client.go) (outgoing requests to other providers)
@@ -145,8 +134,8 @@ vet                   Run the Go vet application
 <br/>
 
 ## Examples & Tests
-All unit tests and [examples](examples) run via [GitHub Actions](https://github.com/tonicpow/go-paymail/actions) and
-uses [Go version 1.18.x](https://golang.org/doc/go1.18). View the [configuration file](.github/workflows/run-tests.yml).
+All unit tests and [examples](examples) run via [GitHub Actions](https://github.com/bitcoin-sv/go-paymail/actions) and
+uses [Go version 1.21](https://golang.org/doc/go1.21). View the [configuration file](.github/workflows/run-tests.yml).
 
 Run all tests (including integration tests)
 ```shell script
@@ -175,31 +164,3 @@ Read more about this Go project's [code standards](.github/CODE_STANDARDS.md).
 
 ## Usage
 Checkout all the [client examples](examples/client) or [server examples](examples/server)!
-
-<br/>
-
-## Maintainers
-| [<img src="https://github.com/mrz1836.png" height="50" alt="MrZ" />](https://github.com/mrz1836) |
-|:------------------------------------------------------------------------------------------------:|
-|                                [MrZ](https://github.com/mrz1836)                                 |
-
-<br/>
-
-## Contributing
-
-View the [contributing guidelines](.github/CONTRIBUTING.md) and follow the [code of conduct](.github/CODE_OF_CONDUCT.md).
-
-### How can I help?
-All kinds of contributions are welcome :raised_hands:! 
-The most basic way to show your support is to star :star2: the project, or to raise issues :speech_balloon:. 
-You can also support this project by [becoming a sponsor on GitHub](https://github.com/sponsors/tonicpow) :clap: 
-or by making a [**bitcoin donation**](https://tonicpow.com/?utm_source=github&utm_medium=sponsor-link&utm_campaign=go-paymail&utm_term=go-paymail&utm_content=go-paymail) to ensure this journey continues indefinitely! :rocket:
-
-[![Stars](https://img.shields.io/github/stars/tonicpow/go-paymail?label=Please%20like%20us&style=social&v=4)](https://github.com/tonicpow/go-paymail/stargazers)
-
-
-<br/>
-
-## License
-
-[![License](https://img.shields.io/github/license/tonicpow/go-paymail.svg?style=flat&v=4)](LICENSE)
