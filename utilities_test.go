@@ -95,7 +95,7 @@ func ExampleValidatePaymail() {
 	} else {
 		fmt.Println("example failed")
 	}
-	// Output:paymail address failed format validation: email is not a valid address format
+	// Output:paymail address failed format validation: bad@paymail
 }
 
 // BenchmarkValidatePaymail benchmarks the method ValidatePaymail()
@@ -277,7 +277,7 @@ func TestValidateAndSanitisePaymail(t *testing.T) {
 		}, "invalid paymail address should error": {
 			paymail: "test@domain",
 			isBeta:  false,
-			error:   errors.New("paymail address failed format validation: email is not a valid address format"),
+			error:   errors.New("paymail address failed format validation: test@domain"),
 		}, "handcash should convert and return": {
 			paymail: "$test",
 			isBeta:  false,

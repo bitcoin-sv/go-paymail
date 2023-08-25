@@ -2,11 +2,18 @@ package paymail
 
 import (
 	"fmt"
+	"net/url"
+	"regexp"
 	"strings"
 	"time"
+)
 
-	"github.com/mrz1836/go-sanitize"
-	"github.com/mrz1836/go-validate"
+// emptySpace is an empty space for replacing
+var emptySpace = []byte("")
+
+var (
+	emailRegExp    = regexp.MustCompile(`[^a-zA-Z0-9-_.@+]`)
+	pathNameRegExp = regexp.MustCompile(`[^a-zA-Z0-9-_]`)
 )
 
 // SanitisedPaymail contains elements of a sanitized paymail address.
@@ -40,14 +47,14 @@ func ValidateAndSanitisePaymail(paymail string, isBeta bool) (*SanitisedPaymail,
 func SanitizePaymail(paymailAddress string) (alias, domain, address string) {
 
 	// Sanitize the paymail address
-	address = sanitize.Email(paymailAddress, false)
+	address = SanitizeEmail(paymailAddress, false)
 
 	// Split the email parts (alias @ domain)
 	parts := strings.Split(address, "@")
 
 	// Sanitize the domain name (force to lowercase, remove www.)
 	if len(parts) > 1 {
-		domain, _ = sanitize.Domain(parts[1], false, true)
+		domain, _ = SanitizeDomain(parts[1])
 	}
 
 	// Set the alias (lowercase, no spaces)
@@ -66,10 +73,11 @@ func SanitizePaymail(paymailAddress string) (alias, domain, address string) {
 //
 // This will not check to see if the paymail address is active via the provider
 func ValidatePaymail(paymailAddress string) error {
+	isValid := IsValidEmail(paymailAddress)
 
 	// Validate the format for the paymail address (paymail addresses follow conventional email requirements)
-	if _, err := validate.IsValidEmail(paymailAddress, false); err != nil {
-		return fmt.Errorf("paymail address failed format validation: %w", err)
+	if !isValid {
+		return fmt.Errorf("paymail address failed format validation: %s", paymailAddress)
 	}
 
 	return nil
@@ -84,7 +92,7 @@ func ValidateDomain(domain string) error {
 	// Check for a real domain (require at least one period)
 	if !strings.Contains(domain, ".") {
 		return fmt.Errorf("domain name is invalid: %s", domain)
-	} else if !validate.IsValidHost(domain) { // Basic DNS check (not a REAL domain name check)
+	} else if !IsValidHost(domain) { // Basic DNS check (not a REAL domain name check)
 		return fmt.Errorf("domain name failed host check: %s", domain)
 	}
 
@@ -128,6 +136,64 @@ func ValidateTimestamp(timestamp string) error {
 	}
 
 	return nil
+}
+
+// SanitizeDomain will take an input and return the sanitized version (domain.tld)
+//
+// This will not check to see if the domain is an active paymail provider
+// Example: SanitizeDomain("  www.Google.com  ")
+// Result:  google.com
+func SanitizeDomain(original string) (string, error) {
+	// Try to see if we have a host
+	if len(original) == 0 {
+		return original, nil
+	}
+
+	// Missing http?
+	if !strings.Contains(original, "http") {
+		original = "http://" + strings.TrimSpace(original)
+	}
+
+	// Try to parse the url
+	u, err := url.Parse(original)
+	if err != nil {
+		return original, err
+	}
+
+	// Generally all domains should be uniform and lowercase
+	u.Host = strings.ToLower(u.Host)
+
+	// Remove leading www.
+	u.Host = strings.TrimPrefix(u.Host, "www.")
+
+	return u.Host, nil
+}
+
+// SanitizeEmail will take an input and return the sanitized version
+//
+// This will sanitize the email address (force to lowercase, remove spaces, etc.)
+// Example: SanitizeEmail("  John.Doe@Gmail  ", false)
+// Result:  johndoe@gmail
+func SanitizeEmail(original string, preserveCase bool) string {
+
+	// Leave the email address in its original case
+	if preserveCase {
+		return string(emailRegExp.ReplaceAll(
+			[]byte(strings.Replace(original, "mailto:", "", -1)), emptySpace),
+		)
+	}
+
+	// Standard is forced to lowercase
+	return string(emailRegExp.ReplaceAll(
+		[]byte(strings.ToLower(strings.Replace(original, "mailto:", "", -1))), emptySpace),
+	)
+}
+
+// SanitizePathName returns a formatted path compliant name.
+//
+//	View examples: sanitize_test.go
+func SanitizePathName(original string) string {
+	return string(pathNameRegExp.ReplaceAll([]byte(original), emptySpace))
 }
 
 // replaceAliasDomain will replace the alias and domain with the correct values
