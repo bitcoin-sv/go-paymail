@@ -4,7 +4,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/tonicpow/go-paymail/server"
+	"github.com/bitcoin-sv/go-paymail/server"
 )
 
 func main() {

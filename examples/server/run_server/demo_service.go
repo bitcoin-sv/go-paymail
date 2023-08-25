@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/bitcoin-sv/go-paymail"
 	"github.com/bitcoinschema/go-bitcoin/v2"
 	"github.com/mrz1836/go-logger"
-	"github.com/tonicpow/go-paymail"
 )
 
 // paymailAddressTable is the demo data for the example server (table: paymail_address)

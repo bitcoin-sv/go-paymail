@@ -4,8 +4,8 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/bitcoin-sv/go-paymail"
 	apirouter "github.com/mrz1836/go-api-router"
-	"github.com/tonicpow/go-paymail"
 )
 
 // Error codes for server response errors

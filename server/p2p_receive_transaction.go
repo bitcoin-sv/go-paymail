@@ -3,11 +3,11 @@ package server
 import (
 	"net/http"
 
+	"github.com/bitcoin-sv/go-paymail"
 	"github.com/bitcoinschema/go-bitcoin/v2"
 	"github.com/julienschmidt/httprouter"
 	"github.com/libsv/go-bt/v2/bscript"
 	apirouter "github.com/mrz1836/go-api-router"
-	"github.com/tonicpow/go-paymail"
 )
 
 /*

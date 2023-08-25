@@ -3,7 +3,7 @@ package server
 import (
 	"context"
 
-	"github.com/tonicpow/go-paymail"
+	"github.com/bitcoin-sv/go-paymail"
 )
 
 // Mock implementation of a service provider

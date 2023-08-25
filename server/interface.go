@@ -3,7 +3,7 @@ package server
 import (
 	"context"
 
-	"github.com/tonicpow/go-paymail"
+	"github.com/bitcoin-sv/go-paymail"
 )
 
 // PaymailServiceProvider the paymail server interface that needs to be implemented

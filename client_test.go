@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bitcoin-sv/go-paymail/tester"
 	"github.com/go-resty/resty/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/tonicpow/go-paymail/tester"
 )
 
 // newTestClient will return a client for testing purposes
