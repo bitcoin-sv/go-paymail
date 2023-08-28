@@ -106,4 +106,10 @@ func (c *Configuration) registerPaymailRoutes(router *nrhttprouter.Router) {
 		"/"+c.APIVersion+"/"+c.ServiceName+"/receive-transaction/:paymailAddress",
 		c.p2pReceiveTx,
 	)
+
+	// P2P BEEF capability Receive Tx request
+	router.HTTPRouter.POST(
+		"/"+c.APIVersion+"/"+c.ServiceName+"/receive-beef-transaction/:paymailAddress",
+		router.Request(c.p2pReceiveBeefTx),
+	)
 }

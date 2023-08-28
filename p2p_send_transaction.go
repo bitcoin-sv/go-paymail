@@ -25,6 +25,7 @@ Example:
 // P2PTransaction is the request body for the P2P transaction request
 type P2PTransaction struct {
 	Hex       string       `json:"hex"`       // The raw transaction, encoded as a hexadecimal string
+	Beef      string       `json:"beef"`      // The transaction in BEEF format
 	MetaData  *P2PMetaData `json:"metadata"`  // An object containing data associated with the transaction
 	Reference string       `json:"reference"` // Reference for the payment (from previous P2P Destination request)
 }
@@ -71,8 +72,8 @@ func (c *Client) SendP2PTransaction(p2pURL, alias, domain string,
 	if transaction == nil {
 		err = errors.New("transaction cannot be nil")
 		return
-	} else if len(transaction.Hex) == 0 {
-		err = errors.New("hex is required")
+	} else if len(transaction.Beef) == 0 && len(transaction.Hex) == 0 {
+		err = errors.New("beef or hex is required")
 		return
 	} else if len(transaction.Reference) == 0 {
 		err = errors.New("reference is required")

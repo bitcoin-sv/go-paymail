@@ -138,3 +138,8 @@ func (c *Configuration) p2pReceiveTx(w http.ResponseWriter, req *http.Request, _
 	// Set the response
 	writeJsonResponse(w, http.StatusOK, response)
 }
+
+// p2pReceiveBeefTx will receive a P2P transaction in BEEF format
+func (c *Configuration) p2pReceiveBeefTx(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
+	ErrorResponse(w, ErrorNotImplmented, "Receive BEEF transactions not implemented", http.StatusNotImplemented)
+}

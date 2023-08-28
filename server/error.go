@@ -27,6 +27,7 @@ const (
 	ErrorUnknownDomain       = "unknown-domain"
 	ErrorFailedMarshalJSON   = "failed-marshal-json"
 	ErrorEncodingResponse    = "error-encoding-response"
+	ErrorNotImplmented       = "not-implemented"
 )
 
 var (
@@ -64,5 +65,5 @@ func ErrorResponse(w http.ResponseWriter, code, message string, statusCode int) 
 		return
 	}
 
-	writeRespone(w, statusCode,  "application/json", jsonData)
+	writeRespone(w, statusCode, "application/json", jsonData)
 }
