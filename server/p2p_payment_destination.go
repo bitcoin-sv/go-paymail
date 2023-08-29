@@ -1,7 +1,6 @@
 package server
 
 import (
-	"encoding/json"
 	"net/http"
 	"strconv"
 
@@ -76,12 +75,5 @@ func (c *Configuration) p2pDestination(w http.ResponseWriter, req *http.Request,
 	}
 
 	// Set the response
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	err = json.NewEncoder(w).Encode(response)
-
-	if err != nil {
-		ErrorResponse(w, ErrorEncodingResponse, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	writeJsonResponse(w, http.StatusOK, response)
 }

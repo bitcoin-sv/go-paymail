@@ -1,7 +1,6 @@
 package server
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/bitcoin-sv/go-paymail"
@@ -46,13 +45,5 @@ func (c *Configuration) showCapabilities(w http.ResponseWriter, req *http.Reques
 
 	// Set the service URL
 	capabilities := c.EnrichCapabilities(domain)
-	jsonData, err := json.Marshal(capabilities)
-	if err != nil {
-		ErrorResponse(w, ErrorFailedMarshalJSON, "failed to marshal JSON response", http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(jsonData)
+	writeJsonResponse(w, http.StatusOK, capabilities)
 }

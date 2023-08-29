@@ -1,7 +1,6 @@
 package server
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/bitcoin-sv/go-paymail"
@@ -47,12 +46,5 @@ func (c *Configuration) showPKI(w http.ResponseWriter, req *http.Request, _ http
 	}
 
 	// Set the response
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	err = json.NewEncoder(w).Encode(pkiPayload)
-
-	if err != nil {
-		ErrorResponse(w, ErrorEncodingResponse, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	writeJsonResponse(w, http.StatusOK, pkiPayload)
 }

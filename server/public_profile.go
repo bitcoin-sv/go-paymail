@@ -1,7 +1,6 @@
 package server
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/bitcoin-sv/go-paymail"
@@ -46,12 +45,5 @@ func (c *Configuration) publicProfile(w http.ResponseWriter, req *http.Request, 
 	}
 
 	// Set the response
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	err = json.NewEncoder(w).Encode(payload)
-
-	if err != nil {
-		ErrorResponse(w, ErrorEncodingResponse, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	writeJsonResponse(w, http.StatusOK, payload)
 }

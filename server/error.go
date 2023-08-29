@@ -57,14 +57,12 @@ var (
 // Specs: http://bsvalias.org/99-01-recommendations.html
 func ErrorResponse(w http.ResponseWriter, code, message string, statusCode int) {
 	srvErr := &paymail.ServerError{Code: code, Message: message}
-
 	jsonData, err := json.Marshal(srvErr)
+
 	if err != nil {
 		http.Error(w, ErrorFailedMarshalJSON, http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(statusCode)
-	_, _ = w.Write(jsonData)
+	writeRespone(w, statusCode,  "application/json", jsonData)
 }

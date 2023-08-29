@@ -1,7 +1,6 @@
 package server
 
 import (
-	"encoding/json"
 	"net"
 	"net/http"
 	"strconv"
@@ -136,14 +135,7 @@ func (c *Configuration) resolveAddress(w http.ResponseWriter, req *http.Request,
 	}
 
 	// Set the response
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	err = json.NewEncoder(w).Encode(response)
-
-	if err != nil {
-		ErrorResponse(w, ErrorEncodingResponse, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	writeJsonResponse(w, http.StatusOK, response)
 }
 
 // getSenderPubKey will fetch the pubKey from a PKI request for the sender handle
