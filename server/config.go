@@ -4,8 +4,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bitcoin-sv/go-paymail"
 	"github.com/mrz1836/go-sanitize"
-	"github.com/tonicpow/go-paymail"
 )
 
 // Configuration paymail server configuration object

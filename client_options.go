@@ -3,8 +3,8 @@ package paymail
 import (
 	"time"
 
+	"github.com/bitcoin-sv/go-paymail/interfaces"
 	"github.com/go-resty/resty/v2"
-	"github.com/tonicpow/go-paymail/interfaces"
 )
 
 // ClientOps allow functional options to be supplied

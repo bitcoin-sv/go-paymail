@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 
-	"github.com/tonicpow/go-paymail"
-	"github.com/tonicpow/go-paymail/server"
+	"github.com/bitcoin-sv/go-paymail"
+	"github.com/bitcoin-sv/go-paymail/server"
 )
 
 // Example demo implementation of a service provider
