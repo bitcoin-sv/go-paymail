@@ -67,12 +67,9 @@ Client Packages:
 - [libsv/go-bk](https://github.com/libsv/go-bk)
 - [libsv/go-bt](https://github.com/libsv/go-bt)
 - [miekg/dns](https://github.com/miekg/dns)
-- [mrz1836/go-sanitize](https://github.com/mrz1836/go-sanitize)
-- [mrz1836/go-validate](https://github.com/mrz1836/go-validate)
 
 Server Packages:
 - [julienschmidt/httprouter](https://github.com/julienschmidt/httprouter)
-- [mrz1836/go-logger](https://github.com/mrz1836/go-logger)
 </details>
 
 <details>

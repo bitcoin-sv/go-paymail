@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/bitcoin-sv/go-paymail"
-	"github.com/mrz1836/go-sanitize"
 )
 
 // Configuration paymail server configuration object
@@ -47,7 +46,7 @@ func (c *Configuration) Validate() error {
 	// todo: validate the []domains
 
 	// Sanitize and standardize the service name
-	c.ServiceName = sanitize.PathName(c.ServiceName)
+	c.ServiceName = paymail.SanitizePathName(c.ServiceName)
 	if len(c.ServiceName) == 0 {
 		return ErrServiceNameMissing
 	}
@@ -74,9 +73,7 @@ func (c *Configuration) IsAllowedDomain(domain string) (success bool) {
 
 	// Sanitize the domain (standard)
 	var err error
-	if domain, err = sanitize.Domain(
-		domain, false, true,
-	); err != nil {
+	if domain, err = paymail.SanitizeDomain(domain); err != nil {
 		// todo: log the error? This should rarely occur
 		return
 	}
@@ -101,9 +98,7 @@ func (c *Configuration) AddDomain(domain string) (err error) {
 	}
 
 	// Sanitize and standardize
-	domain, err = sanitize.Domain(
-		domain, false, true,
-	)
+	domain, err = paymail.SanitizeDomain(domain)
 	if err != nil {
 		return
 	}

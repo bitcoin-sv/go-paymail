@@ -6,11 +6,11 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/bitcoin-sv/go-paymail"
 	"github.com/bitcoinschema/go-bitcoin/v2"
-	"github.com/mrz1836/go-logger"
 )
 
 // paymailAddressTable is the demo data for the example server (table: paymail_address)
@@ -164,7 +164,7 @@ func DemoRecordTransaction(_ context.Context,
 	p2pTx *paymail.P2PTransaction) (*paymail.P2PTransactionPayload, error) {
 
 	// Record the transaction
-	logger.Data(2, logger.DEBUG, "recording tx...", logger.MakeParameter("reference", p2pTx.Reference))
+	log.Printf("recording tx... reference: %s\n", p2pTx.Reference)
 
 	// Broadcast etc...
 
