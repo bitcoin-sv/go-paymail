@@ -389,6 +389,18 @@ func TestNewConfig(t *testing.T) {
 		assert.Equal(t, "test", c.Capabilities.BsvAlias)
 	})
 
+	t.Run("with beef capabilities", func(t *testing.T) {
+		c, err := NewConfig(
+			new(mockServiceProvider),
+			WithDomain("test.com"),
+			WithP2PCapabilities(),
+			WithBeefCapabilities(),
+		)
+		require.NoError(t, err)
+		require.NotNil(t, c)
+		assert.Equal(t, 8, len(c.Capabilities.Capabilities))
+	})
+
 	t.Run("with basic routes", func(t *testing.T) {
 		c, err := NewConfig(
 			new(mockServiceProvider),

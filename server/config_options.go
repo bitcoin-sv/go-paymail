@@ -42,6 +42,13 @@ func WithP2PCapabilities() ConfigOps {
 	}
 }
 
+// WithBeefCapabilities will load the beef capabilities
+func WithBeefCapabilities() ConfigOps {
+	return func(c *Configuration) {
+		c.Capabilities = BeefCapabilities(c.Capabilities)
+	}
+}
+
 // WithCapabilities will modify the capabilities
 func WithCapabilities(capabilities *paymail.CapabilitiesPayload) ConfigOps {
 	return func(c *Configuration) {

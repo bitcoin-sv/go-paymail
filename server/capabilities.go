@@ -29,6 +29,12 @@ func P2PCapabilities(bsvAliasVersion string, senderValidation bool) *paymail.Cap
 	return c
 }
 
+// BeefCapabilities will add beef capabilities to given ones
+func BeefCapabilities(c *paymail.CapabilitiesPayload) *paymail.CapabilitiesPayload {
+	c.Capabilities[paymail.BRFCBeefTransaction] = "/receive-beef-transaction/{alias}@{domain.tld}"
+	return c
+}
+
 // showCapabilities will return the service discovery results for the server
 // and list all active capabilities of the Paymail server
 //
