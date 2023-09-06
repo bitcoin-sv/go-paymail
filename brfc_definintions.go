@@ -17,7 +17,7 @@ const (
 	BRFCSFPAuthoriseAction             = "95dddb461bff"       // more info: https://docs.moneybutton.com/docs/sfp/paymail-10-sfp-authorise.html
 	BRFCSFPBuildAction                 = "189e32d93d28"       // more info: https://docs.moneybutton.com/docs/sfp/paymail-09-sfp-build.html
 	BRFCVerifyPublicKeyOwner           = "a9f510c16bde"       // more info: http://bsvalias.org/05-verify-public-key-owner.html
-	BRFCBeefTransaction                = "5c55a7fdb7bb"       // more info: https://bsv.brc.dev/transactions/0062
+	BRFCBeefTransaction                = "5c55a7fdb7bb"       // more info: https://bsv.brc.dev/payments/0070
 )
 
 // BRFCKnownSpecifications is a running list of all known BRFC specifications
@@ -194,7 +194,7 @@ const BRFCKnownSpecifications = `
    "author": "Darren Kellenschwiler",
    "id": "5c55a7fdb7bb",
    "title": "Background Evaluation Extended Format Transaction",
-   "url": "https://bsv.brc.dev/transactions/0062",
+   "url": "https://bsv.brc.dev/payments/0070",
    "version": "1.0.0"
   }
 ]
