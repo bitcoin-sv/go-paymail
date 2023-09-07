@@ -1,33 +1,42 @@
 name: bump-version
+
 on:
   push:
     branches:
       - main
+
 permissions:
-    contents: write
-    pull-requests: write
+  contents: write
+  pull-requests: write
+
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v3
       - name: release-please
         id: release
         uses: GoogleCloudPlatform/release-please-action@v3
         with:
           token: ${{ secrets.TOKEN }}
           release-type: go
-
-      - name: merge-pr
+      - name: Get created PR number
+        id: pr-number
         if: steps.release.outputs.pr
         uses: actions/github-script@v6
         with:
-          github-token: ${{ secrets.TOKEN }}
+          result-encoding: string
           script: |
             const pr = ${{ steps.release.outputs.pr }};
-            if (pr && pr.number) {
-              github.rest.pulls.merge({
-                pull_number: pr.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo
-              });
-            }
+            return pr && pr.number
+      - name: Approve Release PR
+        if: steps.release.outputs.pr
+        run: gh pr review ${{ steps.pr-number.outputs.result }} --approve
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - name: Merge Release PR
+        if: steps.release.outputs.pr
+        run: gh pr merge ${{ steps.pr-number.outputs.result }} --auto --rebase
+        env:
+          GH_TOKEN: ${{ secrets.TOKEN }}

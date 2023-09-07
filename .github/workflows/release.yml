@@ -9,19 +9,9 @@ jobs:
   syndicate:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-    - name: Install Task
+    - name: Install cURL
+      run: sudo apt-get install curl -y
+    - name: Syndicate to GoDocs
       run: |
-        curl -sL https://taskfile.dev/install.sh | sh
-        sudo mv ./bin/task /usr/local/bin
-    - name: Setup Go
-      uses: actions/setup-go@v2
-      with:
-        go-version: 1.21
-    - name: Sync with GoDocs using Taskfile
-      run: task godocs
-      env:
-        GIT_DOMAIN: ${{ github.server_url }}
-        REPO: ${{ github.repository }}
-        VERSION_SHORT: ${{ github.ref }}
+        echo "syndicating to GoDocs..."
+        curl "https://proxy.golang.org/github.com/${{ github.repository }}/v/${{ github.ref }}/info"
