@@ -10,19 +10,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v2
     - name: Install Task
       run: |
         curl -sL https://taskfile.dev/install.sh | sh
         sudo mv ./bin/task /usr/local/bin
     - name: Setup Go
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v2
       with:
         go-version: 1.21
     - name: Sync with GoDocs using Taskfile
       run: task godocs
       env:
-        GIT_DOMAIN: ${{ secrets.GIT_DOMAIN }}
-        REPO_OWNER: ${{ secrets.REPO_OWNER }}
-        REPO_NAME: ${{ secrets.REPO_NAME }}
+        GIT_DOMAIN: ${{ github.server_url }}
+        REPO: ${{ github.repository }}
         VERSION_SHORT: ${{ github.ref }}

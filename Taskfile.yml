@@ -16,7 +16,6 @@ tasks:
     cmds:
       - echo "syndicating to GoDocs..."
       - test $(GIT_DOMAIN)
-      - test $(REPO_OWNER)
-      - test $(REPO_NAME)
+      - test $(REPO)
       - test $(VERSION_SHORT)
-      - curl https://proxy.golang.org/$(GIT_DOMAIN)/$(REPO_OWNER)/$(REPO_NAME)/@v/$(VERSION_SHORT).info
+      - curl https://proxy.golang.org/$(GIT_DOMAIN)/$(REPO)/@v/$(VERSION_SHORT).info
