@@ -1,6 +1,7 @@
 package paymail
 
 import (
+	"encoding/json"
 	"fmt"
 	"net"
 	"testing"
@@ -159,12 +160,18 @@ func TestNewClient(t *testing.T) {
 func TestClient_GetBRFCs(t *testing.T) {
 	t.Parallel()
 
+	// get default brfcs
 	t.Run("get brfcs", func(t *testing.T) {
 		client, err := NewClient()
 		assert.NoError(t, err)
 		assert.NotNil(t, client)
+
 		brfcs := client.GetBRFCs()
-		assert.Equal(t, 23, len(brfcs))
+
+		specs := make([]*BRFCSpec, 0)
+		_ = json.Unmarshal([]byte(BRFCKnownSpecifications), &specs)
+
+		assert.Equal(t, len(specs), len(brfcs))
 		assert.Equal(t, "b2aa66e26b43", brfcs[0].ID)
 	})
 }
