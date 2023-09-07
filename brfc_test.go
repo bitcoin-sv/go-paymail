@@ -89,6 +89,7 @@ func TestBRFCSpec_Validate(t *testing.T) {
 		{&BRFCSpec{Author: "Fabriik", ID: "189e32d93d28", Title: "Simple Fabriik Protocol for Tokens Build Action", Version: "1"}, "189e32d93d28", false, true},
 		{&BRFCSpec{Author: "Fabriik", ID: "95dddb461bff", Title: "Simple Fabriik Protocol for Tokens Authorise Action", Version: "1"}, "95dddb461bff", false, true},
 		{&BRFCSpec{Author: "Fabriik", ID: "f792b6eff07a", Title: "P2P Payment Destination with Tokens Support", Version: "1"}, "f792b6eff07a", false, true},
+		{&BRFCSpec{Author: "Darren Kellenschwiler", ID: "5c55a7fdb7bb", Title: "Background Evaluation Extended Format Transaction", Version: "1.0.0"}, "5c55a7fdb7bb", false, true},
 	}
 
 	for _, test := range tests {
