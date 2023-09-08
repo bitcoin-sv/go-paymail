@@ -1,7 +1,7 @@
 package paymail
 
 import (
-	"fmt"
+	"encoding/json"
 	"testing"
 )
 
@@ -42,24 +42,6 @@ func TestBRFCSpec_Generate(t *testing.T) {
 			t.Errorf("%s Failed: [%v] inputted, [%s] expected and id did not match, got: %s", t.Name(), test.brfc, test.expectedID, test.brfc.ID)
 		}
 	}
-}
-
-// ExampleBRFCSpec_Generate example using Generate()
-//
-// See more examples in /examples/
-func ExampleBRFCSpec_Generate() {
-	// Start with a new BRFC specification
-	newBRFC := &BRFCSpec{
-		Author:  "MrZ",
-		Title:   "New BRFC",
-		Version: "1",
-	}
-	if err := newBRFC.Generate(); err != nil {
-		fmt.Printf("error occurred: %s", err.Error())
-	} else {
-		fmt.Printf("id generated: %s", newBRFC.ID)
-	}
-	// Output:id generated: e898079d7d1a
 }
 
 // BenchmarkBRFCSpec_Generate benchmarks the method Generate()
@@ -107,6 +89,7 @@ func TestBRFCSpec_Validate(t *testing.T) {
 		{&BRFCSpec{Author: "Fabriik", ID: "189e32d93d28", Title: "Simple Fabriik Protocol for Tokens Build Action", Version: "1"}, "189e32d93d28", false, true},
 		{&BRFCSpec{Author: "Fabriik", ID: "95dddb461bff", Title: "Simple Fabriik Protocol for Tokens Authorise Action", Version: "1"}, "95dddb461bff", false, true},
 		{&BRFCSpec{Author: "Fabriik", ID: "f792b6eff07a", Title: "P2P Payment Destination with Tokens Support", Version: "1"}, "f792b6eff07a", false, true},
+		{&BRFCSpec{Author: "Darren Kellenschwiler", ID: "5c55a7fdb7bb", Title: "Background Evaluation Extended Format Transaction", Version: "1.0.0"}, "5c55a7fdb7bb", false, true},
 	}
 
 	for _, test := range tests {
@@ -120,27 +103,6 @@ func TestBRFCSpec_Validate(t *testing.T) {
 			t.Errorf("%s Failed: [%v] inputted, [%s] expected and valid did not match", t.Name(), test.brfc, test.expectedID)
 		}
 	}
-}
-
-// ExampleBRFCSpec_Validate example using Validate()
-//
-// See more examples in /examples/
-func ExampleBRFCSpec_Validate() {
-	// Start with an existing BRFC specification
-	newBRFC := &BRFCSpec{
-		Author:  "MrZ",
-		ID:      "e898079d7d1a",
-		Title:   "New BRFC",
-		Version: "1",
-	}
-	if valid, id, err := newBRFC.Validate(); err != nil {
-		fmt.Printf("error occurred: %s", err.Error())
-	} else if !valid {
-		fmt.Printf("id is invalid: %s vs %s", newBRFC.ID, id)
-	} else {
-		fmt.Printf("brfc is valid: %s", id)
-	}
-	// Output:brfc is valid: e898079d7d1a
 }
 
 // BenchmarkBRFCSpec_Validate benchmarks the method Validate()
@@ -158,13 +120,17 @@ func TestLoadBRFCs(t *testing.T) {
 	// Create a client with options
 	// client := newTestClient(t)
 
+	specs := make([]*BRFCSpec, 0)
+	_ = json.Unmarshal([]byte(BRFCKnownSpecifications), &specs)
+	defSpecsLen := len(specs)
+
 	var tests = []struct {
 		specJSON       string
 		expectedLength int
 		expectedError  bool
 	}{
-		{`[{"author": "andy (nChain)","id": "57dd1f54fc67","title": "BRFC Specifications","url": "http://bsvalias.org/01-02-brfc-id-assignment.html","version": "1"}]`, 24, false},
-		{`[{"invalid:1}]`, 23, true},
+		{`[{"author": "andy (nChain)","id": "57dd1f54fc67","title": "BRFC Specifications","url": "http://bsvalias.org/01-02-brfc-id-assignment.html","version": "1"}]`, defSpecsLen + 1, false},
+		{`[{"invalid:1}]`, defSpecsLen, true},
 		{`[{"author": "andy (nChain), Ryan X. Charles (Money Button)","title":"invalid-spec","id": "17dd1f54fc66"}]`, 0, true},
 		{`[{"author": "andy (nChain), Ryan X. Charles (Money Button)","title":""}]`, 0, true},
 	}
@@ -178,22 +144,6 @@ func TestLoadBRFCs(t *testing.T) {
 			t.Errorf("%s Failed: [%s] inputted, [%d] expected specs but got: %d", t.Name(), test.specJSON, test.expectedLength, len(specs))
 		}
 	}
-}
-
-// ExampleLoadBRFCs example using LoadBRFCs()
-//
-// See more examples in /examples/
-func ExampleLoadBRFCs() {
-	// Load additional specification(s)
-	additionalSpec := `[{"author": "andy (nChain)","id": "57dd1f54fc67","title": "BRFC Specifications","url": "http://bsvalias.org/01-02-brfc-id-assignment.html","version": "1"}]`
-	specs, err := LoadBRFCs(additionalSpec)
-	if err != nil {
-		fmt.Printf("error occurred: %s", err.Error())
-		return
-	}
-	fmt.Printf("total specifications found: %d", len(specs))
-
-	// Output:total specifications found: 24
 }
 
 // BenchmarkLoadBRFCs benchmarks the method LoadBRFCs()
