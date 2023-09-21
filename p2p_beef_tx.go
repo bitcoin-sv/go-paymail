@@ -69,7 +69,7 @@ func DecodeCMPSliceFromStream(hexBytes []byte) (CMPSlice, []byte, error) {
 		}
 
 		cmpPaths = append(cmpPaths, cmp)
-		hexBytes = extractRemainingBytes(hexBytes, bytesUsedToDecodeCMP)
+		hexBytes = removeLeadingNBytes(hexBytes, bytesUsedToDecodeCMP)
 	}
 
 	cmpSlice := CMPSlice(cmpPaths)
@@ -78,14 +78,11 @@ func DecodeCMPSliceFromStream(hexBytes []byte) (CMPSlice, []byte, error) {
 }
 
 func NewCMPFromStream(hexBytes []byte) (CompoundMerklePath, int, error) {
-	hexToProcess := make([]byte, len(hexBytes))
-	copy(hexToProcess, hexBytes)
-
-	height, bytesUsed, err := extractHeight(hexToProcess)
+	height, bytesUsed, err := extractHeight(hexBytes)
 	if err != nil {
 		return nil, 0, err
 	}
-	hexToProcess = hexToProcess[bytesUsed:]
+	hexBytes = hexBytes[bytesUsed:]
 
 	var cmp CompoundMerklePath
 	previousHeight := height
@@ -94,13 +91,13 @@ func NewCMPFromStream(hexBytes []byte) (CompoundMerklePath, int, error) {
 	for previousHeight >= 0 {
 		var pathMap map[string]uint64
 
-		pathMap, bytesUsed, err = extractPathMap(hexToProcess, previousHeight)
+		pathMap, bytesUsed, err = extractPathMap(hexBytes, previousHeight)
 		if err != nil {
 			return nil, 0, err
 		}
 
 		cmp = append(cmp, pathMap)
-		hexToProcess = hexToProcess[bytesUsed:]
+		hexBytes = hexBytes[bytesUsed:]
 
 		previousHeight--
 		bytesUsedToDecodeCMP += bytesUsed
@@ -140,10 +137,6 @@ func DecodeTransactionsWithPathIndexes(bytes []byte) ([]TxData, error) {
 	}
 
 	return transactions, nil
-}
-
-func extractRemainingBytes(bytes []byte, bytesUsed int) []byte {
-	return bytes[bytesUsed:]
 }
 
 func extractHeight(bb []byte) (int, int, error) {
