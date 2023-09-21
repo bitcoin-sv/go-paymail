@@ -3,7 +3,6 @@ package paymail
 import (
 	"encoding/hex"
 	"errors"
-	"fmt"
 
 	"github.com/libsv/go-bt/v2"
 )
@@ -55,6 +54,10 @@ func DecodeBEEF(beefHex string) (*DecodedBEEF, error) {
 }
 
 func DecodeCMPSliceFromStream(hexBytes []byte) (CMPSlice, []byte, error) {
+	if len(hexBytes) == 0 {
+		return nil, nil, errors.New("provided hexStream is empty")
+	}
+
 	nCMPs, bytesUsed := bt.NewVarIntFromBytes(hexBytes)
 	hexBytes = hexBytes[bytesUsed:]
 
@@ -145,18 +148,18 @@ func extractRemainingBytes(bytes []byte, bytesUsed int) []byte {
 
 func extractHeight(bb []byte) (int, int, error) {
 	if len(bb) < 1 {
-		return 0, 0, fmt.Errorf("insufficient bytes to extract height")
+		return 0, 0, errors.New("insufficient bytes to extract height")
 	}
 	height := int(bb[0])
 	if height > 64 {
-		return 0, 0, fmt.Errorf("height exceeds maximum allowed value of 64")
+		return 0, 0, errors.New("height exceeds maximum allowed value of 64")
 	}
 	return height, 1, nil
 }
 
 func extractPathMap(hexBytes []byte, expectedHeight int) (map[string]uint64, int, error) {
 	if len(hexBytes) < 1 {
-		return nil, 0, fmt.Errorf("insufficient bytes to extract path map")
+		return nil, 0, errors.New("insufficient bytes to extract path map")
 	}
 
 	nLeaves, nLeavesBytesUsed := bt.NewVarIntFromBytes(hexBytes)
@@ -165,14 +168,14 @@ func extractPathMap(hexBytes []byte, expectedHeight int) (map[string]uint64, int
 
 	for i := 0; i < int(nLeaves); i++ {
 		if len(hexBytes[bytesUsed:]) < 1 {
-			return nil, 0, fmt.Errorf("insufficient bytes to extract offset")
+			return nil, 0, errors.New("insufficient bytes to extract offset")
 		}
 
 		offsetValue, offsetBytesUsed := bt.NewVarIntFromBytes(hexBytes[bytesUsed:])
 		bytesUsed += offsetBytesUsed
 
 		if len(hexBytes[bytesUsed:]) < 32 {
-			return nil, 0, fmt.Errorf("insufficient bytes to extract hash")
+			return nil, 0, errors.New("insufficient bytes to extract hash")
 		}
 
 		hash := hex.EncodeToString(hexBytes[bytesUsed : bytesUsed+32])
@@ -182,7 +185,7 @@ func extractPathMap(hexBytes []byte, expectedHeight int) (map[string]uint64, int
 	}
 
 	if expectedHeight < 0 {
-		return nil, 0, fmt.Errorf("unexpected negative height value")
+		return nil, 0, errors.New("unexpected negative height value")
 	}
 
 	return pathMap, bytesUsed, nil
