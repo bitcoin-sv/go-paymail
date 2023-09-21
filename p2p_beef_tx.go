@@ -69,7 +69,7 @@ func DecodeCMPSliceFromStream(hexBytes []byte) (CMPSlice, []byte, error) {
 		}
 
 		cmpPaths = append(cmpPaths, cmp)
-		hexBytes = removeLeadingNBytes(hexBytes, bytesUsedToDecodeCMP)
+		hexBytes = hexBytes[bytesUsedToDecodeCMP:]
 	}
 
 	cmpSlice := CMPSlice(cmpPaths)
@@ -197,20 +197,16 @@ func extractBytesWithoutVersionAndMarker(hexStream string) ([]byte, error) {
 	}
 
 	// removes version bytes
-	bytes = removeLeadingNBytes(bytes, versionBytesCount)
+	bytes = bytes[versionBytesCount:]
 	err = validateMarker(bytes)
 	if err != nil {
 		return nil, err
 	}
 
 	// removes marker bytes
-	bytes = removeLeadingNBytes(bytes, markerBytesCount)
+	bytes = bytes[markerBytesCount:]
 
 	return bytes, nil
-}
-
-func removeLeadingNBytes(bytes []byte, bytesToRemove int) []byte {
-	return bytes[bytesToRemove:]
 }
 
 func validateMarker(bytes []byte) error {
