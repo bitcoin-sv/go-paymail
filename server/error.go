@@ -26,7 +26,7 @@ const (
 	ErrorFailedMarshalJSON         = "failed-marshal-json"
 	ErrorEncodingResponse          = "error-encoding-response"
 	ErrorNotImplmented             = "not-implemented"
-	ErrorSimplePaymentVerification = "spv-failed"
+	ErrorSimplifiedPaymentVerification = "spv-failed"
 )
 
 var (

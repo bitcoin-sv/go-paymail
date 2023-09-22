@@ -44,8 +44,8 @@ func (d *demoServiceProvider) RecordTransaction(ctx context.Context,
 	return DemoRecordTransaction(ctx, p2pTx)
 }
 
-// ExecuteSimplePaymentVerification is a demo implementation of this interface
-func (d *demoServiceProvider) ExecuteSimplePaymentVerification(ctx context.Context,
+// ExecuteSimplifiedPaymentVerification is a demo implementation of this interface
+func (d *demoServiceProvider) ExecuteSimplifiedPaymentVerification(ctx context.Context,
 	beedData *paymail.DecodedBEEF) error {
 
 	return nil
