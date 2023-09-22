@@ -22,6 +22,11 @@ const (
 	HasCMP   = 0x01
 )
 
+const (
+	MarkerBytesCount  = 2
+	VersionBytesCount = 2
+)
+
 type TxData struct {
 	Transaction *bt.Tx
 	PathIndex   *bt.VarInt
@@ -197,9 +202,6 @@ func extractPathMap(hexBytes []byte, height int) (map[string]uint64, int, error)
 }
 
 func extractBytesWithoutVersionAndMarker(hexStream string) ([]byte, error) {
-	versionBytesCount := 2
-	markerBytesCount := 2
-
 	bytes, err := hex.DecodeString(hexStream)
 	if err != nil {
 		return nil, errors.New("invalid beef hex stream")
@@ -209,14 +211,14 @@ func extractBytesWithoutVersionAndMarker(hexStream string) ([]byte, error) {
 	}
 
 	// removes version bytes
-	bytes = bytes[versionBytesCount:]
+	bytes = bytes[VersionBytesCount:]
 	err = validateMarker(bytes)
 	if err != nil {
 		return nil, err
 	}
 
 	// removes marker bytes
-	bytes = bytes[markerBytesCount:]
+	bytes = bytes[MarkerBytesCount:]
 
 	return bytes, nil
 }
