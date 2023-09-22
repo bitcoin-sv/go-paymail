@@ -124,10 +124,10 @@ func DecodeTransactionsWithPathIndexes(bytes []byte) ([]TxData, error) {
 			value, offset := bt.NewVarIntFromBytes(bytes[1:])
 			pathIndex = &value
 			bytes = bytes[1+offset:]
-		} else if bytes[0] != HasNoCMP {
-			return nil, errors.New("invalid HasCMP flag")
-		} else {
+		} else if bytes[0] == HasNoCMP {
 			bytes = bytes[1:]
+		} else {
+			return nil, errors.New("invalid HasCMP flag")
 		}
 
 		transactions = append(transactions, TxData{
