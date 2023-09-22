@@ -180,7 +180,7 @@ func extractPathMap(hexBytes []byte, height int) (map[string]uint64, int, error)
 		bytesUsed += offsetBytesUsed
 
 		if len(hexBytes[bytesUsed:]) < 32 {
-			return nil, 0, errors.New("insufficient bytes to extract hash")
+			return nil, 0, fmt.Errorf("insufficient bytes to extract hash of path with offset %d at height %d", offsetValue, height)
 		}
 
 		hash := hex.EncodeToString(hexBytes[bytesUsed : bytesUsed+32])
