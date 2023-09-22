@@ -153,7 +153,7 @@ func DecodeTransactionsWithPathIndexes(bytes []byte) ([]TxData, error) {
 
 func extractHeight(hexBytes []byte) (int, int, error) {
 	if len(hexBytes) < 1 {
-		return 0, 0, errors.New("insufficient bytes to extract height")
+		return 0, 0, errors.New("insufficient bytes to extract height of compount merkle path")
 	}
 	height := int(hexBytes[0])
 	if height > 64 {
