@@ -3,6 +3,7 @@ package paymail
 import (
 	"encoding/hex"
 	"errors"
+	"fmt"
 
 	"github.com/libsv/go-bt/v2"
 )
@@ -172,7 +173,7 @@ func extractPathMap(hexBytes []byte, expectedHeight int) (map[string]uint64, int
 
 	for i := 0; i < int(nLeaves); i++ {
 		if len(hexBytes[bytesUsed:]) < 1 {
-			return nil, 0, errors.New("insufficient bytes to extract offset")
+			return nil, 0, fmt.Errorf("insufficient bytes to extract %d path of %d paths at %d height", i, int(nLeaves), expectedHeight)
 		}
 
 		offsetValue, offsetBytesUsed := bt.NewVarIntFromBytes(hexBytes[bytesUsed:])
