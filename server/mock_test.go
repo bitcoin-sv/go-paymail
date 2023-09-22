@@ -41,8 +41,8 @@ func (m *mockServiceProvider) RecordTransaction(_ context.Context,
 	return nil, nil
 }
 
-// ExecuteSimplePaymentVerification is a mock implementation of this interface
-func (m *mockServiceProvider) ExecuteSimplePaymentVerification(ctx context.Context,
+// ExecuteSimplifiedPaymentVerification is a mock implementation of this interface
+func (m *mockServiceProvider) ExecuteSimplifiedPaymentVerification(ctx context.Context,
 	beedData *paymail.DecodedBEEF) error {
 
 	return nil
