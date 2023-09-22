@@ -43,3 +43,10 @@ func (d *demoServiceProvider) RecordTransaction(ctx context.Context,
 	// Record the tx into your datastore layer
 	return DemoRecordTransaction(ctx, p2pTx)
 }
+
+// ExecuteSimplePaymentVerification is a demo implementation of this interface
+func (d *demoServiceProvider) ExecuteSimplePaymentVerification(ctx context.Context,
+	beedData *paymail.DecodedBEEF) error {
+
+	return nil
+}
