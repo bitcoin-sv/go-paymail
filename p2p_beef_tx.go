@@ -102,13 +102,13 @@ func NewCMPFromStream(hexBytes []byte) (CompoundMerklePath, int, error) {
 	hexBytes = hexBytes[bytesUsed:]
 
 	var cmp CompoundMerklePath
-	previousHeight := height
+	currentHeight := height
 	bytesUsedToDecodeCMP := bytesUsed
 
-	for previousHeight >= 0 {
+	for currentHeight >= 0 {
 		var pathMap map[string]uint64
 
-		pathMap, bytesUsed, err = extractPathMap(hexBytes, previousHeight)
+		pathMap, bytesUsed, err = extractPathMap(hexBytes, currentHeight)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -116,7 +116,7 @@ func NewCMPFromStream(hexBytes []byte) (CompoundMerklePath, int, error) {
 		cmp = append(cmp, pathMap)
 		hexBytes = hexBytes[bytesUsed:]
 
-		previousHeight--
+		currentHeight--
 		bytesUsedToDecodeCMP += bytesUsed
 	}
 
