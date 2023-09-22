@@ -167,6 +167,10 @@ func extractPathMap(hexBytes []byte, height int) (map[string]uint64, int, error)
 		return nil, 0, fmt.Errorf("insufficient bytes to extract Compound Merkle Path at height %d", height)
 	}
 
+	if height < 0 {
+		return nil, 0, fmt.Errorf("unexpected negative value of height %d", height)
+	}
+
 	nLeaves, nLeavesBytesUsed := bt.NewVarIntFromBytes(hexBytes)
 	bytesUsed := nLeavesBytesUsed
 	var pathMap = make(map[string]uint64)
@@ -187,10 +191,6 @@ func extractPathMap(hexBytes []byte, height int) (map[string]uint64, int, error)
 		bytesUsed += 32
 
 		pathMap[hash] = uint64(offsetValue)
-	}
-
-	if height < 0 {
-		return nil, 0, errors.New("unexpected negative height value")
 	}
 
 	return pathMap, bytesUsed, nil
