@@ -225,7 +225,7 @@ func extractBytesWithoutVersionAndMarker(hexStream string) ([]byte, error) {
 
 func validateMarker(bytes []byte) error {
 	if bytes[0] != BEEFMarkerPart1 || bytes[1] != BEEFMarkerPart2 {
-		return errors.New("invalid beef marker")
+		return errors.New("invalid format of transaction, BEEF marker not found")
 	}
 
 	return nil
