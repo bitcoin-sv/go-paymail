@@ -150,11 +150,11 @@ func DecodeTransactionsWithPathIndexes(bytes []byte) ([]TxData, error) {
 	return transactions, nil
 }
 
-func extractHeight(bb []byte) (int, int, error) {
-	if len(bb) < 1 {
+func extractHeight(hexBytes []byte) (int, int, error) {
+	if len(hexBytes) < 1 {
 		return 0, 0, errors.New("insufficient bytes to extract height")
 	}
-	height := int(bb[0])
+	height := int(hexBytes[0])
 	if height > 64 {
 		return 0, 0, errors.New("height exceeds maximum allowed value of 64")
 	}
