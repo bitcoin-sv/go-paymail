@@ -27,8 +27,9 @@ type TxData struct {
 }
 
 type DecodedBEEF struct {
-	CMPSlice CMPSlice
-	TxData   []TxData
+	CMPSlice        CMPSlice
+	InputsTxData    []TxData
+	ProcessedTxData TxData
 }
 
 func DecodeBEEF(beefHex string) (*DecodedBEEF, error) {
@@ -47,9 +48,19 @@ func DecodeBEEF(beefHex string) (*DecodedBEEF, error) {
 		return nil, err
 	}
 
+	if len(transactions) == 0 {
+		return nil, errors.New("no transactions found")
+	}
+
+	// get the last transaction as the processed transaction - it should be the last one because of khan's ordering
+	processedTx := transactions[len(transactions)-1]
+
+	transactions = transactions[:len(transactions)-1]
+
 	return &DecodedBEEF{
-		CMPSlice: cmpSlice,
-		TxData:   transactions,
+		CMPSlice:        cmpSlice,
+		InputsTxData:    transactions,
+		ProcessedTxData: processedTx,
 	}, nil
 }
 
