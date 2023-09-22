@@ -23,6 +23,7 @@ const (
 )
 
 const (
+	HashBytesCount    = 32
 	MarkerBytesCount  = 2
 	VersionBytesCount = 2
 )
@@ -188,12 +189,12 @@ func extractPathMap(hexBytes []byte, height int) (map[string]uint64, int, error)
 		offsetValue, offsetBytesUsed := bt.NewVarIntFromBytes(hexBytes[bytesUsed:])
 		bytesUsed += offsetBytesUsed
 
-		if len(hexBytes[bytesUsed:]) < 32 {
+		if len(hexBytes[bytesUsed:]) < HashBytesCount {
 			return nil, 0, fmt.Errorf("insufficient bytes to extract hash of path with offset %d at height %d", offsetValue, height)
 		}
 
-		hash := hex.EncodeToString(hexBytes[bytesUsed : bytesUsed+32])
-		bytesUsed += 32
+		hash := hex.EncodeToString(hexBytes[bytesUsed : bytesUsed+HashBytesCount])
+		bytesUsed += HashBytesCount
 
 		pathMap[hash] = uint64(offsetValue)
 	}
