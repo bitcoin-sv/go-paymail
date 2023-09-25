@@ -23,9 +23,9 @@ const (
 )
 
 const (
-	HashBytesCount    = 32
-	MarkerBytesCount  = 2
-	VersionBytesCount = 2
+	hashBytesCount    = 32
+	markerBytesCount  = 2
+	versionBytesCount = 2
 )
 
 type TxData struct {
@@ -185,12 +185,12 @@ func extractPathMap(hexBytes []byte, height int) (map[string]uint64, int, error)
 		offsetValue, offsetBytesUsed := bt.NewVarIntFromBytes(hexBytes[bytesUsed:])
 		bytesUsed += offsetBytesUsed
 
-		if len(hexBytes[bytesUsed:]) < HashBytesCount {
+		if len(hexBytes[bytesUsed:]) < hashBytesCount {
 			return nil, 0, fmt.Errorf("insufficient bytes to extract hash of path with offset %d at height %d", offsetValue, height)
 		}
 
-		hash := hex.EncodeToString(hexBytes[bytesUsed : bytesUsed+HashBytesCount])
-		bytesUsed += HashBytesCount
+		hash := hex.EncodeToString(hexBytes[bytesUsed : bytesUsed+hashBytesCount])
+		bytesUsed += hashBytesCount
 
 		pathMap[hash] = uint64(offsetValue)
 	}
@@ -208,14 +208,14 @@ func extractBytesWithoutVersionAndMarker(hexStream string) ([]byte, error) {
 	}
 
 	// removes version bytes
-	bytes = bytes[VersionBytesCount:]
+	bytes = bytes[versionBytesCount:]
 	err = validateMarker(bytes)
 	if err != nil {
 		return nil, err
 	}
 
 	// removes marker bytes
-	bytes = bytes[MarkerBytesCount:]
+	bytes = bytes[markerBytesCount:]
 
 	return bytes, nil
 }
