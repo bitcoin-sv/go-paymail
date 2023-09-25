@@ -45,18 +45,18 @@ func DecodeBEEF(beefHex string) (*DecodedBEEF, error) {
 		return nil, err
 	}
 
-	cmpSlice, remainingBytes, err := DecodeCMPSliceFromStream(beefBytes)
+	cmpSlice, remainingBytes, err := decodeCMPSliceFromStream(beefBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	transactions, err := DecodeTransactionsWithPathIndexes(remainingBytes)
+	transactions, err := decodeTransactionsWithPathIndexes(remainingBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(transactions) == 0 {
-		return nil, errors.New("no transactions found")
+	if len(transactions) < 2 {
+		return nil, errors.New("not enough transactions provided to decode BEEF")
 	}
 
 	// get the last transaction as the processed transaction - it should be the last one because of khan's ordering
@@ -71,9 +71,9 @@ func DecodeBEEF(beefHex string) (*DecodedBEEF, error) {
 	}, nil
 }
 
-func DecodeCMPSliceFromStream(hexBytes []byte) (CMPSlice, []byte, error) {
+func decodeCMPSliceFromStream(hexBytes []byte) (CMPSlice, []byte, error) {
 	if len(hexBytes) == 0 {
-		return nil, nil, errors.New("provided hexStream is empty")
+		return nil, nil, errors.New("cannot decode cmp slice from stream - no bytes provided")
 	}
 
 	nCMPs, bytesUsed := bt.NewVarIntFromBytes(hexBytes)
@@ -124,7 +124,7 @@ func NewCMPFromStream(hexBytes []byte) (CompoundMerklePath, int, error) {
 	return cmp, bytesUsedToDecodeCMP, nil
 }
 
-func DecodeTransactionsWithPathIndexes(bytes []byte) ([]TxData, error) {
+func decodeTransactionsWithPathIndexes(bytes []byte) ([]TxData, error) {
 	nTransactions, offset := bt.NewVarIntFromBytes(bytes)
 	bytes = bytes[offset:]
 
@@ -145,7 +145,7 @@ func DecodeTransactionsWithPathIndexes(bytes []byte) ([]TxData, error) {
 		} else if bytes[0] == HasNoCMP {
 			bytes = bytes[1:]
 		} else {
-			return nil, errors.New("invalid HasCMP flag")
+			return nil, fmt.Errorf("invalid HasCMP flag for transaction at index %d", i)
 		}
 
 		transactions = append(transactions, TxData{
@@ -173,17 +173,13 @@ func extractPathMap(hexBytes []byte, height int) (map[string]uint64, int, error)
 		return nil, 0, fmt.Errorf("insufficient bytes to extract Compound Merkle Path at height %d", height)
 	}
 
-	if height < 0 {
-		return nil, 0, fmt.Errorf("unexpected negative value of height %d", height)
-	}
-
 	nLeaves, nLeavesBytesUsed := bt.NewVarIntFromBytes(hexBytes)
 	bytesUsed := nLeavesBytesUsed
 	var pathMap = make(map[string]uint64)
 
 	for i := 0; i < int(nLeaves); i++ {
 		if len(hexBytes[bytesUsed:]) < 1 {
-			return nil, 0, fmt.Errorf("insufficient bytes to extract %d path of %d paths at %d height", i, int(nLeaves), height)
+			return nil, 0, fmt.Errorf("insufficient bytes to extract index %d leaf of %d leaves at %d height", i, int(nLeaves), height)
 		}
 
 		offsetValue, offsetBytesUsed := bt.NewVarIntFromBytes(hexBytes[bytesUsed:])
