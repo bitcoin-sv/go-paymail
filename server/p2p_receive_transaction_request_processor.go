@@ -78,7 +78,7 @@ func getProcessedTxData(payload *p2pReceiveTxReqPayload, format p2pPayloadFormat
 		processedTx = beefData.ProcessedTxData.Transaction
 
 	default:
-		panic("WRONG FORMAT!!")
+		panic("Unexpected transaction format!")
 	}
 
 	return processedTx, beefData, nil

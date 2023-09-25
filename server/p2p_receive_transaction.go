@@ -37,7 +37,6 @@ func (c *Configuration) p2pReceiveTx(w http.ResponseWriter, req *http.Request, _
 		panic("empty hex after parsing!!")
 	}
 
-	// Record the transaction
 	var response *paymail.P2PTransactionPayload
 	var err error
 	if response, err = c.actions.RecordTransaction(
@@ -74,21 +73,19 @@ func (c *Configuration) p2pReceiveBeefTx(w http.ResponseWriter, req *http.Reques
 	}
 
 	if len(requestPayload.Hex) == 0 {
-		panic("empty hex after parsing!!")
+		panic("empty hex after parsing!")
 	}
 
 	if beefData == nil {
-		panic("empty beef after parsing!!")
+		panic("empty beef after parsing!")
 	}
 
-	// SPV
 	var err error
 	if err = c.actions.ExecuteSimplifiedPaymentVerification(req.Context(), beefData); err != nil {
 		ErrorResponse(w, ErrorSimplifiedPaymentVerification, err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
-	// Record the transaction
 	var response *paymail.P2PTransactionPayload
 	if response, err = c.actions.RecordTransaction(
 		req.Context(), requestPayload.P2PTransaction, md,
