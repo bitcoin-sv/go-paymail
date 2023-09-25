@@ -241,10 +241,11 @@ func TestDecodeBEEF_DecodeBEEF_HandlingErrors(t *testing.T) {
 			beef := tc.hexStream
 
 			// when
-			_, err := DecodeBEEF(beef)
+			result, err := DecodeBEEF(beef)
 
 			// then
 			assert.Equal(t, tc.expectedError, err, "expected error %v, but got %v", tc.expectedError, err)
+			assert.Nil(t, result, "expected nil result, but got %v", result)
 		})
 	}
 }
