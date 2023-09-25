@@ -159,7 +159,6 @@ func TestDecodeBEEF_DecodeBEEF_HappyPaths(t *testing.T) {
 			// then
 			assert.Equal(t, tc.expectedError, err, "expected error %v, but got %v", tc.expectedError, err)
 
-			// only if there is no error go through the rest of the assertions
 			assert.Equal(t, len(tc.expectedDecodedBEEF.InputsTxData), len(decodedBEEF.InputsTxData), "expected %v inputs, but got %v", len(tc.expectedDecodedBEEF.InputsTxData), len(decodedBEEF.InputsTxData))
 			assert.Equal(t, len(tc.expectedDecodedBEEF.CMPSlice), len(decodedBEEF.CMPSlice), "expected %v CMPs, but got %v", len(tc.expectedDecodedBEEF.CMPSlice), len(decodedBEEF.CMPSlice))
 			assert.NotNil(t, decodedBEEF.ProcessedTxData.Transaction, "expected original transaction to be not nil")
@@ -242,15 +241,10 @@ func TestDecodeBEEF_DecodeBEEF_HandlingErrors(t *testing.T) {
 			beef := tc.hexStream
 
 			// when
-			decodedBEEF, err := DecodeBEEF(beef)
+			_, err := DecodeBEEF(beef)
 
 			// then
 			assert.Equal(t, tc.expectedError, err, "expected error %v, but got %v", tc.expectedError, err)
-
-			if tc.expectedDecodedBEEF != nil {
-				assert.Equal(t, len(tc.expectedDecodedBEEF.InputsTxData), len(decodedBEEF.InputsTxData), "expected %v inputs, but got %v", len(tc.expectedDecodedBEEF.InputsTxData), len(decodedBEEF.InputsTxData))
-				assert.Equal(t, len(tc.expectedDecodedBEEF.CMPSlice), len(decodedBEEF.CMPSlice), "expected %v CMPs, but got %v", len(tc.expectedDecodedBEEF.CMPSlice), len(decodedBEEF.CMPSlice))
-			}
 		})
 	}
 }
