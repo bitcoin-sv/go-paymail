@@ -8,13 +8,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestDecodeBEEF_DecodeBEEF(t *testing.T) {
+func TestDecodeBEEF_DecodeBEEF_HappyPaths(t *testing.T) {
 	testCases := []struct {
-		name                         string
-		hexStream                    string
-		expectedDecodedBEEF          *DecodedBEEF
-		expectedCMPForTheOldestInput bool
-		expectedError                error
+		name                       string
+		hexStream                  string
+		expectedDecodedBEEF        *DecodedBEEF
+		pathIndexForTheOldestInput *bt.VarInt
+		expectedError              error
 	}{
 		{
 			name:      "valid BEEF with 1 CMP and 1 input transaction",
@@ -29,15 +29,46 @@ func TestDecodeBEEF_DecodeBEEF(t *testing.T) {
 				},
 				InputsTxData: []TxData{
 					{
-						Transaction: &bt.Tx{},
-						PathIndex:   func(v bt.VarInt) *bt.VarInt { return &v }(0x0),
+						Transaction: &bt.Tx{
+							Version:  2,
+							LockTime: 0,
+							Inputs: []*bt.Input{
+								{
+									PreviousTxSatoshis: 0,
+									PreviousTxOutIndex: 0,
+									SequenceNumber:     4294967295,
+									PreviousTxScript:   nil,
+								},
+							},
+							Outputs: []*bt.Output{
+								{
+									Satoshis: 1,
+								},
+							}},
+						PathIndex: func(v bt.VarInt) *bt.VarInt { return &v }(0x0),
 					},
 				},
 				ProcessedTxData: TxData{
-					Transaction: &bt.Tx{},
+					Transaction: &bt.Tx{
+						Version:  2,
+						LockTime: 0,
+						Inputs: []*bt.Input{
+							{
+								PreviousTxSatoshis: 0,
+								PreviousTxOutIndex: 0,
+								SequenceNumber:     4294967295,
+								PreviousTxScript:   nil,
+							},
+						},
+						Outputs: []*bt.Output{
+							{
+								Satoshis: 1,
+							},
+						}},
+					PathIndex: nil,
 				},
 			},
-			expectedCMPForTheOldestInput: true,
+			pathIndexForTheOldestInput: func(v bt.VarInt) *bt.VarInt { return &v }(0x0),
 		},
 		{
 			name:      "valid BEEF with 2 CMP and 2 input transaction - all input transactions have no CMP flag set",
@@ -57,20 +88,95 @@ func TestDecodeBEEF_DecodeBEEF(t *testing.T) {
 				},
 				InputsTxData: []TxData{
 					{
-						Transaction: &bt.Tx{},
-						PathIndex:   nil,
+						Transaction: &bt.Tx{
+							Version:  2,
+							LockTime: 0,
+							Inputs: []*bt.Input{
+								{
+									PreviousTxSatoshis: 0,
+									PreviousTxOutIndex: 0,
+									SequenceNumber:     4294967295,
+									PreviousTxScript:   nil,
+								},
+							},
+							Outputs: []*bt.Output{
+								{
+									Satoshis: 1,
+								},
+							}},
+						PathIndex: nil,
 					},
 					{
-						Transaction: &bt.Tx{},
-						PathIndex:   nil,
+						Transaction: &bt.Tx{
+							Version:  2,
+							LockTime: 0,
+							Inputs: []*bt.Input{
+								{
+									PreviousTxSatoshis: 0,
+									PreviousTxOutIndex: 0,
+									SequenceNumber:     4294967295,
+									PreviousTxScript:   nil,
+								},
+							},
+							Outputs: []*bt.Output{
+								{
+									Satoshis: 1,
+								},
+							}},
+						PathIndex: nil,
 					},
 				},
 				ProcessedTxData: TxData{
-					Transaction: &bt.Tx{},
+					Transaction: &bt.Tx{
+						Version:  2,
+						LockTime: 0,
+						Inputs: []*bt.Input{
+							{
+								PreviousTxSatoshis: 0,
+								PreviousTxOutIndex: 0,
+								SequenceNumber:     4294967295,
+								PreviousTxScript:   nil,
+							},
+						},
+						Outputs: []*bt.Output{
+							{
+								Satoshis: 1,
+							},
+						}},
 				},
 			},
-			expectedCMPForTheOldestInput: false,
+			pathIndexForTheOldestInput: nil,
 		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// given
+			beef := tc.hexStream
+
+			// when
+			decodedBEEF, err := DecodeBEEF(beef)
+
+			// then
+			assert.Equal(t, tc.expectedError, err, "expected error %v, but got %v", tc.expectedError, err)
+
+			// only if there is no error go through the rest of the assertions
+			assert.Equal(t, len(tc.expectedDecodedBEEF.InputsTxData), len(decodedBEEF.InputsTxData), "expected %v inputs, but got %v", len(tc.expectedDecodedBEEF.InputsTxData), len(decodedBEEF.InputsTxData))
+			assert.Equal(t, len(tc.expectedDecodedBEEF.CMPSlice), len(decodedBEEF.CMPSlice), "expected %v CMPs, but got %v", len(tc.expectedDecodedBEEF.CMPSlice), len(decodedBEEF.CMPSlice))
+			assert.NotNil(t, decodedBEEF.ProcessedTxData.Transaction, "expected original transaction to be not nil")
+
+			assert.Equal(t, tc.expectedDecodedBEEF.InputsTxData[0].PathIndex, decodedBEEF.InputsTxData[0].PathIndex, "expected path index for the oldest input to be %v, but got %v", tc.expectedDecodedBEEF.InputsTxData[0].PathIndex, decodedBEEF.InputsTxData[0].PathIndex)
+		})
+	}
+}
+
+func TestDecodeBEEF_DecodeBEEF_HandlingErrors(t *testing.T) {
+	testCases := []struct {
+		name                         string
+		hexStream                    string
+		expectedDecodedBEEF          *DecodedBEEF
+		expectedCMPForTheOldestInput bool
+		expectedError                error
+	}{
 		{
 			name:                         "too short hex stream",
 			hexStream:                    "001",
@@ -141,16 +247,9 @@ func TestDecodeBEEF_DecodeBEEF(t *testing.T) {
 			// then
 			assert.Equal(t, tc.expectedError, err, "expected error %v, but got %v", tc.expectedError, err)
 
-			// only if there is no error go through the rest of the assertions
-			if tc.expectedError == nil {
+			if tc.expectedDecodedBEEF != nil {
 				assert.Equal(t, len(tc.expectedDecodedBEEF.InputsTxData), len(decodedBEEF.InputsTxData), "expected %v inputs, but got %v", len(tc.expectedDecodedBEEF.InputsTxData), len(decodedBEEF.InputsTxData))
 				assert.Equal(t, len(tc.expectedDecodedBEEF.CMPSlice), len(decodedBEEF.CMPSlice), "expected %v CMPs, but got %v", len(tc.expectedDecodedBEEF.CMPSlice), len(decodedBEEF.CMPSlice))
-
-				assert.NotNil(t, decodedBEEF.ProcessedTxData.Transaction, "expected original transaction to be not nil")
-
-				if tc.expectedCMPForTheOldestInput {
-					assert.NotNil(t, tc.expectedDecodedBEEF.InputsTxData[0].PathIndex, "expected %v, but got %v", "expected PathIndex for oldest input to be not nil")
-				}
 			}
 		})
 	}
