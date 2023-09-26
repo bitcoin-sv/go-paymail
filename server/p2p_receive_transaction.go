@@ -7,6 +7,13 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
+type p2pPayloadFormat uint
+
+const (
+	basicP2pPayload p2pPayloadFormat = iota
+	beefP2pPayload
+)
+
 /*
 Incoming Data Object Example:
 {
@@ -34,7 +41,7 @@ func (c *Configuration) p2pReceiveTx(w http.ResponseWriter, req *http.Request, _
 	}
 
 	if len(requestPayload.Hex) == 0 {
-		panic("empty hex after parsing!!")
+		panic("empty hex after parsing!")
 	}
 
 	var response *paymail.P2PTransactionPayload
@@ -96,10 +103,3 @@ func (c *Configuration) p2pReceiveBeefTx(w http.ResponseWriter, req *http.Reques
 
 	writeJsonResponse(w, http.StatusOK, response)
 }
-
-type p2pPayloadFormat uint
-
-const (
-	basicP2pPayload p2pPayloadFormat = iota
-	beefP2pPayload
-)
