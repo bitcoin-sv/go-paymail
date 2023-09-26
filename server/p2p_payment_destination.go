@@ -47,7 +47,7 @@ func (c *Configuration) p2pDestination(w http.ResponseWriter, req *http.Request,
 
 	// Did we get some satoshis?
 	if paymentRequest.Satoshis == 0 {
-		ErrorResponse(w, ErrorMissingSatoshis, "missing parameter: satoshis", http.StatusBadRequest)
+		ErrorResponse(w, ErrorMissingField, "missing parameter: satoshis", http.StatusBadRequest)
 		return
 	}
 
