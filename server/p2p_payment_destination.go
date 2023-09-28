@@ -1,8 +1,8 @@
 package server
 
 import (
+	"encoding/json"
 	"net/http"
-	"strconv"
 
 	"github.com/bitcoin-sv/go-paymail"
 	"github.com/julienschmidt/httprouter"
@@ -14,15 +14,15 @@ Incoming Data Object Example:
   "satoshis": 1000100,
 }
 */
+type p2pDestinationRequestBody struct {
+	Satoshis uint64 `json:"satoshis,omitempty"`
+}
 
 // p2pDestination will return an output script(s) for a destination (used with SendP2PTransaction)
 //
 // Specs: https://docs.moneybutton.com/docs/paymail-07-p2p-payment-destination.html
-func (c *Configuration) p2pDestination(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
-
-	// Get the params & paymail address submitted via URL request
-	params := req.URL.Query()
-	incomingPaymail := params.Get("paymailAddress")
+func (c *Configuration) p2pDestination(w http.ResponseWriter, req *http.Request, p httprouter.Params) {	
+	incomingPaymail := p.ByName("paymailAddress")
 
 	// Parse, sanitize and basic validation
 	alias, domain, paymailAddress := paymail.SanitizePaymail(incomingPaymail)
@@ -33,16 +33,16 @@ func (c *Configuration) p2pDestination(w http.ResponseWriter, req *http.Request,
 		ErrorResponse(w, ErrorUnknownDomain, "domain unknown: "+domain, http.StatusBadRequest)
 		return
 	}
-
-	satoshis, err := strconv.ParseUint(params.Get("satoshis"), 10, 64)
-	if err != nil {
-		ErrorResponse(w, ErrorInvalidParameter, "invalid satoshis: "+params.Get("satoshis"), http.StatusBadRequest)
+	var b p2pDestinationRequestBody
+	err := json.NewDecoder(req.Body).Decode(&b)
+    if err != nil {
+        ErrorResponse(w, ErrorInvalidParameter, "invalid satoshis: ", http.StatusBadRequest)
 		return
-	}
+    }
 
 	// Start the PaymentRequest
 	paymentRequest := &paymail.PaymentRequest{
-		Satoshis: satoshis,
+		Satoshis: b.Satoshis,
 	}
 
 	// Did we get some satoshis?
