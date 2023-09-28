@@ -1,10 +1,11 @@
 package paymail
 
 import (
+	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"fmt"
-
+	"github.com/libsv/go-bc"
 	"github.com/libsv/go-bt/v2"
 )
 
@@ -37,6 +38,189 @@ type DecodedBEEF struct {
 	CMPSlice        CMPSlice
 	InputsTxData    []TxData
 	ProcessedTxData TxData
+}
+
+func (dBeef *DecodedBEEF) GetMerkleRoots() ([]string, error) {
+	var merkleRoots []string
+	for _, cmp := range dBeef.CMPSlice {
+		fmt.Println("<----   CMP   ---->")
+		fmt.Println(cmp)
+		partialMerkleRoots, err := cmp.CalculateMerkleRoots()
+		if err != nil {
+			return nil, err
+		}
+		merkleRoots = append(merkleRoots, partialMerkleRoots...)
+	}
+	return merkleRoots, nil
+}
+
+func (cmp *CompoundMerklePath) CalculateMerkleRoots() ([]string, error) {
+	merkleRoots := make([]string, 0)
+	cmpCopy := *cmp
+
+	// Get first layer
+	for tx, offset := range cmpCopy[len(cmpCopy)-1] {
+		fmt.Println("<--- Offset:  ", offset, "<--- TX:  ", tx)
+		// Get leaf
+		// Calculate merkle root for one tx
+		fmt.Println("Calculate merkle root for one tx")
+		merkleRoot, err := calculateMerkleRoot(tx, offset, cmpCopy)
+		merkleRoot2, err := calculateMerkleRoot2(tx, offset, cmpCopy)
+		merkleRoot3, err := calculateMerkleRoot3(tx, offset, cmpCopy)
+		fmt.Println("merkleRoot: ", merkleRoot)
+		fmt.Println("merkleRoot2: ", merkleRoot2)
+		fmt.Println("merkleRoot3: ", merkleRoot3)
+		if err != nil {
+			return nil, err
+		}
+		merkleRoots = append(merkleRoots, merkleRoot)
+		merkleRoots = append(merkleRoots, merkleRoot2)
+		merkleRoots = append(merkleRoots, merkleRoot3)
+
+	}
+	return merkleRoots, nil
+}
+
+func calculateMerkleRoot(baseTx string, offset uint64, cmp []map[string]uint64) (string, error) {
+	fmt.Println("<------------------")
+	fmt.Println("<------------------")
+	fmt.Println("<------------------ CALCULATE MERKLE ROOT")
+	// Iterate through layers
+	for i := len(cmp) - 1; i >= 0; i-- {
+		var leftNode, rightNode string
+		// Get pair tx for given tx
+		fmt.Println("Get pair tx for given tx")
+		fmt.Println("tx: ", baseTx)
+
+		newOffset := offset - 1
+		if offset%2 == 0 {
+			newOffset = offset + 1
+		}
+		tx2 := keyByValue(cmp[i], newOffset)
+		if tx2 == nil {
+			fmt.Println("could not find pair")
+			return "", errors.New("could not find pair")
+		}
+		fmt.Println("tx2: ", *tx2)
+
+		if newOffset > offset {
+			leftNode = baseTx
+			rightNode = *tx2
+		} else {
+			leftNode = *tx2
+			rightNode = baseTx
+		}
+
+		fmt.Println("leftNode: ", leftNode)
+		fmt.Println("rightNode: ", rightNode)
+
+		str, err := bc.MerkleTreeParentStr(leftNode, rightNode)
+		if err != nil {
+			fmt.Println("error: ", err)
+			return "", err
+		}
+		baseTx = str
+		fmt.Println("New hash: ", baseTx)
+
+		// Reduce offset
+		offset = offset / 2
+		fmt.Println("New offset: ", offset)
+	}
+
+	fmt.Println("Final hash: ", baseTx)
+
+	return baseTx, nil
+}
+
+func calculateMerkleRoot2(baseTx string, baseOffset uint64, cmp []map[string]uint64) (string, error) {
+	fmt.Println("<------------------")
+	fmt.Println("<------------------")
+	fmt.Println("<------------------ CALCULATE MERKLE ROOT 2")
+	// Iterate through layers
+	branches := make([]string, 0)
+	offset := baseOffset
+	for i := len(cmp) - 1; i >= 0; i-- {
+		newOffset := offset - 1
+		if offset%2 == 0 {
+			newOffset = offset + 1
+		}
+		tx2 := keyByValue(cmp[i], newOffset)
+		if tx2 == nil {
+			fmt.Println("could not find pair")
+			return "", errors.New("could not find pair")
+		}
+		fmt.Println("tx2: ", *tx2)
+		branches = append(branches, *tx2)
+
+		// Reduce offset
+		offset = offset / 2
+		fmt.Println("New offset: ", offset)
+	}
+
+	merkleRoot, err := bc.MerkleRootFromBranches(baseTx, int(baseOffset), branches)
+	if err != nil {
+		fmt.Println("error: ", err)
+		return "", err
+	}
+
+	fmt.Println("Final hash: ", baseTx)
+
+	return merkleRoot, nil
+}
+
+func calculateMerkleRoot3(baseTx string, offset uint64, cmp []map[string]uint64) (string, error) {
+	fmt.Println("<------------------")
+	fmt.Println("<------------------")
+	fmt.Println("<------------------ CALCULATE MERKLE ROOT 3")
+	// Iterate through layers
+	for i := len(cmp) - 1; i >= 0; i-- {
+		var leftNode, rightNode string
+		// Get pair tx for given tx
+		fmt.Println("Get pair tx for given tx")
+		fmt.Println("tx: ", baseTx)
+
+		newOffset := offset - 1
+		if offset%2 == 0 {
+			newOffset = offset + 1
+		}
+		tx2 := keyByValue(cmp[i], newOffset)
+		if tx2 == nil {
+			fmt.Println("could not find pair")
+			return "", errors.New("could not find pair")
+		}
+		fmt.Println("tx2: ", *tx2)
+
+		if newOffset > offset {
+			leftNode = baseTx
+			rightNode = *tx2
+		} else {
+			leftNode = *tx2
+			rightNode = baseTx
+		}
+		fmt.Println("leftNode: ", leftNode)
+		fmt.Println("rightNode: ", rightNode)
+
+		hashBytes := sha256.Sum256([]byte(leftNode + rightNode))
+		baseTx = fmt.Sprintf("%x", hashBytes)
+		fmt.Println("New hash: ", baseTx)
+
+		// Reduce offset
+		offset = offset / 2
+		fmt.Println("New offset: ", offset)
+	}
+
+	fmt.Println("Final hash: ", baseTx)
+
+	return baseTx, nil
+}
+
+func keyByValue(m map[string]uint64, value uint64) *string {
+	for k, v := range m {
+		if value == v {
+			return &k
+		}
+	}
+	return nil
 }
 
 func DecodeBEEF(beefHex string) (*DecodedBEEF, error) {

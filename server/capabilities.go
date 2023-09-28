@@ -31,7 +31,7 @@ func P2PCapabilities(bsvAliasVersion string, senderValidation bool) *paymail.Cap
 
 // BeefCapabilities will add beef capabilities to given ones
 func BeefCapabilities(c *paymail.CapabilitiesPayload) *paymail.CapabilitiesPayload {
-	c.Capabilities[paymail.BRFCBeefTransaction] = "/receive-beef-transaction/{alias}@{domain.tld}"
+	c.Capabilities[paymail.BRFCBeefTransaction] = "/beef/{alias}@{domain.tld}"
 	return c
 }
 
