@@ -10,11 +10,9 @@ import (
 // showPKI will return the public key information for the corresponding paymail address
 //
 // Specs: http://bsvalias.org/03-public-key-infrastructure.html
-func (c *Configuration) showPKI(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
+func (c *Configuration) showPKI(w http.ResponseWriter, req *http.Request, p httprouter.Params) {
 
-	// Get the params & paymail address submitted via URL request
-	params := req.URL.Query()
-	incomingPaymail := params.Get("paymailAddress")
+	incomingPaymail := p.ByName("paymailAddress")
 
 	// Parse, sanitize and basic validation
 	alias, domain, address := paymail.SanitizePaymail(incomingPaymail)

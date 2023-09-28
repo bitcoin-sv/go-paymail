@@ -31,10 +31,10 @@ Incoming Data Object Example:
 // p2pReceiveTx will receive a P2P transaction (from previous request: P2P Payment Destination)
 //
 // Specs: https://docs.moneybutton.com/docs/paymail-06-p2p-transactions.html
-func (c *Configuration) p2pReceiveTx(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
+func (c *Configuration) p2pReceiveTx(w http.ResponseWriter, req *http.Request, p httprouter.Params) {
 	p2pFormat := basicP2pPayload
 
-	requestPayload, _, md, vErr := processP2pReceiveTxRequest(c, req, p2pFormat)
+	requestPayload, _, md, vErr := processP2pReceiveTxRequest(c, req, p, p2pFormat)
 	if vErr != nil {
 		ErrorResponse(w, vErr.code, vErr.msg, vErr.httpResponseCode)
 		return
@@ -70,10 +70,10 @@ Incoming Data Object Example:
 }
 */
 // p2pReceiveBeefTx will receive a P2P transaction in BEEF format
-func (c *Configuration) p2pReceiveBeefTx(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
+func (c *Configuration) p2pReceiveBeefTx(w http.ResponseWriter, req *http.Request, p httprouter.Params) {
 	p2pFormat := beefP2pPayload
 
-	requestPayload, beefData, md, vErr := processP2pReceiveTxRequest(c, req, p2pFormat)
+	requestPayload, beefData, md, vErr := processP2pReceiveTxRequest(c, req, p, p2pFormat)
 	if vErr != nil {
 		ErrorResponse(w, vErr.code, vErr.msg, vErr.httpResponseCode)
 		return

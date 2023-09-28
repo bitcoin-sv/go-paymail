@@ -2,17 +2,18 @@ package server
 
 import (
 	"encoding/json"
-	"net/url"
+	"net/http"
 
 	"github.com/bitcoin-sv/go-paymail"
+	"github.com/julienschmidt/httprouter"
 )
 
 type parseError struct {
 	code, msg string
 }
 
-func parseP2pReceiveTxRequest(c *Configuration, parms url.Values, format p2pPayloadFormat) (*p2pReceiveTxReqPayload, *parseError) {
-	incomingPaymail := parms.Get("paymailAddress")
+func parseP2pReceiveTxRequest(c *Configuration, req *http.Request, params httprouter.Params, format p2pPayloadFormat) (*p2pReceiveTxReqPayload, *parseError) {
+	incomingPaymail := params.ByName("paymailAddress")
 
 	alias, domain, paymailAddress := paymail.SanitizePaymail(incomingPaymail)
 	if len(paymailAddress) == 0 {
@@ -27,44 +28,19 @@ func parseP2pReceiveTxRequest(c *Configuration, parms url.Values, format p2pPayl
 		incomingPaymailDomain: domain,
 	}
 
-	requestTx := paymail.P2PTransaction{}
-
-	requestTx.Reference = parms.Get("reference")
-	if len(requestTx.Reference) == 0 {
-		return nil, &parseError{ErrorMissingField, "missing parameter: reference"}
+	var p2pTransaction paymail.P2PTransaction
+	err := json.NewDecoder(req.Body).Decode(&p2pTransaction)
+	if err != nil {
+		return nil, &parseError{ErrorInvalidParameter, "invalid request"}
 	}
-
-	if format == basicP2pPayload {
-		requestTx.Hex = parms.Get("hex")
-		if len(requestTx.Hex) == 0 {
-			return nil, &parseError{ErrorMissingField, "missing parameter: hex"}
-		}
-	} else if format == beefP2pPayload {
-		requestTx.Beef = parms.Get("beef")
-		if len(requestTx.Beef) == 0 {
-			return nil, &parseError{ErrorMissingField, "missing parameter: beef"}
-		}
-	}
-
-	requestTx.MetaData = parseMetadata(parms.Get("metadata"))
-	vErr := validateMetadata(c, requestTx.MetaData)
+	vErr := validateMetadata(c, p2pTransaction.MetaData)
 
 	if vErr != nil {
 		return nil, vErr
 	}
 
-	requestData.P2PTransaction = &requestTx
+	requestData.P2PTransaction = &p2pTransaction
 	return &requestData, nil
-}
-
-func parseMetadata(metadata string) *paymail.P2PMetaData {
-	result := paymail.P2PMetaData{}
-
-	if len(metadata) > 0 {
-		_ = json.Unmarshal([]byte(metadata), &result) // ignore metadata deserialization errors
-	}
-
-	return &result
 }
 
 func validateMetadata(c *Configuration, metadata *paymail.P2PMetaData) *parseError {

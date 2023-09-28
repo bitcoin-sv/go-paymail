@@ -10,11 +10,8 @@ import (
 // publicProfile will return the public profile for the corresponding paymail address
 //
 // Specs: https://github.com/bitcoin-sv-specs/brfc-paymail/pull/7/files
-func (c *Configuration) publicProfile(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
-
-	// Get the params & paymail address submitted via URL request
-	params := req.URL.Query()
-	incomingPaymail := params.Get("paymailAddress")
+func (c *Configuration) publicProfile(w http.ResponseWriter, req *http.Request, p httprouter.Params) {
+	incomingPaymail := p.ByName("paymailAddress")
 
 	// Parse, sanitize and basic validation
 	alias, domain, address := paymail.SanitizePaymail(incomingPaymail)

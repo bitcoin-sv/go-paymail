@@ -1,9 +1,9 @@
 package server
 
 import (
+	"encoding/json"
 	"net"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/bitcoin-sv/go-paymail"
@@ -28,11 +28,8 @@ Incoming Data Object Example:
 // resolveAddress will return the payment destination (bitcoin address) for the corresponding paymail address
 //
 // Specs: http://bsvalias.org/04-01-basic-address-resolution.html
-func (c *Configuration) resolveAddress(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
-
-	// Get the params & paymail address submitted via URL request
-	params := req.URL.Query()
-	incomingPaymail := params.Get("paymailAddress")
+func (c *Configuration) resolveAddress(w http.ResponseWriter, req *http.Request, p httprouter.Params) {
+	incomingPaymail := p.ByName("paymailAddress")
 
 	// Parse, sanitize and basic validation
 	alias, domain, paymailAddress := paymail.SanitizePaymail(incomingPaymail)
@@ -44,20 +41,11 @@ func (c *Configuration) resolveAddress(w http.ResponseWriter, req *http.Request,
 		return
 	}
 
-	amount, err := strconv.ParseUint(params.Get("amount"), 10, 64)
+	var senderRequest paymail.SenderRequest
+	err := json.NewDecoder(req.Body).Decode(&senderRequest)
 	if err != nil {
-		ErrorResponse(w, ErrorInvalidParameter, "invalid amount: "+err.Error(), http.StatusBadRequest)
+		ErrorResponse(w, ErrorInvalidParameter, "invalid request body", http.StatusBadRequest)
 		return
-	}
-
-	// Start the SenderRequest
-	senderRequest := &paymail.SenderRequest{
-		Amount:       amount,
-		Dt:           params.Get("dt"),
-		Purpose:      params.Get("purpose"),
-		SenderHandle: params.Get("senderHandle"),
-		SenderName:   params.Get("senderName"),
-		Signature:    params.Get("signature"),
 	}
 
 	// Check for required fields
@@ -113,7 +101,7 @@ func (c *Configuration) resolveAddress(w http.ResponseWriter, req *http.Request,
 
 	// Create the metadata struct
 	md := CreateMetadata(req, alias, domain, "")
-	md.ResolveAddress = senderRequest
+	md.ResolveAddress = &senderRequest
 
 	// Get from the data layer
 	foundPaymail, err := c.actions.GetPaymailByAlias(req.Context(), alias, domain, md)
