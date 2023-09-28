@@ -11,12 +11,9 @@ import (
 // verifyPubKey will return a response if the pubkey matches the paymail given
 //
 // Specs: https://bsvalias.org/05-verify-public-key-owner.html
-func (c *Configuration) verifyPubKey(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
-
-	// Get the params submitted via URL request
-	params := req.URL.Query()
-	incomingPaymail := params.Get("paymailAddress")
-	incomingPubKey := params.Get("pubKey")
+func (c *Configuration) verifyPubKey(w http.ResponseWriter, req *http.Request, p httprouter.Params) {
+	incomingPaymail := p.ByName("paymailAddress")
+	incomingPubKey := p.ByName("pubKey")
 
 	// Parse, sanitize and basic validation
 	alias, domain, address := paymail.SanitizePaymail(incomingPaymail)

@@ -27,41 +27,22 @@ Incoming Data Object Example:
 // p2pReceiveTx will receive a P2P transaction (from previous request: P2P Payment Destination)
 //
 // Specs: https://docs.moneybutton.com/docs/paymail-06-p2p-transactions.html
-func (c *Configuration) p2pReceiveTx(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
-
-	// Get the params & paymail address submitted via URL request
-	parms := req.URL.Query()
-	hex := parms.Get("hex")
-	reference := parms.Get("reference")
-	metaDataString := parms.Get("metadata")
-	incomingPaymail := parms.Get("paymailAddress")
-
-	// Start the P2PTransaction
-	p2pTransaction := &paymail.P2PTransaction{
-		Hex:       hex,
-		MetaData:  &paymail.P2PMetaData{},
-		Reference: reference,
-	}
-
-	// Parse the metadata JSON into the P2PTransaction struct
-	if len(metaDataString) > 0 {
-		var metaData map[string]interface{}
-		err := json.Unmarshal([]byte(metaDataString), &metaData)
-		if err == nil {
-			p2pTransaction.MetaData.Note, _ = metaData["note"].(string)
-			p2pTransaction.MetaData.PubKey, _ = metaData["pubkey"].(string)
-			p2pTransaction.MetaData.Sender, _ = metaData["sender"].(string)
-			p2pTransaction.MetaData.Signature, _ = metaData["signature"].(string)
-		}
-	}
-
+func (c *Configuration) p2pReceiveTx(w http.ResponseWriter, req *http.Request, p httprouter.Params) {
+	incomingPaymail := p.ByName("paymailAddress")
 	// Parse, sanitize and basic validation
 	alias, domain, paymailAddress := paymail.SanitizePaymail(incomingPaymail)
 	if len(paymailAddress) == 0 {
-		ErrorResponse(w, ErrorInvalidParameter, "invalid paymail: "+incomingPaymail, http.StatusBadRequest)
+		ErrorResponse(w, ErrorInvalidParameter, "invalid paymail", http.StatusBadRequest)
 		return
 	} else if !c.IsAllowedDomain(domain) {
 		ErrorResponse(w, ErrorUnknownDomain, "domain unknown: "+domain, http.StatusBadRequest)
+		return
+	}
+
+	var p2pTransaction paymail.P2PTransaction
+	err := json.NewDecoder(req.Body).Decode(&p2pTransaction)
+	if err != nil {
+		ErrorResponse(w, ErrorInvalidParameter, "invalid request body", http.StatusBadRequest)
 		return
 	}
 
@@ -129,7 +110,7 @@ func (c *Configuration) p2pReceiveTx(w http.ResponseWriter, req *http.Request, _
 
 	// Record the transaction (verify, save, broadcast...)
 	if response, err = c.actions.RecordTransaction(
-		req.Context(), p2pTransaction, md,
+		req.Context(), &p2pTransaction, md,
 	); err != nil {
 		ErrorResponse(w, ErrorRecordingTx, err.Error(), http.StatusExpectationFailed)
 		return
