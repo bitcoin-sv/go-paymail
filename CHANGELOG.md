@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/bitcoin-sv/go-paymail/compare/v0.2.0...v0.2.1) (2023-09-28)
+
+
+### Bug Fixes
+
+* **BUX-242:** fix go-paymail routes ([#17](https://github.com/bitcoin-sv/go-paymail/issues/17)) ([8bb7077](https://github.com/bitcoin-sv/go-paymail/commit/8bb7077ff7092acc8f3eebcb24e78a0dac10097b))
+
 ## [0.2.0](https://github.com/bitcoin-sv/go-paymail/compare/v0.1.0...v0.2.0) (2023-09-25)
 
 
