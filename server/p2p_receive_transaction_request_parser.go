@@ -33,6 +33,18 @@ func parseP2pReceiveTxRequest(c *Configuration, req *http.Request, params httpro
 	if err != nil {
 		return nil, &parseError{ErrorInvalidParameter, "invalid request"}
 	}
+	if len(p2pTransaction.Reference) == 0 {
+		return nil, &parseError{ErrorMissingField, "missing parameter: reference"}
+	}
+	if format == basicP2pPayload {
+		if len(p2pTransaction.Hex) == 0 {
+			return nil, &parseError{ErrorMissingField, "missing parameter: hex"}
+		}
+	} else if format == beefP2pPayload {
+		if len(p2pTransaction.Beef) == 0 {
+			return nil, &parseError{ErrorMissingField, "missing parameter: beef"}
+		}
+	}
 	vErr := validateMetadata(c, p2pTransaction.MetaData)
 
 	if vErr != nil {

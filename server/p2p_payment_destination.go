@@ -15,7 +15,7 @@ Incoming Data Object Example:
 }
 */
 type p2pDestinationRequestBody struct {
-	Satoshis uint64 `json:"satoshis"`
+	Satoshis uint64 `json:"satoshis,omitempty"`
 }
 
 // p2pDestination will return an output script(s) for a destination (used with SendP2PTransaction)
