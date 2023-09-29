@@ -88,7 +88,7 @@ func (c *Configuration) p2pReceiveBeefTx(w http.ResponseWriter, req *http.Reques
 	}
 
 	var err error
-	if err = c.actions.ExecuteSimplifiedPaymentVerification(req.Context(), beefData); err != nil {
+	if err = ExecuteSimplifiedPaymentVerification(req.Context(), beefData); err != nil {
 		ErrorResponse(w, ErrorSimplifiedPaymentVerification, err.Error(), http.StatusExpectationFailed)
 		return
 	}
