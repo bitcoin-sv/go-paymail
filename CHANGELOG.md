@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/bitcoin-sv/go-paymail/compare/v0.2.1...v0.3.0) (2023-09-29)
+
+
+### Features
+
+* delete ExecuteSimplifiedPaymentVerification from  PaymailServiceProvider ([#20](https://github.com/bitcoin-sv/go-paymail/issues/20)) ([14e4b69](https://github.com/bitcoin-sv/go-paymail/commit/14e4b6901537d5e807fed37c8f84f54bebe9d873))
+
 ## [0.2.1](https://github.com/bitcoin-sv/go-paymail/compare/v0.2.0...v0.2.1) (2023-09-28)
 
 
