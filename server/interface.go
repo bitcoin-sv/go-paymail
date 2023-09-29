@@ -33,9 +33,4 @@ type PaymailServiceProvider interface {
 		p2pTx *paymail.P2PTransaction,
 		metaData *RequestMetadata,
 	) (*paymail.P2PTransactionPayload, error)
-
-	ExecuteSimplifiedPaymentVerification(
-		ctx context.Context,
-		beedData *paymail.DecodedBEEF,
-	) error
 }
