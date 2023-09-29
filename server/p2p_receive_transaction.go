@@ -1,9 +1,6 @@
 package server
 
 import (
-	"fmt"
-	"github.com/libsv/go-bt/v2"
-	"github.com/libsv/go-bt/v2/bscript/interpreter"
 	"net/http"
 
 	"github.com/bitcoin-sv/go-paymail"
@@ -76,7 +73,7 @@ Incoming Data Object Example:
 func (c *Configuration) p2pReceiveBeefTx(w http.ResponseWriter, req *http.Request, p httprouter.Params) {
 	p2pFormat := beefP2pPayload
 
-	requestPayload, beefData, md, vErr := processP2pReceiveTxRequest(c, req, p, p2pFormat)
+	requestPayload, dBeef, md, vErr := processP2pReceiveTxRequest(c, req, p, p2pFormat)
 	if vErr != nil {
 		ErrorResponse(w, vErr.code, vErr.msg, vErr.httpResponseCode)
 		return
@@ -86,97 +83,32 @@ func (c *Configuration) p2pReceiveBeefTx(w http.ResponseWriter, req *http.Reques
 		panic("empty hex after parsing!")
 	}
 
-	if beefData == nil {
+	if dBeef == nil {
 		panic("empty beef after parsing!")
 	}
 
-	var err error
-	if err = ExecuteSimplifiedPaymentVerification(req.Context(), beefData); err != nil {
+	err := dBeef.ExecuteSimplifiedPaymentVerification()
+	if err != nil {
 		ErrorResponse(w, ErrorSimplifiedPaymentVerification, err.Error(), http.StatusExpectationFailed)
-		//var err error
-		//if err = c.actions.ExecuteSimplifiedPaymentVerification(req.Context(), beefData); err != nil {
-		//	ErrorResponse(w, ErrorSimplifiedPaymentVerification, err.Error(), http.StatusExpectationFailed)
-		//	return
-		//}
-
-		// verify merkle proofs
-		merkleRoots, err := beefData.GetMerkleRoots()
-		fmt.Println("<------- Merkle Roots")
-		fmt.Println(merkleRoots)
-
-		err = c.actions.VerifyMerkleRoots(req.Context(), merkleRoots)
-		if err != nil {
-			ErrorResponse(w, ErrorInvalidParameter, "invalid parameter: merkle proofs", http.StatusBadRequest)
-			return
-		}
-
-		// TODO: get values from BEEF decode
-		//inputSatoshis := 100000
-		//outputSatoshis := 100000
-
-		//if inputSatoshis <= outputSatoshis {
-		//	ErrorResponse(w, ErrorInvalidParameter, "invalid parameter: input satoshis has to be larger than output satoshis", http.StatusBadRequest)
-		//	return
-		//}
-
-		// TODO: check scripts pair
-		//verifyScripts(nil, nil)
-
-		var response *paymail.P2PTransactionPayload
-		if response, err = c.actions.RecordTransaction(
-			req.Context(), requestPayload.P2PTransaction, md,
-		); err != nil {
-			ErrorResponse(w, ErrorRecordingTx, err.Error(), http.StatusExpectationFailed)
-			return
-		}
-
-		writeJsonResponse(w, http.StatusOK, response)
+		return
 	}
-}
 
-func verifyScripts(tx, prevTx *bt.Tx) bool {
+	// verify merkle proofs
+	merkleRoots, err := dBeef.GetMerkleRoots()
 
-	//bscript.NewFromHexString(firstTx)
-	//bscript.NewFromHexString(secondTX)
-	//
-	//tx, err := bt.NewTxFromString(firstTx)
-	//if err != nil {
-	//	fmt.Println(err)
-	//	return
-	//}
-	//
-	//prevTx, err := bt.NewTxFromString(secondTX)
-	//if err != nil {
-	//	fmt.Println(err)
-	//	return
-	//}
-
-	inputIdx := 0
-	input := tx.InputIdx(inputIdx)
-	prevOutput := prevTx.OutputIdx(int(input.PreviousTxOutIndex))
-
-	inputASM, err := input.UnlockingScript.ToASM()
+	err = c.actions.VerifyMerkleRoots(req.Context(), merkleRoots)
 	if err != nil {
-		fmt.Println(err)
-		return false
+		ErrorResponse(w, ErrorInvalidParameter, "invalid parameter: merkle proofs", http.StatusBadRequest)
+		return
 	}
 
-	outputASM, err := prevOutput.LockingScript.ToASM()
-	if err != nil {
-		fmt.Println(err)
-		return false
-	}
-
-	fmt.Println(inputASM)
-	fmt.Println(outputASM)
-
-	if err := interpreter.NewEngine().Execute(
-		interpreter.WithTx(tx, inputIdx, prevOutput),
-		interpreter.WithForkID(),
-		interpreter.WithAfterGenesis(),
+	var response *paymail.P2PTransactionPayload
+	if response, err = c.actions.RecordTransaction(
+		req.Context(), requestPayload.P2PTransaction, md,
 	); err != nil {
-		fmt.Println(err)
-		return false
+		ErrorResponse(w, ErrorRecordingTx, err.Error(), http.StatusExpectationFailed)
+		return
 	}
-	return true
+
+	writeJsonResponse(w, http.StatusOK, response)
 }

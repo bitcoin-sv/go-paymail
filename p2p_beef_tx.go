@@ -1,12 +1,12 @@
 package paymail
 
 import (
-	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"fmt"
 	"github.com/libsv/go-bc"
 	"github.com/libsv/go-bt/v2"
+	"github.com/libsv/go-bt/v2/bscript/interpreter"
 )
 
 type CompoundMerklePath []map[string]uint64
@@ -54,44 +54,96 @@ func (dBeef *DecodedBEEF) GetMerkleRoots() ([]string, error) {
 	return merkleRoots, nil
 }
 
+// ExecuteSimplifiedPaymentVerification executes the SPV for decoded BEEF tx
+func (dBeef *DecodedBEEF) ExecuteSimplifiedPaymentVerification() error {
+	if len(dBeef.ProcessedTxData.Transaction.Inputs) == 0 {
+		return errors.New("invalid input, no inputs")
+	}
+
+	if len(dBeef.ProcessedTxData.Transaction.Outputs) == 0 {
+		return errors.New("invalid output, no outputs")
+	}
+
+	// check locktime and sequence
+	if dBeef.ProcessedTxData.Transaction.LockTime == 0 {
+		for _, input := range dBeef.ProcessedTxData.Transaction.Inputs {
+			if input.SequenceNumber != 0xffffffff {
+				return errors.New("invalid sequence")
+			}
+		}
+	} else {
+		return errors.New("invalid locktime or sequence")
+	}
+
+	// check inputs and outputs
+	inputSum, outputSum := uint64(0), uint64(0)
+	for _, input := range dBeef.ProcessedTxData.Transaction.Inputs {
+		inputSum += input.PreviousTxSatoshis
+	}
+	for _, output := range dBeef.ProcessedTxData.Transaction.Outputs {
+		inputSum += output.Satoshis
+	}
+
+	// Check if the output sum is not higher than the input sum
+	if inputSum <= outputSum {
+		return errors.New("invalid input and output sum, outputs can not be larger than inputs")
+	}
+
+	// Verify scripts
+	for _, input := range dBeef.ProcessedTxData.Transaction.Inputs {
+		txId := input.PreviousTxID()
+		for j, input2 := range dBeef.InputsTxData {
+			if input2.Transaction.TxID() == string(txId) {
+				result := verifyScripts(dBeef.ProcessedTxData.Transaction, input2.Transaction, j)
+				if !result {
+					return errors.New("invalid script")
+				}
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
 func (cmp *CompoundMerklePath) CalculateMerkleRoots() ([]string, error) {
 	merkleRoots := make([]string, 0)
 	cmpCopy := *cmp
 
-	// Get first layer
+	// Iterate through first layer
 	for tx, offset := range cmpCopy[len(cmpCopy)-1] {
-		fmt.Println("<--- Offset:  ", offset, "<--- TX:  ", tx)
-		// Get leaf
 		// Calculate merkle root for one tx
-		fmt.Println("Calculate merkle root for one tx")
 		merkleRoot, err := calculateMerkleRoot(tx, offset, cmpCopy)
-		merkleRoot2, err := calculateMerkleRoot2(tx, offset, cmpCopy)
-		merkleRoot3, err := calculateMerkleRoot3(tx, offset, cmpCopy)
-		fmt.Println("merkleRoot: ", merkleRoot)
-		fmt.Println("merkleRoot2: ", merkleRoot2)
-		fmt.Println("merkleRoot3: ", merkleRoot3)
 		if err != nil {
 			return nil, err
 		}
 		merkleRoots = append(merkleRoots, merkleRoot)
-		merkleRoots = append(merkleRoots, merkleRoot2)
-		merkleRoots = append(merkleRoots, merkleRoot3)
 
 	}
 	return merkleRoots, nil
 }
 
+// Verify locking and unlocking scripts pair
+func verifyScripts(tx, prevTx *bt.Tx, inputIdx int) bool {
+	input := tx.InputIdx(inputIdx)
+	prevOutput := prevTx.OutputIdx(int(input.PreviousTxOutIndex))
+
+	if err := interpreter.NewEngine().Execute(
+		interpreter.WithTx(tx, inputIdx, prevOutput),
+		interpreter.WithForkID(),
+		interpreter.WithAfterGenesis(),
+	); err != nil {
+		fmt.Println(err)
+		return false
+	}
+	return true
+}
+
 func calculateMerkleRoot(baseTx string, offset uint64, cmp []map[string]uint64) (string, error) {
-	fmt.Println("<------------------")
-	fmt.Println("<------------------")
-	fmt.Println("<------------------ CALCULATE MERKLE ROOT")
 	// Iterate through layers
 	for i := len(cmp) - 1; i >= 0; i-- {
 		var leftNode, rightNode string
 		// Get pair tx for given tx
-		fmt.Println("Get pair tx for given tx")
-		fmt.Println("tx: ", baseTx)
-
 		newOffset := offset - 1
 		if offset%2 == 0 {
 			newOffset = offset + 1
@@ -101,8 +153,8 @@ func calculateMerkleRoot(baseTx string, offset uint64, cmp []map[string]uint64) 
 			fmt.Println("could not find pair")
 			return "", errors.New("could not find pair")
 		}
-		fmt.Println("tx2: ", *tx2)
 
+		// Define nodes
 		if newOffset > offset {
 			leftNode = baseTx
 			rightNode = *tx2
@@ -111,105 +163,16 @@ func calculateMerkleRoot(baseTx string, offset uint64, cmp []map[string]uint64) 
 			rightNode = baseTx
 		}
 
-		fmt.Println("leftNode: ", leftNode)
-		fmt.Println("rightNode: ", rightNode)
-
+		// Calculate new merkle tree parent
 		str, err := bc.MerkleTreeParentStr(leftNode, rightNode)
 		if err != nil {
-			fmt.Println("error: ", err)
 			return "", err
 		}
 		baseTx = str
-		fmt.Println("New hash: ", baseTx)
 
 		// Reduce offset
 		offset = offset / 2
-		fmt.Println("New offset: ", offset)
 	}
-
-	fmt.Println("Final hash: ", baseTx)
-
-	return baseTx, nil
-}
-
-func calculateMerkleRoot2(baseTx string, baseOffset uint64, cmp []map[string]uint64) (string, error) {
-	fmt.Println("<------------------")
-	fmt.Println("<------------------")
-	fmt.Println("<------------------ CALCULATE MERKLE ROOT 2")
-	// Iterate through layers
-	branches := make([]string, 0)
-	offset := baseOffset
-	for i := len(cmp) - 1; i >= 0; i-- {
-		newOffset := offset - 1
-		if offset%2 == 0 {
-			newOffset = offset + 1
-		}
-		tx2 := keyByValue(cmp[i], newOffset)
-		if tx2 == nil {
-			fmt.Println("could not find pair")
-			return "", errors.New("could not find pair")
-		}
-		fmt.Println("tx2: ", *tx2)
-		branches = append(branches, *tx2)
-
-		// Reduce offset
-		offset = offset / 2
-		fmt.Println("New offset: ", offset)
-	}
-
-	merkleRoot, err := bc.MerkleRootFromBranches(baseTx, int(baseOffset), branches)
-	if err != nil {
-		fmt.Println("error: ", err)
-		return "", err
-	}
-
-	fmt.Println("Final hash: ", baseTx)
-
-	return merkleRoot, nil
-}
-
-func calculateMerkleRoot3(baseTx string, offset uint64, cmp []map[string]uint64) (string, error) {
-	fmt.Println("<------------------")
-	fmt.Println("<------------------")
-	fmt.Println("<------------------ CALCULATE MERKLE ROOT 3")
-	// Iterate through layers
-	for i := len(cmp) - 1; i >= 0; i-- {
-		var leftNode, rightNode string
-		// Get pair tx for given tx
-		fmt.Println("Get pair tx for given tx")
-		fmt.Println("tx: ", baseTx)
-
-		newOffset := offset - 1
-		if offset%2 == 0 {
-			newOffset = offset + 1
-		}
-		tx2 := keyByValue(cmp[i], newOffset)
-		if tx2 == nil {
-			fmt.Println("could not find pair")
-			return "", errors.New("could not find pair")
-		}
-		fmt.Println("tx2: ", *tx2)
-
-		if newOffset > offset {
-			leftNode = baseTx
-			rightNode = *tx2
-		} else {
-			leftNode = *tx2
-			rightNode = baseTx
-		}
-		fmt.Println("leftNode: ", leftNode)
-		fmt.Println("rightNode: ", rightNode)
-
-		hashBytes := sha256.Sum256([]byte(leftNode + rightNode))
-		baseTx = fmt.Sprintf("%x", hashBytes)
-		fmt.Println("New hash: ", baseTx)
-
-		// Reduce offset
-		offset = offset / 2
-		fmt.Println("New offset: ", offset)
-	}
-
-	fmt.Println("Final hash: ", baseTx)
 
 	return baseTx, nil
 }

@@ -40,3 +40,17 @@ func (m *mockServiceProvider) RecordTransaction(_ context.Context,
 	// Record the tx into your datastore layer
 	return nil, nil
 }
+
+// ExecuteSimplifiedPaymentVerification is a mock implementation of this interface
+func (m *mockServiceProvider) ExecuteSimplifiedPaymentVerification(ctx context.Context,
+	beedData *paymail.DecodedBEEF) error {
+
+	return nil
+}
+
+// ExecuteSimplifiedPaymentVerification is a mock implementation of this interface
+func (m *mockServiceProvider) VerifyMerkleRoots(ctx context.Context, merkleProofs []string) error {
+
+	// Verify the merkle roots
+	return nil
+}
