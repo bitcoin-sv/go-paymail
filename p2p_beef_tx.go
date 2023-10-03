@@ -43,8 +43,6 @@ type DecodedBEEF struct {
 func (dBeef *DecodedBEEF) GetMerkleRoots() ([]string, error) {
 	var merkleRoots []string
 	for _, cmp := range dBeef.CMPSlice {
-		fmt.Println("<----   CMP   ---->")
-		fmt.Println(cmp)
 		partialMerkleRoots, err := cmp.CalculateMerkleRoots()
 		if err != nil {
 			return nil, err
@@ -81,7 +79,7 @@ func (dBeef *DecodedBEEF) ExecuteSimplifiedPaymentVerification() error {
 		inputSum += input.PreviousTxSatoshis
 	}
 	for _, output := range dBeef.ProcessedTxData.Transaction.Outputs {
-		inputSum += output.Satoshis
+		outputSum += output.Satoshis
 	}
 
 	// Check if the output sum is not higher than the input sum
