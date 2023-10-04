@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/bitcoin-sv/go-paymail/compare/v0.3.0...v0.4.0) (2023-10-04)
+
+
+### Features
+
+* adds new version of codeowner/codestandards/template files ([#24](https://github.com/bitcoin-sv/go-paymail/issues/24)) ([74f16e0](https://github.com/bitcoin-sv/go-paymail/commit/74f16e0d9c9f700a77181d32b2b925baf0d9d6b6))
+
 ## [0.3.0](https://github.com/bitcoin-sv/go-paymail/compare/v0.2.1...v0.3.0) (2023-09-29)
 
 
