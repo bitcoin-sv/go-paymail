@@ -75,8 +75,9 @@ func (dBeef *DecodedBEEF) ExecuteSimplifiedPaymentVerification() error {
 
 	// check inputs and outputs
 	inputSum, outputSum := uint64(0), uint64(0)
-	for _, input := range dBeef.ProcessedTxData.Transaction.Inputs {
-		inputSum += input.PreviousTxSatoshis
+	for i, input := range dBeef.ProcessedTxData.Transaction.Inputs {
+		input2 := dBeef.InputsTxData[i]
+		inputSum += input2.Transaction.Outputs[input.PreviousTxOutIndex].Satoshis
 	}
 	for _, output := range dBeef.ProcessedTxData.Transaction.Outputs {
 		outputSum += output.Satoshis
