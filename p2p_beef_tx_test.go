@@ -1,13 +1,24 @@
 package paymail
 
 import (
+	"context"
 	"errors"
+	"github.com/libsv/bitcoin-hc/transports/http/endpoints/api/merkleroots"
 	"github.com/stretchr/testify/require"
 	"testing"
 
 	"github.com/libsv/go-bt/v2"
 	"github.com/stretchr/testify/assert"
 )
+
+// Mock implementation of a service provider
+type mockServiceProvider struct{}
+
+// ExecuteSimplifiedPaymentVerification is a mock implementation of this interface
+func (m *mockServiceProvider) VerifyMerkleRoots(ctx context.Context, merkleProofs []string) (*merkleroots.MerkleRootsConfirmationsResponse, error) {
+	// Verify the merkle roots
+	return &merkleroots.MerkleRootsConfirmationsResponse{AllConfirmed: true}, nil
+}
 
 func TestDecodeBEEF_DecodeBEEF_HappyPaths(t *testing.T) {
 	testCases := []struct {
@@ -260,6 +271,6 @@ func TestDecodedBeef(t *testing.T) {
 	require.Nil(t, err)
 
 	t.Run("SPV on valid beef", func(t *testing.T) {
-		require.Nil(t, validDecodedBeef.ExecuteSimplifiedPaymentVerification())
+		require.Nil(t, validDecodedBeef.ExecuteSimplifiedPaymentVerification(new(mockServiceProvider)))
 	})
 }

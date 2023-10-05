@@ -1,9 +1,11 @@
 package paymail
 
 import (
+	"context"
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/libsv/bitcoin-hc/transports/http/endpoints/api/merkleroots"
 	"github.com/libsv/go-bc"
 	"github.com/libsv/go-bt/v2"
 	"github.com/libsv/go-bt/v2/bscript/interpreter"
@@ -12,6 +14,13 @@ import (
 type CompoundMerklePath []map[string]uint64
 
 type CMPSlice []CompoundMerklePath
+
+type MerkleRootVerifier interface {
+	VerifyMerkleRoots(
+		ctx context.Context,
+		merkleRoots []string,
+	) (*merkleroots.MerkleRootsConfirmationsResponse, error)
+}
 
 const (
 	BEEFMarkerPart1 = 0xBE
@@ -43,7 +52,7 @@ type DecodedBEEF struct {
 func (dBeef *DecodedBEEF) GetMerkleRoots() ([]string, error) {
 	var merkleRoots []string
 	for _, cmp := range dBeef.CMPSlice {
-		partialMerkleRoots, err := cmp.CalculateMerkleRoots()
+		partialMerkleRoots, err := cmp.calculateMerkleRoots()
 		if err != nil {
 			return nil, err
 		}
@@ -53,42 +62,72 @@ func (dBeef *DecodedBEEF) GetMerkleRoots() ([]string, error) {
 }
 
 // ExecuteSimplifiedPaymentVerification executes the SPV for decoded BEEF tx
-func (dBeef *DecodedBEEF) ExecuteSimplifiedPaymentVerification() error {
-	if len(dBeef.ProcessedTxData.Transaction.Inputs) == 0 {
-		return errors.New("invalid input, no inputs")
+func (dBeef *DecodedBEEF) ExecuteSimplifiedPaymentVerification(provider MerkleRootVerifier) error {
+	err := dBeef.satoshisInInputsGreaterThanZero()
+	if err != nil {
+		return err
 	}
 
+	err = dBeef.satoshisInOutputsGreaterThanZero()
+	if err != nil {
+		return err
+	}
+
+	err = dBeef.validateSatoshisSum()
+	if err != nil {
+		return err
+	}
+
+	err = dBeef.validateLockTime()
+	if err != nil {
+		return err
+	}
+
+	err = dBeef.validateScripts()
+	if err != nil {
+		return err
+	}
+
+	err = dBeef.verifyMerkleRoots(provider)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (dBeef *DecodedBEEF) satoshisInOutputsGreaterThanZero() error {
 	if len(dBeef.ProcessedTxData.Transaction.Outputs) == 0 {
 		return errors.New("invalid output, no outputs")
 	}
+	return nil
+}
 
-	// check locktime and sequence
-	if dBeef.ProcessedTxData.Transaction.LockTime == 0 {
-		for _, input := range dBeef.ProcessedTxData.Transaction.Inputs {
-			if input.SequenceNumber != 0xffffffff {
-				return errors.New("invalid sequence")
-			}
-		}
-	} else {
-		return errors.New("invalid locktime or sequence")
+func (dBeef *DecodedBEEF) satoshisInInputsGreaterThanZero() error {
+	if len(dBeef.ProcessedTxData.Transaction.Inputs) == 0 {
+		return errors.New("invalid input, no inputs")
+	}
+	return nil
+}
+
+func (dBeef *DecodedBEEF) verifyMerkleRoots(provider MerkleRootVerifier) error {
+	merkleRoots, err := dBeef.GetMerkleRoots()
+	if err != nil {
+		return err
 	}
 
-	// check inputs and outputs
-	inputSum, outputSum := uint64(0), uint64(0)
-	for i, input := range dBeef.ProcessedTxData.Transaction.Inputs {
-		input2 := dBeef.InputsTxData[i]
-		inputSum += input2.Transaction.Outputs[input.PreviousTxOutIndex].Satoshis
-	}
-	for _, output := range dBeef.ProcessedTxData.Transaction.Outputs {
-		outputSum += output.Satoshis
+	res, err := provider.VerifyMerkleRoots(context.Background(), merkleRoots)
+	if err != nil {
+		return err
 	}
 
-	// Check if the output sum is not higher than the input sum
-	if inputSum <= outputSum {
-		return errors.New("invalid input and output sum, outputs can not be larger than inputs")
+	if !res.AllConfirmed {
+		return errors.New("not all merkle roots were confirmed")
 	}
+	return nil
+}
 
-	// Verify scripts
+func (dBeef *DecodedBEEF) validateScripts() error {
 	for _, input := range dBeef.ProcessedTxData.Transaction.Inputs {
 		txId := input.PreviousTxID()
 		for j, input2 := range dBeef.InputsTxData {
@@ -101,23 +140,47 @@ func (dBeef *DecodedBEEF) ExecuteSimplifiedPaymentVerification() error {
 			}
 		}
 	}
-
 	return nil
 }
 
-func (cmp *CompoundMerklePath) CalculateMerkleRoots() ([]string, error) {
-	merkleRoots := make([]string, 0)
-	cmpCopy := *cmp
+func (dBeef *DecodedBEEF) validateSatoshisSum() error {
+	inputSum, outputSum := uint64(0), uint64(0)
+	for i, input := range dBeef.ProcessedTxData.Transaction.Inputs {
+		input2 := dBeef.InputsTxData[i]
+		inputSum += input2.Transaction.Outputs[input.PreviousTxOutIndex].Satoshis
+	}
+	for _, output := range dBeef.ProcessedTxData.Transaction.Outputs {
+		outputSum += output.Satoshis
+	}
 
-	// Iterate through first layer
-	for tx, offset := range cmpCopy[len(cmpCopy)-1] {
-		// Calculate merkle root for one tx
-		merkleRoot, err := calculateMerkleRoot(tx, offset, cmpCopy)
+	if inputSum <= outputSum {
+		return errors.New("invalid input and output sum, outputs can not be larger than inputs")
+	}
+	return nil
+}
+
+func (dBeef *DecodedBEEF) validateLockTime() error {
+	if dBeef.ProcessedTxData.Transaction.LockTime == 0 {
+		for _, input := range dBeef.ProcessedTxData.Transaction.Inputs {
+			if input.SequenceNumber != 0xffffffff {
+				return errors.New("invalid sequence")
+			}
+		}
+	} else {
+		return errors.New("invalid locktime")
+	}
+	return nil
+}
+
+func (cmp CompoundMerklePath) calculateMerkleRoots() ([]string, error) {
+	merkleRoots := make([]string, 0)
+
+	for tx, offset := range cmp[len(cmp)-1] {
+		merkleRoot, err := calculateMerkleRoot(tx, offset, cmp)
 		if err != nil {
 			return nil, err
 		}
 		merkleRoots = append(merkleRoots, merkleRoot)
-
 	}
 	return merkleRoots, nil
 }
@@ -139,10 +202,8 @@ func verifyScripts(tx, prevTx *bt.Tx, inputIdx int) bool {
 }
 
 func calculateMerkleRoot(baseTx string, offset uint64, cmp []map[string]uint64) (string, error) {
-	// Iterate through layers
 	for i := len(cmp) - 1; i >= 0; i-- {
 		var leftNode, rightNode string
-		// Get pair tx for given tx
 		newOffset := offset - 1
 		if offset%2 == 0 {
 			newOffset = offset + 1
@@ -153,7 +214,6 @@ func calculateMerkleRoot(baseTx string, offset uint64, cmp []map[string]uint64) 
 			return "", errors.New("could not find pair")
 		}
 
-		// Define nodes
 		if newOffset > offset {
 			leftNode = baseTx
 			rightNode = *tx2

@@ -87,18 +87,9 @@ func (c *Configuration) p2pReceiveBeefTx(w http.ResponseWriter, req *http.Reques
 		panic("empty beef after parsing!")
 	}
 
-	err := dBeef.ExecuteSimplifiedPaymentVerification()
+	err := dBeef.ExecuteSimplifiedPaymentVerification(c.actions)
 	if err != nil {
 		ErrorResponse(w, ErrorSimplifiedPaymentVerification, err.Error(), http.StatusExpectationFailed)
-		return
-	}
-
-	// verify merkle proofs
-	merkleRoots, err := dBeef.GetMerkleRoots()
-
-	err = c.actions.VerifyMerkleRoots(req.Context(), merkleRoots)
-	if err != nil {
-		ErrorResponse(w, ErrorInvalidParameter, "invalid parameter: merkle proofs", http.StatusBadRequest)
 		return
 	}
 
