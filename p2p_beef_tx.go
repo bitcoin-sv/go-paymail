@@ -11,10 +11,6 @@ import (
 	"github.com/libsv/go-bt/v2/bscript/interpreter"
 )
 
-type CompoundMerklePath []map[string]uint64
-
-type CMPSlice []CompoundMerklePath
-
 type MerkleRootVerifier interface {
 	VerifyMerkleRoots(
 		ctx context.Context,
@@ -170,19 +166,6 @@ func (dBeef *DecodedBEEF) validateLockTime() error {
 		return errors.New("invalid locktime")
 	}
 	return nil
-}
-
-func (cmp CompoundMerklePath) calculateMerkleRoots() ([]string, error) {
-	merkleRoots := make([]string, 0)
-
-	for tx, offset := range cmp[len(cmp)-1] {
-		merkleRoot, err := calculateMerkleRoot(tx, offset, cmp)
-		if err != nil {
-			return nil, err
-		}
-		merkleRoots = append(merkleRoots, merkleRoot)
-	}
-	return merkleRoots, nil
 }
 
 // Verify locking and unlocking scripts pair
