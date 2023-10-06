@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/bitcoin-sv/go-paymail"
-	"github.com/libsv/bitcoin-hc/transports/http/endpoints/api/merkleroots"
 )
 
 // PaymailServiceProvider the paymail server interface that needs to be implemented
@@ -38,5 +37,5 @@ type PaymailServiceProvider interface {
 	VerifyMerkleRoots(
 		ctx context.Context,
 		merkleProofs []string,
-	) (*merkleroots.MerkleRootsConfirmationsResponse, error)
+	) error
 }

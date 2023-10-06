@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/libsv/bitcoin-hc/transports/http/endpoints/api/merkleroots"
 	"github.com/libsv/go-bt/v2"
 	"github.com/libsv/go-bt/v2/bscript/interpreter"
 )
@@ -13,7 +12,7 @@ type MerkleRootVerifier interface {
 	VerifyMerkleRoots(
 		ctx context.Context,
 		merkleRoots []string,
-	) (*merkleroots.MerkleRootsConfirmationsResponse, error)
+	) error
 }
 
 // ExecuteSimplifiedPaymentVerification executes the SPV for decoded BEEF tx
@@ -47,14 +46,11 @@ func verifyMerkleRoots(dBeef *DecodedBEEF, provider MerkleRootVerifier) error {
 		return err
 	}
 
-	res, err := provider.VerifyMerkleRoots(context.Background(), merkleRoots)
+	err = provider.VerifyMerkleRoots(context.Background(), merkleRoots)
 	if err != nil {
 		return err
 	}
 
-	if !res.AllConfirmed {
-		return errors.New("not all merkle roots were confirmed")
-	}
 	return nil
 }
 
@@ -102,11 +98,11 @@ func validateLockTime(dBeef *DecodedBEEF) error {
 	if dBeef.ProcessedTxData.Transaction.LockTime == 0 {
 		for _, input := range dBeef.ProcessedTxData.Transaction.Inputs {
 			if input.SequenceNumber != 0xffffffff {
-				return errors.New("invalid sequence")
+				return errors.New("unexpected transaction with nSequence")
 			}
 		}
 	} else {
-		return errors.New("invalid locktime")
+		return errors.New("nexpected transaction with nLockTime")
 	}
 	return nil
 }

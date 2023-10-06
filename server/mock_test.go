@@ -2,8 +2,6 @@ package server
 
 import (
 	"context"
-	"github.com/libsv/bitcoin-hc/transports/http/endpoints/api/merkleroots"
-
 	"github.com/bitcoin-sv/go-paymail"
 )
 
@@ -43,8 +41,8 @@ func (m *mockServiceProvider) RecordTransaction(_ context.Context,
 }
 
 // VerifyMerkleRoots is a mock implementation of this interface
-func (m *mockServiceProvider) VerifyMerkleRoots(_ context.Context, _ []string) (*merkleroots.MerkleRootsConfirmationsResponse, error) {
+func (m *mockServiceProvider) VerifyMerkleRoots(_ context.Context, _ []string) error {
 
 	// Verify the merkle roots
-	return &merkleroots.MerkleRootsConfirmationsResponse{AllConfirmed: true}, nil
+	return nil
 }
