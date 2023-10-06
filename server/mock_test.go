@@ -42,8 +42,8 @@ func (m *mockServiceProvider) RecordTransaction(_ context.Context,
 	return nil, nil
 }
 
-// ExecuteSimplifiedPaymentVerification is a mock implementation of this interface
-func (m *mockServiceProvider) VerifyMerkleRoots(ctx context.Context, merkleProofs []string) (*merkleroots.MerkleRootsConfirmationsResponse, error) {
+// VerifyMerkleRoots is a mock implementation of this interface
+func (m *mockServiceProvider) VerifyMerkleRoots(_ context.Context, _ []string) (*merkleroots.MerkleRootsConfirmationsResponse, error) {
 
 	// Verify the merkle roots
 	return &merkleroots.MerkleRootsConfirmationsResponse{AllConfirmed: true}, nil

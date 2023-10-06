@@ -14,8 +14,8 @@ import (
 // Mock implementation of a service provider
 type mockServiceProvider struct{}
 
-// ExecuteSimplifiedPaymentVerification is a mock implementation of this interface
-func (m *mockServiceProvider) VerifyMerkleRoots(ctx context.Context, merkleProofs []string) (*merkleroots.MerkleRootsConfirmationsResponse, error) {
+// VerifyMerkleRoots is a mock implementation of this interface
+func (m *mockServiceProvider) VerifyMerkleRoots(_ context.Context, _ []string) (*merkleroots.MerkleRootsConfirmationsResponse, error) {
 	// Verify the merkle roots
 	return &merkleroots.MerkleRootsConfirmationsResponse{AllConfirmed: true}, nil
 }
@@ -271,6 +271,6 @@ func TestDecodedBeef(t *testing.T) {
 	require.Nil(t, err)
 
 	t.Run("SPV on valid beef", func(t *testing.T) {
-		require.Nil(t, validDecodedBeef.ExecuteSimplifiedPaymentVerification(new(mockServiceProvider)))
+		require.Nil(t, ExecuteSimplifiedPaymentVerification(validDecodedBeef, new(mockServiceProvider)))
 	})
 }
