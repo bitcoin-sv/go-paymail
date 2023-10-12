@@ -17,8 +17,8 @@ github.com/julienschmidt/httprouter v1.3.0 h1:U0609e9tgbseu3rBINet9P48AI/D3oJs4d
 github.com/julienschmidt/httprouter v1.3.0/go.mod h1:JR6WtHb+2LUe8TCKY3cZOxFyyO8IZAc4RVcycCCAKdM=
 github.com/kr/pretty v0.3.1 h1:flRD4NNwYAUpkphVc1HcthR4KEIFJ65n8Mw5qdRn3LE=
 github.com/kr/text v0.2.0 h1:5Nx0Ya0ZqY2ygV366QzturHI13Jq95ApcVaJBhpS+AY=
-github.com/libsv/go-bc v0.1.17 h1:RHlb7BhkjGatKoGGsxZXiE2xoh5aDQDhgELAD2I4n90=
-github.com/libsv/go-bc v0.1.17/go.mod h1:TydCZiPUpYPTLiYFDrz2Ug+wSzADUHJux4t3DPVPg08=
+github.com/libsv/go-bc v0.1.18 h1:n0M5c0jtd8Ds4DLyX1g+AkfFZB7o780aO9YHQlRxzGM=
+github.com/libsv/go-bc v0.1.18/go.mod h1:TydCZiPUpYPTLiYFDrz2Ug+wSzADUHJux4t3DPVPg08=
 github.com/libsv/go-bk v0.1.6 h1:c9CiT5+64HRDbzxPl1v/oiFmbvWZTuUYqywCf+MBs/c=
 github.com/libsv/go-bk v0.1.6/go.mod h1:khJboDoH18FPUaZlzRFKzlVN84d4YfdmlDtdX4LAjQA=
 github.com/libsv/go-bt/v2 v2.2.5 h1:VoggBLMRW9NYoFujqe5bSYKqnw5y+fYfufgERSoubog=
