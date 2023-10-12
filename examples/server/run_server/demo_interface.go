@@ -43,3 +43,10 @@ func (d *demoServiceProvider) RecordTransaction(ctx context.Context,
 	// Record the tx into your datastore layer
 	return DemoRecordTransaction(ctx, p2pTx)
 }
+
+// VerifyMerkleRoots is a demo implementation of this interface
+func (d *demoServiceProvider) VerifyMerkleRoots(ctx context.Context, merkleProofs []string) error {
+
+	// Verify the Merkle roots
+	return nil
+}

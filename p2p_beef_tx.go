@@ -4,13 +4,9 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-
+	"github.com/libsv/go-bc"
 	"github.com/libsv/go-bt/v2"
 )
-
-type CompoundMerklePath []map[string]uint64
-
-type CMPSlice []CompoundMerklePath
 
 const (
 	BEEFMarkerPart1 = 0xBE
@@ -37,6 +33,62 @@ type DecodedBEEF struct {
 	CMPSlice        CMPSlice
 	InputsTxData    []TxData
 	ProcessedTxData TxData
+}
+
+func (dBeef *DecodedBEEF) GetMerkleRoots() ([]string, error) {
+	var merkleRoots []string
+	for _, cmp := range dBeef.CMPSlice {
+		partialMerkleRoots, err := cmp.calculateMerkleRoots()
+		if err != nil {
+			return nil, err
+		}
+		merkleRoots = append(merkleRoots, partialMerkleRoots...)
+	}
+	return merkleRoots, nil
+}
+
+func calculateMerkleRoot(baseTx string, offset uint64, cmp []map[string]uint64) (string, error) {
+	for i := len(cmp) - 1; i >= 0; i-- {
+		var leftNode, rightNode string
+		newOffset := offset - 1
+		if offset%2 == 0 {
+			newOffset = offset + 1
+		}
+		tx2 := keyByValue(cmp[i], newOffset)
+		if tx2 == nil {
+			fmt.Println("could not find pair")
+			return "", errors.New("could not find pair")
+		}
+
+		if newOffset > offset {
+			leftNode = baseTx
+			rightNode = *tx2
+		} else {
+			leftNode = *tx2
+			rightNode = baseTx
+		}
+
+		// Calculate new merkle tree parent
+		str, err := bc.MerkleTreeParentStr(leftNode, rightNode)
+		if err != nil {
+			return "", err
+		}
+		baseTx = str
+
+		// Reduce offset
+		offset = offset / 2
+	}
+
+	return baseTx, nil
+}
+
+func keyByValue(m map[string]uint64, value uint64) *string {
+	for k, v := range m {
+		if value == v {
+			return &k
+		}
+	}
+	return nil
 }
 
 func DecodeBEEF(beefHex string) (*DecodedBEEF, error) {

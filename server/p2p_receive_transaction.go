@@ -73,7 +73,7 @@ Incoming Data Object Example:
 func (c *Configuration) p2pReceiveBeefTx(w http.ResponseWriter, req *http.Request, p httprouter.Params) {
 	p2pFormat := beefP2pPayload
 
-	requestPayload, beefData, md, vErr := processP2pReceiveTxRequest(c, req, p, p2pFormat)
+	requestPayload, dBeef, md, vErr := processP2pReceiveTxRequest(c, req, p, p2pFormat)
 	if vErr != nil {
 		ErrorResponse(w, vErr.code, vErr.msg, vErr.httpResponseCode)
 		return
@@ -83,12 +83,12 @@ func (c *Configuration) p2pReceiveBeefTx(w http.ResponseWriter, req *http.Reques
 		panic("empty hex after parsing!")
 	}
 
-	if beefData == nil {
+	if dBeef == nil {
 		panic("empty beef after parsing!")
 	}
 
-	var err error
-	if err = ExecuteSimplifiedPaymentVerification(req.Context(), beefData); err != nil {
+	err := paymail.ExecuteSimplifiedPaymentVerification(dBeef, c.actions)
+	if err != nil {
 		ErrorResponse(w, ErrorSimplifiedPaymentVerification, err.Error(), http.StatusExpectationFailed)
 		return
 	}

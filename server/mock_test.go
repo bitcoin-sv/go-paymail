@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-
 	"github.com/bitcoin-sv/go-paymail"
 )
 
@@ -39,4 +38,11 @@ func (m *mockServiceProvider) RecordTransaction(_ context.Context,
 
 	// Record the tx into your datastore layer
 	return nil, nil
+}
+
+// VerifyMerkleRoots is a mock implementation of this interface
+func (m *mockServiceProvider) VerifyMerkleRoots(_ context.Context, _ []string) error {
+
+	// Verify the merkle roots
+	return nil
 }
