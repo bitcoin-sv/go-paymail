@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/bitcoinschema/go-bitcoin/v2 v2.0.5
-	github.com/go-resty/resty/v2 v2.7.0
+	github.com/go-resty/resty/v2 v2.9.1
 	github.com/jarcoal/httpmock v1.3.1
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/libsv/go-bc v0.1.17
@@ -13,7 +13,7 @@ require (
 	github.com/miekg/dns v1.1.55
 	github.com/newrelic/go-agent/v3/integrations/nrhttprouter v1.0.2
 	github.com/stretchr/testify v1.8.4
-	golang.org/x/net v0.14.0
+	golang.org/x/net v0.15.0
 )
 
 require (
