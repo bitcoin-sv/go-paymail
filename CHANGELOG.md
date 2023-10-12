@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/bitcoin-sv/go-paymail/compare/v0.4.0...v0.5.0) (2023-10-12)
+
+
+### Features
+
+* **BUX-164:** verify beef tx ([#22](https://github.com/bitcoin-sv/go-paymail/issues/22)) ([90b9efb](https://github.com/bitcoin-sv/go-paymail/commit/90b9efb72caa70df217c078c1d282e7fa53fb1c3))
+
 ## [0.4.0](https://github.com/bitcoin-sv/go-paymail/compare/v0.3.0...v0.4.0) (2023-10-04)
 
 
