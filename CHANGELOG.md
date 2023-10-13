@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1](https://github.com/bitcoin-sv/go-paymail/compare/v0.5.0...v0.5.1) (2023-10-13)
+
+
+### Bug Fixes
+
+* **BUX-272:** Change the order of elements in decoded CMP ([d391319](https://github.com/bitcoin-sv/go-paymail/commit/d3913191a30b3d3c44009d73730cad2d8dd260cf))
+
 ## [0.5.0](https://github.com/bitcoin-sv/go-paymail/compare/v0.4.0...v0.5.0) (2023-10-12)
 
 
