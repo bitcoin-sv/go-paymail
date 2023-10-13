@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+
 	"github.com/libsv/go-bc"
 	"github.com/libsv/go-bt/v2"
 )
@@ -48,7 +49,7 @@ func (dBeef *DecodedBEEF) GetMerkleRoots() ([]string, error) {
 }
 
 func calculateMerkleRoot(baseTx string, offset uint64, cmp []map[string]uint64) (string, error) {
-	for i := len(cmp) - 1; i >= 0; i-- {
+	for i := 0; i < len(cmp); i++ {
 		var leftNode, rightNode string
 		newOffset := offset - 1
 		if offset%2 == 0 {
@@ -166,7 +167,8 @@ func NewCMPFromStream(hexBytes []byte) (CompoundMerklePath, int, error) {
 			return nil, 0, err
 		}
 
-		cmp = append(cmp, pathMap)
+		cmp = append(CompoundMerklePath{pathMap}, cmp...)
+
 		hexBytes = hexBytes[bytesUsed:]
 
 		currentHeight--

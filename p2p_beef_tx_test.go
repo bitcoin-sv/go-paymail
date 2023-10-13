@@ -3,11 +3,11 @@ package paymail
 import (
 	"context"
 	"errors"
-	"github.com/stretchr/testify/require"
 	"testing"
 
 	"github.com/libsv/go-bt/v2"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // Mock implementation of a service provider
@@ -33,9 +33,16 @@ func TestDecodeBEEF_DecodeBEEF_HappyPaths(t *testing.T) {
 			expectedDecodedBEEF: &DecodedBEEF{
 				CMPSlice: CMPSlice{
 					{
+						{
+							"8c00bb9360e93fb822c84b2e579fa4ce75c8378ae87f67730a49552f73c56ee8": 0x0,
+							"da256f78ae0ad74bbf539662cdb9122aa02ba9a9d883f1d52468d96290515adb": 0x1,
+							"b4c8d919190a090e77b73ffcd52b85babaaeeb62da000473102aca7f070facef": 0x2,
+							"e5b331f4961d764373f3a4e2751954e75489fb17902aad583eedbb41dc165a3b": 0x3,
+						},
+						{
+							"3470d882cf556a4b943639eba15dc795dffdbebdc98b9a98e3637fda96e3811e": 0x0, "c58e40f22b9e9fcd05a09689a9b19e6e62dbfd3335c5253d09a7a7cd755d9a3c": 0x1,
+						},
 						{"cd73c0c6bb645581816fa960fd2f1636062fcbf23cb57981074ab8d708a76e3b": 0x1},
-						{"3470d882cf556a4b943639eba15dc795dffdbebdc98b9a98e3637fda96e3811e": 0x0, "c58e40f22b9e9fcd05a09689a9b19e6e62dbfd3335c5253d09a7a7cd755d9a3c": 0x1},
-						{"8c00bb9360e93fb822c84b2e579fa4ce75c8378ae87f67730a49552f73c56ee8": 0x0, "da256f78ae0ad74bbf539662cdb9122aa02ba9a9d883f1d52468d96290515adb": 0x1, "b4c8d919190a090e77b73ffcd52b85babaaeeb62da000473102aca7f070facef": 0x2, "e5b331f4961d764373f3a4e2751954e75489fb17902aad583eedbb41dc165a3b": 0x3},
 					},
 				},
 				InputsTxData: []TxData{
@@ -87,14 +94,30 @@ func TestDecodeBEEF_DecodeBEEF_HappyPaths(t *testing.T) {
 			expectedDecodedBEEF: &DecodedBEEF{
 				CMPSlice: CMPSlice{
 					{
+						{
+							"8c00bb9360e93fb822c84b2e579fa4ce75c8378ae87f67730a49552f73c56ee8": 0x0,
+							"da256f78ae0ad74bbf539662cdb9122aa02ba9a9d883f1d52468d96290515adb": 0x1,
+							"b4c8d919190a090e77b73ffcd52b85babaaeeb62da000473102aca7f070facef": 0x2,
+							"e5b331f4961d764373f3a4e2751954e75489fb17902aad583eedbb41dc165a3b": 0x3,
+						},
+						{
+							"3470d882cf556a4b943639eba15dc795dffdbebdc98b9a98e3637fda96e3811e": 0x0,
+							"c58e40f22b9e9fcd05a09689a9b19e6e62dbfd3335c5253d09a7a7cd755d9a3c": 0x1,
+						},
 						{"cd73c0c6bb645581816fa960fd2f1636062fcbf23cb57981074ab8d708a76e3b": 0x1},
-						{"3470d882cf556a4b943639eba15dc795dffdbebdc98b9a98e3637fda96e3811e": 0x0, "c58e40f22b9e9fcd05a09689a9b19e6e62dbfd3335c5253d09a7a7cd755d9a3c": 0x1},
-						{"8c00bb9360e93fb822c84b2e579fa4ce75c8378ae87f67730a49552f73c56ee8": 0x0, "da256f78ae0ad74bbf539662cdb9122aa02ba9a9d883f1d52468d96290515adb": 0x1, "b4c8d919190a090e77b73ffcd52b85babaaeeb62da000473102aca7f070facef": 0x2, "e5b331f4961d764373f3a4e2751954e75489fb17902aad583eedbb41dc165a3b": 0x3},
 					},
 					{
+						{
+							"8c00bb9360e93fb822c84b2e579fa4ce75c8378ae87f67730a49552f73c56ee8": 0x0,
+							"da256f78ae0ad74bbf539662cdb9122aa02ba9a9d883f1d52468d96290515adb": 0x1,
+							"b4c8d919190a090e77b73ffcd52b85babaaeeb62da000473102aca7f070facef": 0x2,
+							"e5b331f4961d764373f3a4e2751954e75489fb17902aad583eedbb41dc165a3b": 0x3,
+						},
+						{
+							"3470d882cf556a4b943639eba15dc795dffdbebdc98b9a98e3637fda96e3811e": 0x0,
+							"c58e40f22b9e9fcd05a09689a9b19e6e62dbfd3335c5253d09a7a7cd755d9a3c": 0x1,
+						},
 						{"cd73c0c6bb645581816fa960fd2f1636062fcbf23cb57981074ab8d708a76e3b": 0x1},
-						{"3470d882cf556a4b943639eba15dc795dffdbebdc98b9a98e3637fda96e3811e": 0x0, "c58e40f22b9e9fcd05a09689a9b19e6e62dbfd3335c5253d09a7a7cd755d9a3c": 0x1},
-						{"8c00bb9360e93fb822c84b2e579fa4ce75c8378ae87f67730a49552f73c56ee8": 0x0, "da256f78ae0ad74bbf539662cdb9122aa02ba9a9d883f1d52468d96290515adb": 0x1, "b4c8d919190a090e77b73ffcd52b85babaaeeb62da000473102aca7f070facef": 0x2, "e5b331f4961d764373f3a4e2751954e75489fb17902aad583eedbb41dc165a3b": 0x3},
 					},
 				},
 				InputsTxData: []TxData{
@@ -171,7 +194,11 @@ func TestDecodeBEEF_DecodeBEEF_HappyPaths(t *testing.T) {
 			assert.Equal(t, tc.expectedError, err, "expected error %v, but got %v", tc.expectedError, err)
 
 			assert.Equal(t, len(tc.expectedDecodedBEEF.InputsTxData), len(decodedBEEF.InputsTxData), "expected %v inputs, but got %v", len(tc.expectedDecodedBEEF.InputsTxData), len(decodedBEEF.InputsTxData))
+
 			assert.Equal(t, len(tc.expectedDecodedBEEF.CMPSlice), len(decodedBEEF.CMPSlice), "expected %v CMPs, but got %v", len(tc.expectedDecodedBEEF.CMPSlice), len(decodedBEEF.CMPSlice))
+
+			assert.Equal(t, tc.expectedDecodedBEEF.CMPSlice, decodedBEEF.CMPSlice, "expected decoded CMP to be %v, but got %v", tc.expectedDecodedBEEF.CMPSlice, decodedBEEF.CMPSlice)
+
 			assert.NotNil(t, decodedBEEF.ProcessedTxData.Transaction, "expected original transaction to be not nil")
 
 			assert.Equal(t, tc.expectedDecodedBEEF.InputsTxData[0].PathIndex, decodedBEEF.InputsTxData[0].PathIndex, "expected path index for the oldest input to be %v, but got %v", tc.expectedDecodedBEEF.InputsTxData[0].PathIndex, decodedBEEF.InputsTxData[0].PathIndex)
