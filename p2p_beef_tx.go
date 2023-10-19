@@ -57,8 +57,8 @@ func calculateMerkleRoot(baseTx string, offset uint64, cmp []map[string]uint64) 
 		}
 		tx2 := keyByValue(cmp[i], newOffset)
 		if tx2 == nil {
-			fmt.Println("could not find pair")
-			return "", errors.New("could not find pair")
+			fmt.Println("could not find pair, using base tx")
+			tx2 = &baseTx
 		}
 
 		if newOffset > offset {
