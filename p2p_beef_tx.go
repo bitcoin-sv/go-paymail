@@ -124,6 +124,29 @@ func DecodeBEEF(beefHex string) (*DecodedBEEF, error) {
 	}, nil
 }
 
+func DecodeBUMP(beefHex string) (*DecodedBEEF, error) {
+	beefBytes, err := hex.DecodeString(beefHex)
+	if err != nil {
+		return nil, err
+	}
+
+	blockHeight, bytesUsed := bt.NewVarIntFromBytes(beefBytes)
+	beefBytes = beefBytes[bytesUsed:]
+	fmt.Println("blockHeight", blockHeight)
+	fmt.Println("bytesUsed", bytesUsed)
+	fmt.Println()
+
+	bumpSlice, remainingBytes, err := decodeBUMPSliceFromStream(beefBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println("bumpSlice", bumpSlice)
+	fmt.Println("remainingBytes", remainingBytes)
+
+	return nil, nil
+}
+
 func decodeCMPSliceFromStream(hexBytes []byte) (CMPSlice, []byte, error) {
 	if len(hexBytes) == 0 {
 		return nil, nil, errors.New("cannot decode cmp slice from stream - no bytes provided")
@@ -148,7 +171,108 @@ func decodeCMPSliceFromStream(hexBytes []byte) (CMPSlice, []byte, error) {
 	return cmpSlice, hexBytes, nil
 }
 
+func decodeBUMPSliceFromStream(hexBytes []byte) (BUMPSlice, []byte, error) {
+	if len(hexBytes) == 0 {
+		return nil, nil, errors.New("cannot decode cmp slice from stream - no bytes provided")
+	}
+
+	treeHeight, bytesUsed := bt.NewVarIntFromBytes(hexBytes)
+	hexBytes = hexBytes[bytesUsed:]
+	fmt.Println("treeHeight", treeHeight)
+	fmt.Println("bytesUsed", bytesUsed)
+	fmt.Println()
+
+	decodeBUMP(treeHeight, hexBytes)
+
+	return nil, hexBytes, nil
+}
+
+func decodeBUMP(treeHeight bt.VarInt, hexBytes []byte) {
+	//var bumpSlice []BUMP
+	for i := 0; i < int(treeHeight); i++ {
+		nLeaves, bytesUsed := bt.NewVarIntFromBytes(hexBytes)
+		hexBytes = hexBytes[bytesUsed:]
+		fmt.Println("nLeaves", nLeaves)
+		fmt.Println("bytesUsed", bytesUsed)
+		fmt.Println()
+
+		decodeBUMPLeaves(nLeaves, hexBytes)
+	}
+}
+
+func decodeBUMPLeaves(nLeaves bt.VarInt, hexBytes []byte) {
+	fmt.Println("<---------  decodeBUMPLeaves ----------->")
+	fmt.Println("nLeaves", nLeaves)
+	fmt.Println("hexBytes", hexBytes)
+	fmt.Println()
+	for i := 0; i < int(nLeaves); i++ {
+		if len(hexBytes) < 1 {
+			panic(fmt.Errorf("insufficient bytes to extract offset for %d leaf of %d leaves", i, int(nLeaves)))
+		}
+
+		offset, bytesUsed := bt.NewVarIntFromBytes(hexBytes)
+		hexBytes = hexBytes[bytesUsed:]
+		fmt.Println("offset", offset)
+		fmt.Println("bytesUsed", bytesUsed)
+		fmt.Println("hexBytes", hexBytes)
+		fmt.Println()
+
+		if len(hexBytes[bytesUsed:]) < 1 {
+			panic(fmt.Errorf("insufficient bytes to extract flag for %d leaf of %d leaves", i, int(nLeaves)))
+		}
+
+		flag, bytesUsed := bt.NewVarIntFromBytes(hexBytes)
+		hexBytes = hexBytes[bytesUsed:]
+		fmt.Println("flag", flag)
+		fmt.Println("bytesUsed", bytesUsed)
+		fmt.Println("hexBytes", hexBytes)
+		fmt.Println()
+
+		if len(hexBytes[bytesUsed:]) < hashBytesCount {
+			panic("insufficient bytes to extract hash of path")
+		}
+
+		hash := hex.EncodeToString(hexBytes[:hashBytesCount])
+		bytesUsed += hashBytesCount
+		hexBytes = hexBytes[bytesUsed:]
+		fmt.Println("hash", hash)
+		fmt.Println("bytesUsed", bytesUsed)
+		fmt.Println("hexBytes", hexBytes)
+		fmt.Println()
+	}
+}
+
 func NewCMPFromStream(hexBytes []byte) (CompoundMerklePath, int, error) {
+	height, bytesUsed, err := extractHeight(hexBytes)
+	if err != nil {
+		return nil, 0, err
+	}
+	hexBytes = hexBytes[bytesUsed:]
+
+	var cmp CompoundMerklePath
+	currentHeight := height
+	bytesUsedToDecodeCMP := bytesUsed
+
+	for currentHeight >= 0 {
+		var pathMap map[string]uint64
+
+		pathMap, bytesUsed, err = extractPathMap(hexBytes, currentHeight)
+		if err != nil {
+			return nil, 0, err
+		}
+
+		cmp = append(CompoundMerklePath{pathMap}, cmp...)
+
+		hexBytes = hexBytes[bytesUsed:]
+
+		currentHeight--
+		bytesUsedToDecodeCMP += bytesUsed
+	}
+
+	return cmp, bytesUsedToDecodeCMP, nil
+}
+
+func NewBUMPFromStream(hexBytes []byte) (CompoundMerklePath, int, error) {
 	height, bytesUsed, err := extractHeight(hexBytes)
 	if err != nil {
 		return nil, 0, err
