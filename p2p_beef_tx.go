@@ -4,8 +4,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"strconv"
-
 	"github.com/libsv/go-bc"
 	"github.com/libsv/go-bt/v2"
 )
@@ -39,8 +37,8 @@ type DecodedBEEF struct {
 
 func (dBeef *DecodedBEEF) GetMerkleRoots() ([]string, error) {
 	var merkleRoots []string
-	for _, cmp := range dBeef.CMPSlice {
-		partialMerkleRoots, err := cmp.calculateMerkleRoots()
+	for _, bump := range dBeef.BUMP.path {
+		partialMerkleRoots, err := bump.calculateMerkleRoots()
 		if err != nil {
 			return nil, err
 		}
@@ -49,39 +47,56 @@ func (dBeef *DecodedBEEF) GetMerkleRoots() ([]string, error) {
 	return merkleRoots, nil
 }
 
-func calculateMerkleRoot(baseTx string, offset uint64, cmp []map[string]uint64) (string, error) {
-	for i := 0; i < len(cmp); i++ {
-		var leftNode, rightNode string
+func calculateMerkleRoot(baseTx BUMPTx, offset uint64, bumpMap []map[uint64]BUMPTx) (string, error) {
+	calculatedHash := baseTx.hash
+
+	for i := 0; i < len(bumpMap); i++ {
 		newOffset := offset - 1
 		if offset%2 == 0 {
 			newOffset = offset + 1
 		}
-		tx2 := keyByValue(cmp[i], newOffset)
-		if tx2 == nil {
-			fmt.Println("could not find pair")
+		tx2 := bumpMap[i][newOffset]
+		if &tx2 == nil {
 			return "", errors.New("could not find pair")
 		}
 
-		if newOffset > offset {
-			leftNode = baseTx
-			rightNode = *tx2
-		} else {
-			leftNode = *tx2
-			rightNode = baseTx
-		}
+		leftNode, rightNode := prepareNodes(baseTx, offset, tx2, newOffset)
 
-		// Calculate new merkle tree parent
 		str, err := bc.MerkleTreeParentStr(leftNode, rightNode)
 		if err != nil {
 			return "", err
 		}
-		baseTx = str
+		calculatedHash = str
 
-		// Reduce offset
 		offset = offset / 2
+
+		if i+1 < len(bumpMap) {
+			baseTx = bumpMap[i+1][newOffset]
+		}
 	}
 
-	return baseTx, nil
+	return calculatedHash, nil
+}
+
+func prepareNodes(baseTx BUMPTx, offset uint64, tx2 BUMPTx, newOffset uint64) (string, string) {
+	var txHash, tx2Hash string
+
+	if baseTx.duplicate {
+		txHash = tx2.hash
+	} else {
+		txHash = baseTx.hash
+	}
+
+	if tx2.duplicate {
+		tx2Hash = baseTx.hash
+	} else {
+		tx2Hash = tx2.hash
+	}
+
+	if newOffset > offset {
+		return txHash, tx2Hash
+	}
+	return tx2Hash, txHash
 }
 
 func keyByValue(m map[string]uint64, value uint64) *string {
@@ -133,30 +148,6 @@ func DecodeBEEF(beefHex string) (*DecodedBEEF, error) {
 	}, nil
 }
 
-func DecodeBUMP(beefHex string) (*DecodedBEEF, error) {
-	beefBytes, err := hex.DecodeString(beefHex)
-	if err != nil {
-		return nil, err
-	}
-
-	blockHeight, bytesUsed := bt.NewVarIntFromBytes(beefBytes)
-	beefBytes = beefBytes[bytesUsed:]
-
-	bumpSlice, _, err := decodeBUMPSliceFromStream(beefBytes)
-	if err != nil {
-		return nil, err
-	}
-
-	bump := BUMP{
-		blockHeight: uint64(blockHeight),
-		path:        bumpSlice,
-	}
-
-	fmt.Println(bump)
-
-	return nil, nil
-}
-
 func decodeBUMPSliceFromStream(hexBytes []byte) (BUMPSlice, []byte, error) {
 	if len(hexBytes) == 0 {
 		return nil, nil, errors.New("cannot decode cmp slice from stream - no bytes provided")
@@ -179,7 +170,7 @@ func decodeBUMPSliceFromStream(hexBytes []byte) (BUMPSlice, []byte, error) {
 }
 
 func decodeBUMPLeaves(nLeaves bt.VarInt, hexBytes []byte) (BUMPMap, []byte) {
-	bumpMap := make(map[string]BUMPTx)
+	bumpMap := make(map[uint64]BUMPTx)
 	for i := 0; i < int(nLeaves); i++ {
 		if len(hexBytes) < 1 {
 			panic(fmt.Errorf("insufficient bytes to extract offset for %d leaf of %d leaves", i, int(nLeaves)))
@@ -196,8 +187,7 @@ func decodeBUMPLeaves(nLeaves bt.VarInt, hexBytes []byte) (BUMPMap, []byte) {
 		hexBytes = hexBytes[bytesUsed:]
 
 		if flag == 1 {
-			key := strconv.FormatUint(uint64(offset), 10)
-			bumpMap[key] = BUMPTx{
+			bumpMap[uint64(offset)] = BUMPTx{
 				duplicate: true,
 			}
 			continue
@@ -213,11 +203,11 @@ func decodeBUMPLeaves(nLeaves bt.VarInt, hexBytes []byte) (BUMPMap, []byte) {
 		hash = reverse(hash)
 
 		if flag == 0 {
-			bumpMap[strconv.FormatUint(uint64(offset), 10)] = BUMPTx{
+			bumpMap[uint64(offset)] = BUMPTx{
 				hash: hash,
 			}
 		} else {
-			bumpMap[strconv.FormatUint(uint64(offset), 10)] = BUMPTx{
+			bumpMap[uint64(offset)] = BUMPTx{
 				hash: hash,
 				txId: true,
 			}
