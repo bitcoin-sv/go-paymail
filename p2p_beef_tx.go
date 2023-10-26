@@ -30,16 +30,18 @@ type TxData struct {
 }
 
 type DecodedBEEF struct {
-	BUMP            BUMP
+	BUMPs           BUMPPaths
 	InputsTxData    []TxData
 	ProcessedTxData TxData
 }
 
+// GetMerkleRoots will calculate the merkle roots for the BUMPs in the BEEF transaction
 func (dBeef *DecodedBEEF) GetMerkleRoots() ([]string, error) {
 	var merkleRoots []string
-	for _, bump := range dBeef.BUMP.path {
+	for _, bump := range dBeef.BUMPs {
 		partialMerkleRoots, err := bump.calculateMerkleRoots()
 		if err != nil {
+			fmt.Println(err)
 			return nil, err
 		}
 		merkleRoots = append(merkleRoots, partialMerkleRoots...)
@@ -47,20 +49,22 @@ func (dBeef *DecodedBEEF) GetMerkleRoots() ([]string, error) {
 	return merkleRoots, nil
 }
 
-func calculateMerkleRoot(baseTx BUMPTx, offset uint64, bumpMap []map[uint64]BUMPTx) (string, error) {
+// calculateMerkleRoots will calculate one merkle root for tx in the BUMPPath
+func calculateMerkleRoot(baseTx BUMPPathElement, bump BUMP) (string, error) {
 	calculatedHash := baseTx.hash
+	offset := baseTx.offset
 
-	for i := 0; i < len(bumpMap); i++ {
+	for _, bLevel := range bump.path {
 		newOffset := offset - 1
 		if offset%2 == 0 {
 			newOffset = offset + 1
 		}
-		tx2 := bumpMap[i][newOffset]
+		tx2 := bLevel.findTxByOffset(newOffset)
 		if &tx2 == nil {
 			return "", errors.New("could not find pair")
 		}
 
-		leftNode, rightNode := prepareNodes(baseTx, offset, tx2, newOffset)
+		leftNode, rightNode := prepareNodes(baseTx, offset, *tx2, newOffset)
 
 		str, err := bc.MerkleTreeParentStr(leftNode, rightNode)
 		if err != nil {
@@ -70,15 +74,16 @@ func calculateMerkleRoot(baseTx BUMPTx, offset uint64, bumpMap []map[uint64]BUMP
 
 		offset = offset / 2
 
-		if i+1 < len(bumpMap) {
-			baseTx = bumpMap[i+1][newOffset]
+		baseTx = BUMPPathElement{
+			hash:   calculatedHash,
+			offset: offset,
 		}
 	}
 
 	return calculatedHash, nil
 }
 
-func prepareNodes(baseTx BUMPTx, offset uint64, tx2 BUMPTx, newOffset uint64) (string, string) {
+func prepareNodes(baseTx BUMPPathElement, offset uint64, tx2 BUMPPathElement, newOffset uint64) (string, string) {
 	var txHash, tx2Hash string
 
 	if baseTx.duplicate {
@@ -99,34 +104,13 @@ func prepareNodes(baseTx BUMPTx, offset uint64, tx2 BUMPTx, newOffset uint64) (s
 	return tx2Hash, txHash
 }
 
-func keyByValue(m map[string]uint64, value uint64) *string {
-	for k, v := range m {
-		if value == v {
-			return &k
-		}
-	}
-	return nil
-}
-
 func DecodeBEEF(beefHex string) (*DecodedBEEF, error) {
 	beefBytes, err := extractBytesWithoutVersionAndMarker(beefHex)
 	if err != nil {
 		return nil, err
 	}
 
-	blockHeight, bytesUsed := bt.NewVarIntFromBytes(beefBytes)
-	beefBytes = beefBytes[bytesUsed:]
-
-	bumpSlice, remainingBytes, err := decodeBUMPSliceFromStream(beefBytes)
-	if err != nil {
-		return nil, err
-	}
-
-	bump := BUMP{
-		blockHeight: uint64(blockHeight),
-		path:        bumpSlice,
-	}
-
+	bumps, remainingBytes, err := decodeBUMPs(beefBytes)
 	transactions, err := decodeTransactionsWithPathIndexes(remainingBytes)
 	if err != nil {
 		return nil, err
@@ -142,13 +126,38 @@ func DecodeBEEF(beefHex string) (*DecodedBEEF, error) {
 	transactions = transactions[:len(transactions)-1]
 
 	return &DecodedBEEF{
-		BUMP:            bump,
+		BUMPs:           bumps,
 		InputsTxData:    transactions,
 		ProcessedTxData: processedTx,
 	}, nil
 }
 
-func decodeBUMPSliceFromStream(hexBytes []byte) (BUMPSlice, []byte, error) {
+func decodeBUMPs(beefBytes []byte) ([]BUMP, []byte, error) {
+	bumps := make([]BUMP, 0)
+	nBump, bytesUsed := bt.NewVarIntFromBytes(beefBytes)
+	beefBytes = beefBytes[bytesUsed:]
+
+	for i := 0; i < int(nBump); i++ {
+		blockHeight, bytesUsed := bt.NewVarIntFromBytes(beefBytes)
+		beefBytes = beefBytes[bytesUsed:]
+		bumpPaths, remainingBytes, err := decodeBUMPPathsFromStream(beefBytes)
+		if err != nil {
+			return nil, nil, err
+		}
+		beefBytes = remainingBytes
+
+		bump := BUMP{
+			blockHeight: uint64(blockHeight),
+			path:        bumpPaths,
+		}
+
+		bumps = append(bumps, bump)
+	}
+
+	return bumps, beefBytes, nil
+}
+
+func decodeBUMPPathsFromStream(hexBytes []byte) ([]BUMPPath, []byte, error) {
 	if len(hexBytes) == 0 {
 		return nil, nil, errors.New("cannot decode cmp slice from stream - no bytes provided")
 	}
@@ -156,28 +165,43 @@ func decodeBUMPSliceFromStream(hexBytes []byte) (BUMPSlice, []byte, error) {
 	treeHeight, bytesUsed := bt.NewVarIntFromBytes(hexBytes)
 	hexBytes = hexBytes[bytesUsed:]
 
-	var bumpSlice BUMPSlice
+	fmt.Println("treeHeight", treeHeight)
+	fmt.Println("bytesUsed", bytesUsed)
+	fmt.Println()
+
+	bumpPaths := make([]BUMPPath, 0)
+
 	for i := 0; i < int(treeHeight); i++ {
 		nLeaves, bytesUsed := bt.NewVarIntFromBytes(hexBytes)
 		hexBytes = hexBytes[bytesUsed:]
 
-		bumpMap, remainingBytes := decodeBUMPLeaves(nLeaves, hexBytes)
+		fmt.Println("nLeaves", nLeaves)
+		fmt.Println("bytesUsed", bytesUsed)
+		fmt.Println("<- decoding bump level")
+
+		bumpPath, remainingBytes := decodeBUMPPath(nLeaves, hexBytes)
 		hexBytes = remainingBytes
-		bumpSlice = append(bumpSlice, bumpMap)
+		bumpPaths = append(bumpPaths, bumpPath)
 	}
 
-	return bumpSlice, hexBytes, nil
+	return bumpPaths, hexBytes, nil
 }
 
-func decodeBUMPLeaves(nLeaves bt.VarInt, hexBytes []byte) (BUMPMap, []byte) {
-	bumpMap := make(map[uint64]BUMPTx)
+func decodeBUMPPath(nLeaves bt.VarInt, hexBytes []byte) (BUMPPath, []byte) {
+	var bumpPath BUMPPath
 	for i := 0; i < int(nLeaves); i++ {
+		fmt.Println("<-------------------------------------------------------------------------- decoding bump tx")
 		if len(hexBytes) < 1 {
 			panic(fmt.Errorf("insufficient bytes to extract offset for %d leaf of %d leaves", i, int(nLeaves)))
 		}
 
 		offset, bytesUsed := bt.NewVarIntFromBytes(hexBytes)
 		hexBytes = hexBytes[bytesUsed:]
+
+		fmt.Println("offset", offset)
+		fmt.Println("bytesUsed", bytesUsed)
+		fmt.Println("hexBytes", hexBytes)
+		fmt.Println()
 
 		if len(hexBytes[bytesUsed:]) < 1 {
 			panic(fmt.Errorf("insufficient bytes to extract flag for %d leaf of %d leaves", i, int(nLeaves)))
@@ -186,10 +210,17 @@ func decodeBUMPLeaves(nLeaves bt.VarInt, hexBytes []byte) (BUMPMap, []byte) {
 		flag, bytesUsed := bt.NewVarIntFromBytes(hexBytes)
 		hexBytes = hexBytes[bytesUsed:]
 
+		fmt.Println("flag", flag)
+		fmt.Println("bytesUsed", bytesUsed)
+		fmt.Println("hexBytes", hexBytes)
+		fmt.Println()
+
 		if flag == 1 {
-			bumpMap[uint64(offset)] = BUMPTx{
+			bTx := BUMPPathElement{
+				offset:    uint64(offset),
 				duplicate: true,
 			}
+			bumpPath = append(bumpPath, bTx)
 			continue
 		}
 
@@ -202,19 +233,28 @@ func decodeBUMPLeaves(nLeaves bt.VarInt, hexBytes []byte) (BUMPMap, []byte) {
 		hexBytes = hexBytes[bytesUsed:]
 		hash = reverse(hash)
 
+		fmt.Println("hash", hash)
+		fmt.Println("bytesUsed", bytesUsed)
+		fmt.Println("hexBytes", hexBytes)
+		fmt.Println()
+
 		if flag == 0 {
-			bumpMap[uint64(offset)] = BUMPTx{
-				hash: hash,
+			bTx := BUMPPathElement{
+				hash:   hash,
+				offset: uint64(offset),
 			}
+			bumpPath = append(bumpPath, bTx)
 		} else {
-			bumpMap[uint64(offset)] = BUMPTx{
-				hash: hash,
-				txId: true,
+			bTx := BUMPPathElement{
+				hash:   hash,
+				txId:   true,
+				offset: uint64(offset),
 			}
+			bumpPath = append(bumpPath, bTx)
 		}
 	}
 
-	return BUMPMap{bumpMap}, hexBytes
+	return bumpPath, hexBytes
 }
 
 // reverse will reverse a hex string but it takes a pair of character at a time

@@ -1,33 +1,43 @@
 package paymail
 
-// BUMPTx is a struct that represents a single BUMP transaction
-type BUMPTx struct {
-	hash      string
-	txId      bool
-	duplicate bool
-}
-
-// BUMPMap is a map of BUMPTx where offset is the key
-type BUMPMap []map[uint64]BUMPTx
-
-// BUMPSlice is a slice of BUMPMap which contain transactions required to calculate merkle roots
-type BUMPSlice []BUMPMap
+// BUMPPaths represents BUMP format for all inputs
+type BUMPPaths []BUMP
 
 // BUMP is a struct that represents a whole BUMP format
 type BUMP struct {
 	blockHeight uint64
-	path        BUMPSlice
+	path        []BUMPPath
 }
 
-func (b BUMPMap) calculateMerkleRoots() ([]string, error) {
+// BUMPPath is a slice of BUMPLevel objects which represents a path
+type BUMPPath []BUMPPathElement
+
+// BUMPPathElement is a struct that represents a single BUMP transaction
+type BUMPPathElement struct {
+	hash      string
+	txId      bool
+	duplicate bool
+	offset    uint64
+}
+
+func (b BUMP) calculateMerkleRoots() ([]string, error) {
 	merkleRoots := make([]string, 0)
 
-	for offset, bumpTx := range b[0] {
-		merkleRoot, err := calculateMerkleRoot(bumpTx, offset, b)
+	for _, bumpPathElement := range b.path[0] {
+		merkleRoot, err := calculateMerkleRoot(bumpPathElement, b)
 		if err != nil {
 			return nil, err
 		}
 		merkleRoots = append(merkleRoots, merkleRoot)
 	}
 	return merkleRoots, nil
+}
+
+func (bLevel BUMPPath) findTxByOffset(offset uint64) *BUMPPathElement {
+	for _, bumpTx := range bLevel {
+		if bumpTx.offset == offset {
+			return &bumpTx
+		}
+	}
+	return nil
 }
