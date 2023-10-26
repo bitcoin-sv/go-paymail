@@ -1,5 +1,10 @@
 package paymail
 
+import (
+	"errors"
+	"github.com/libsv/go-bc"
+)
+
 // BUMPPaths represents BUMP format for all inputs
 type BUMPPaths []BUMP
 
@@ -33,11 +38,66 @@ func (b BUMP) calculateMerkleRoots() ([]string, error) {
 	return merkleRoots, nil
 }
 
-func (bLevel BUMPPath) findTxByOffset(offset uint64) *BUMPPathElement {
-	for _, bumpTx := range bLevel {
+func (bPath BUMPPath) findTxByOffset(offset uint64) *BUMPPathElement {
+	for _, bumpTx := range bPath {
 		if bumpTx.offset == offset {
 			return &bumpTx
 		}
 	}
 	return nil
+}
+
+// calculateMerkleRoots will calculate one merkle root for tx in the BUMPPath
+func calculateMerkleRoot(baseTx BUMPPathElement, bump BUMP) (string, error) {
+	calculatedHash := baseTx.hash
+	offset := baseTx.offset
+
+	for _, bLevel := range bump.path {
+		newOffset := offset - 1
+		if offset%2 == 0 {
+			newOffset = offset + 1
+		}
+		tx2 := bLevel.findTxByOffset(newOffset)
+		if &tx2 == nil {
+			return "", errors.New("could not find pair")
+		}
+
+		leftNode, rightNode := prepareNodes(baseTx, offset, *tx2, newOffset)
+
+		str, err := bc.MerkleTreeParentStr(leftNode, rightNode)
+		if err != nil {
+			return "", err
+		}
+		calculatedHash = str
+
+		offset = offset / 2
+
+		baseTx = BUMPPathElement{
+			hash:   calculatedHash,
+			offset: offset,
+		}
+	}
+
+	return calculatedHash, nil
+}
+
+func prepareNodes(baseTx BUMPPathElement, offset uint64, tx2 BUMPPathElement, newOffset uint64) (string, string) {
+	var txHash, tx2Hash string
+
+	if baseTx.duplicate {
+		txHash = tx2.hash
+	} else {
+		txHash = baseTx.hash
+	}
+
+	if tx2.duplicate {
+		tx2Hash = baseTx.hash
+	} else {
+		tx2Hash = tx2.hash
+	}
+
+	if newOffset > offset {
+		return txHash, tx2Hash
+	}
+	return tx2Hash, txHash
 }

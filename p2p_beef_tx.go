@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/libsv/go-bc"
 	"github.com/libsv/go-bt/v2"
 )
 
@@ -47,61 +46,6 @@ func (dBeef *DecodedBEEF) GetMerkleRoots() ([]string, error) {
 		merkleRoots = append(merkleRoots, partialMerkleRoots...)
 	}
 	return merkleRoots, nil
-}
-
-// calculateMerkleRoots will calculate one merkle root for tx in the BUMPPath
-func calculateMerkleRoot(baseTx BUMPPathElement, bump BUMP) (string, error) {
-	calculatedHash := baseTx.hash
-	offset := baseTx.offset
-
-	for _, bLevel := range bump.path {
-		newOffset := offset - 1
-		if offset%2 == 0 {
-			newOffset = offset + 1
-		}
-		tx2 := bLevel.findTxByOffset(newOffset)
-		if &tx2 == nil {
-			return "", errors.New("could not find pair")
-		}
-
-		leftNode, rightNode := prepareNodes(baseTx, offset, *tx2, newOffset)
-
-		str, err := bc.MerkleTreeParentStr(leftNode, rightNode)
-		if err != nil {
-			return "", err
-		}
-		calculatedHash = str
-
-		offset = offset / 2
-
-		baseTx = BUMPPathElement{
-			hash:   calculatedHash,
-			offset: offset,
-		}
-	}
-
-	return calculatedHash, nil
-}
-
-func prepareNodes(baseTx BUMPPathElement, offset uint64, tx2 BUMPPathElement, newOffset uint64) (string, string) {
-	var txHash, tx2Hash string
-
-	if baseTx.duplicate {
-		txHash = tx2.hash
-	} else {
-		txHash = baseTx.hash
-	}
-
-	if tx2.duplicate {
-		tx2Hash = baseTx.hash
-	} else {
-		tx2Hash = tx2.hash
-	}
-
-	if newOffset > offset {
-		return txHash, tx2Hash
-	}
-	return tx2Hash, txHash
 }
 
 func DecodeBEEF(beefHex string) (*DecodedBEEF, error) {
@@ -164,21 +108,11 @@ func decodeBUMPPathsFromStream(hexBytes []byte) ([]BUMPPath, []byte, error) {
 
 	treeHeight, bytesUsed := bt.NewVarIntFromBytes(hexBytes)
 	hexBytes = hexBytes[bytesUsed:]
-
-	fmt.Println("treeHeight", treeHeight)
-	fmt.Println("bytesUsed", bytesUsed)
-	fmt.Println()
-
 	bumpPaths := make([]BUMPPath, 0)
 
 	for i := 0; i < int(treeHeight); i++ {
 		nLeaves, bytesUsed := bt.NewVarIntFromBytes(hexBytes)
 		hexBytes = hexBytes[bytesUsed:]
-
-		fmt.Println("nLeaves", nLeaves)
-		fmt.Println("bytesUsed", bytesUsed)
-		fmt.Println("<- decoding bump level")
-
 		bumpPath, remainingBytes := decodeBUMPPath(nLeaves, hexBytes)
 		hexBytes = remainingBytes
 		bumpPaths = append(bumpPaths, bumpPath)
@@ -190,18 +124,12 @@ func decodeBUMPPathsFromStream(hexBytes []byte) ([]BUMPPath, []byte, error) {
 func decodeBUMPPath(nLeaves bt.VarInt, hexBytes []byte) (BUMPPath, []byte) {
 	var bumpPath BUMPPath
 	for i := 0; i < int(nLeaves); i++ {
-		fmt.Println("<-------------------------------------------------------------------------- decoding bump tx")
 		if len(hexBytes) < 1 {
 			panic(fmt.Errorf("insufficient bytes to extract offset for %d leaf of %d leaves", i, int(nLeaves)))
 		}
 
 		offset, bytesUsed := bt.NewVarIntFromBytes(hexBytes)
 		hexBytes = hexBytes[bytesUsed:]
-
-		fmt.Println("offset", offset)
-		fmt.Println("bytesUsed", bytesUsed)
-		fmt.Println("hexBytes", hexBytes)
-		fmt.Println()
 
 		if len(hexBytes[bytesUsed:]) < 1 {
 			panic(fmt.Errorf("insufficient bytes to extract flag for %d leaf of %d leaves", i, int(nLeaves)))
@@ -210,17 +138,12 @@ func decodeBUMPPath(nLeaves bt.VarInt, hexBytes []byte) (BUMPPath, []byte) {
 		flag, bytesUsed := bt.NewVarIntFromBytes(hexBytes)
 		hexBytes = hexBytes[bytesUsed:]
 
-		fmt.Println("flag", flag)
-		fmt.Println("bytesUsed", bytesUsed)
-		fmt.Println("hexBytes", hexBytes)
-		fmt.Println()
-
 		if flag == 1 {
-			bTx := BUMPPathElement{
+			bumpPathElement := BUMPPathElement{
 				offset:    uint64(offset),
 				duplicate: true,
 			}
-			bumpPath = append(bumpPath, bTx)
+			bumpPath = append(bumpPath, bumpPathElement)
 			continue
 		}
 
@@ -233,24 +156,19 @@ func decodeBUMPPath(nLeaves bt.VarInt, hexBytes []byte) (BUMPPath, []byte) {
 		hexBytes = hexBytes[bytesUsed:]
 		hash = reverse(hash)
 
-		fmt.Println("hash", hash)
-		fmt.Println("bytesUsed", bytesUsed)
-		fmt.Println("hexBytes", hexBytes)
-		fmt.Println()
-
 		if flag == 0 {
-			bTx := BUMPPathElement{
+			bumpPathElement := BUMPPathElement{
 				hash:   hash,
 				offset: uint64(offset),
 			}
-			bumpPath = append(bumpPath, bTx)
+			bumpPath = append(bumpPath, bumpPathElement)
 		} else {
-			bTx := BUMPPathElement{
+			bumpPathElement := BUMPPathElement{
 				hash:   hash,
 				txId:   true,
 				offset: uint64(offset),
 			}
-			bumpPath = append(bumpPath, bTx)
+			bumpPath = append(bumpPath, bumpPathElement)
 		}
 	}
 
