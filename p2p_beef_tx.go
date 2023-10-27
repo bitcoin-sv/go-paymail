@@ -55,6 +55,10 @@ func DecodeBEEF(beefHex string) (*DecodedBEEF, error) {
 	}
 
 	bumps, remainingBytes, err := decodeBUMPs(beefBytes)
+	if err != nil {
+		return nil, err
+	}
+
 	transactions, err := decodeTransactionsWithPathIndexes(remainingBytes)
 	if err != nil {
 		return nil, err
@@ -66,7 +70,6 @@ func DecodeBEEF(beefHex string) (*DecodedBEEF, error) {
 
 	// get the last transaction as the processed transaction - it should be the last one because of khan's ordering
 	processedTx := transactions[len(transactions)-1]
-
 	transactions = transactions[:len(transactions)-1]
 
 	return &DecodedBEEF{
@@ -77,11 +80,18 @@ func DecodeBEEF(beefHex string) (*DecodedBEEF, error) {
 }
 
 func decodeBUMPs(beefBytes []byte) ([]BUMP, []byte, error) {
+	if len(beefBytes) == 0 {
+		return nil, nil, errors.New("cannot decode BUMP - no bytes provided")
+	}
+
 	bumps := make([]BUMP, 0)
 	nBump, bytesUsed := bt.NewVarIntFromBytes(beefBytes)
 	beefBytes = beefBytes[bytesUsed:]
 
 	for i := 0; i < int(nBump); i++ {
+		if len(beefBytes) < 1 {
+			return nil, nil, errors.New("insufficient bytes to extract BUMP blockHeight")
+		}
 		blockHeight, bytesUsed := bt.NewVarIntFromBytes(beefBytes)
 		beefBytes = beefBytes[bytesUsed:]
 		bumpPaths, remainingBytes, err := decodeBUMPPathsFromStream(beefBytes)
@@ -102,8 +112,8 @@ func decodeBUMPs(beefBytes []byte) ([]BUMP, []byte, error) {
 }
 
 func decodeBUMPPathsFromStream(hexBytes []byte) ([]BUMPPath, []byte, error) {
-	if len(hexBytes) == 0 {
-		return nil, nil, errors.New("cannot decode cmp slice from stream - no bytes provided")
+	if len(hexBytes) < 1 {
+		return nil, nil, errors.New("cannot decode BUMP paths from stream - no bytes provided")
 	}
 
 	treeHeight, bytesUsed := bt.NewVarIntFromBytes(hexBytes)
@@ -111,9 +121,15 @@ func decodeBUMPPathsFromStream(hexBytes []byte) ([]BUMPPath, []byte, error) {
 	bumpPaths := make([]BUMPPath, 0)
 
 	for i := 0; i < int(treeHeight); i++ {
+		if len(hexBytes) < 1 {
+			return nil, nil, errors.New("cannot decode BUMP paths number of leaves from stream - no bytes provided")
+		}
 		nLeaves, bytesUsed := bt.NewVarIntFromBytes(hexBytes)
 		hexBytes = hexBytes[bytesUsed:]
-		bumpPath, remainingBytes := decodeBUMPPath(nLeaves, hexBytes)
+		bumpPath, remainingBytes, err := decodeBUMPPath(nLeaves, hexBytes)
+		if err != nil {
+			return nil, nil, err
+		}
 		hexBytes = remainingBytes
 		bumpPaths = append(bumpPaths, bumpPath)
 	}
@@ -121,22 +137,26 @@ func decodeBUMPPathsFromStream(hexBytes []byte) ([]BUMPPath, []byte, error) {
 	return bumpPaths, hexBytes, nil
 }
 
-func decodeBUMPPath(nLeaves bt.VarInt, hexBytes []byte) (BUMPPath, []byte) {
+func decodeBUMPPath(nLeaves bt.VarInt, hexBytes []byte) (BUMPPath, []byte, error) {
 	var bumpPath BUMPPath
 	for i := 0; i < int(nLeaves); i++ {
 		if len(hexBytes) < 1 {
-			panic(fmt.Errorf("insufficient bytes to extract offset for %d leaf of %d leaves", i, int(nLeaves)))
+			return nil, nil, fmt.Errorf("insufficient bytes to extract offset for %d leaf of %d leaves", i, int(nLeaves))
 		}
 
 		offset, bytesUsed := bt.NewVarIntFromBytes(hexBytes)
 		hexBytes = hexBytes[bytesUsed:]
 
-		if len(hexBytes[bytesUsed:]) < 1 {
-			panic(fmt.Errorf("insufficient bytes to extract flag for %d leaf of %d leaves", i, int(nLeaves)))
+		if len(hexBytes) < 1 {
+			return nil, nil, fmt.Errorf("insufficient bytes to extract flag for %d leaf of %d leaves", i, int(nLeaves))
 		}
 
 		flag, bytesUsed := bt.NewVarIntFromBytes(hexBytes)
 		hexBytes = hexBytes[bytesUsed:]
+
+		if flag != 0 && flag != 1 && flag != 2 {
+			return nil, nil, fmt.Errorf("invalid flag: %d for %d leaf of %d leaves", flag, i, int(nLeaves))
+		}
 
 		if flag == 1 {
 			bumpPathElement := BUMPPathElement{
@@ -147,8 +167,8 @@ func decodeBUMPPath(nLeaves bt.VarInt, hexBytes []byte) (BUMPPath, []byte) {
 			continue
 		}
 
-		if len(hexBytes[bytesUsed:]) < hashBytesCount-1 {
-			panic("insufficient bytes to extract hash of path")
+		if len(hexBytes) < hashBytesCount {
+			return nil, nil, errors.New("insufficient bytes to extract hash of path")
 		}
 
 		hash := hex.EncodeToString(hexBytes[:hashBytesCount])
@@ -172,7 +192,7 @@ func decodeBUMPPath(nLeaves bt.VarInt, hexBytes []byte) (BUMPPath, []byte) {
 		}
 	}
 
-	return bumpPath, hexBytes
+	return bumpPath, hexBytes, nil
 }
 
 // reverse will reverse a hex string but it takes a pair of character at a time
@@ -215,47 +235,6 @@ func decodeTransactionsWithPathIndexes(bytes []byte) ([]TxData, error) {
 	}
 
 	return transactions, nil
-}
-
-func extractHeight(hexBytes []byte) (int, int, error) {
-	if len(hexBytes) < 1 {
-		return 0, 0, errors.New("insufficient bytes to extract height of compount merkle path")
-	}
-	height := int(hexBytes[0])
-	if height > 64 {
-		return 0, 0, errors.New("height exceeds maximum allowed value of 64")
-	}
-	return height, 1, nil
-}
-
-func extractPathMap(hexBytes []byte, height int) (map[string]uint64, int, error) {
-	if len(hexBytes) < 1 {
-		return nil, 0, fmt.Errorf("insufficient bytes to extract Compound Merkle Path at height %d", height)
-	}
-
-	nLeaves, nLeavesBytesUsed := bt.NewVarIntFromBytes(hexBytes)
-	bytesUsed := nLeavesBytesUsed
-	var pathMap = make(map[string]uint64)
-
-	for i := 0; i < int(nLeaves); i++ {
-		if len(hexBytes[bytesUsed:]) < 1 {
-			return nil, 0, fmt.Errorf("insufficient bytes to extract index %d leaf of %d leaves at %d height", i, int(nLeaves), height)
-		}
-
-		offsetValue, offsetBytesUsed := bt.NewVarIntFromBytes(hexBytes[bytesUsed:])
-		bytesUsed += offsetBytesUsed
-
-		if len(hexBytes[bytesUsed:]) < hashBytesCount {
-			return nil, 0, fmt.Errorf("insufficient bytes to extract hash of path with offset %d at height %d", offsetValue, height)
-		}
-
-		hash := hex.EncodeToString(hexBytes[bytesUsed : bytesUsed+hashBytesCount])
-		bytesUsed += hashBytesCount
-
-		pathMap[hash] = uint64(offsetValue)
-	}
-
-	return pathMap, bytesUsed, nil
 }
 
 func extractBytesWithoutVersionAndMarker(hexStream string) ([]byte, error) {
