@@ -91,22 +91,22 @@ func getOffsetPair(offset uint64) uint64 {
 }
 
 func prepareNodes(baseLeaf BUMPLeaf, offset uint64, leafInPair BUMPLeaf, newOffset uint64) (string, string) {
-	var txHash, tx2Hash string
+	var baseLeafHash, pairLeafHash string
 
 	if baseLeaf.duplicate {
-		txHash = leafInPair.hash
+		baseLeafHash = leafInPair.hash
 	} else {
-		txHash = baseLeaf.hash
+		baseLeafHash = baseLeaf.hash
 	}
 
 	if leafInPair.duplicate {
-		tx2Hash = baseLeaf.hash
+		pairLeafHash = baseLeaf.hash
 	} else {
-		tx2Hash = leafInPair.hash
+		pairLeafHash = leafInPair.hash
 	}
 
 	if newOffset > offset {
-		return txHash, tx2Hash
+		return baseLeafHash, pairLeafHash
 	}
-	return tx2Hash, txHash
+	return pairLeafHash, baseLeafHash
 }
