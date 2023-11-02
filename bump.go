@@ -35,7 +35,7 @@ func (b BUMP) calculateMerkleRoots() ([]string, error) {
 	return merkleRoots, nil
 }
 
-func findTxByOffset(offset uint64, bumpLeaves []BUMPLeaf) *BUMPLeaf {
+func findLeafByOffset(offset uint64, bumpLeaves []BUMPLeaf) *BUMPLeaf {
 	for _, bumpTx := range bumpLeaves {
 		if bumpTx.offset == offset {
 			return &bumpTx
@@ -45,21 +45,21 @@ func findTxByOffset(offset uint64, bumpLeaves []BUMPLeaf) *BUMPLeaf {
 }
 
 // calculateMerkleRoots will calculate one merkle root for tx in the BUMPPath
-func calculateMerkleRoot(baseTx BUMPLeaf, bump BUMP) (string, error) {
-	calculatedHash := baseTx.hash
-	offset := baseTx.offset
+func calculateMerkleRoot(baseLeaf BUMPLeaf, bump BUMP) (string, error) {
+	calculatedHash := baseLeaf.hash
+	offset := baseLeaf.offset
 
 	for _, bLevel := range bump.path {
 		newOffset := offset - 1
 		if offset%2 == 0 {
 			newOffset = offset + 1
 		}
-		tx2 := findTxByOffset(newOffset, bLevel)
-		if tx2 == nil {
+		leafInPair := findLeafByOffset(newOffset, bLevel)
+		if leafInPair == nil {
 			return "", errors.New("could not find pair")
 		}
 
-		leftNode, rightNode := prepareNodes(baseTx, offset, *tx2, newOffset)
+		leftNode, rightNode := prepareNodes(baseLeaf, offset, *leafInPair, newOffset)
 
 		str, err := bc.MerkleTreeParentStr(leftNode, rightNode)
 		if err != nil {
@@ -69,7 +69,7 @@ func calculateMerkleRoot(baseTx BUMPLeaf, bump BUMP) (string, error) {
 
 		offset = offset / 2
 
-		baseTx = BUMPLeaf{
+		baseLeaf = BUMPLeaf{
 			hash:   calculatedHash,
 			offset: offset,
 		}
@@ -78,19 +78,19 @@ func calculateMerkleRoot(baseTx BUMPLeaf, bump BUMP) (string, error) {
 	return calculatedHash, nil
 }
 
-func prepareNodes(baseTx BUMPLeaf, offset uint64, tx2 BUMPLeaf, newOffset uint64) (string, string) {
+func prepareNodes(baseLeaf BUMPLeaf, offset uint64, leafInPair BUMPLeaf, newOffset uint64) (string, string) {
 	var txHash, tx2Hash string
 
-	if baseTx.duplicate {
-		txHash = tx2.hash
+	if baseLeaf.duplicate {
+		txHash = leafInPair.hash
 	} else {
-		txHash = baseTx.hash
+		txHash = baseLeaf.hash
 	}
 
-	if tx2.duplicate {
-		tx2Hash = baseTx.hash
+	if leafInPair.duplicate {
+		tx2Hash = baseLeaf.hash
 	} else {
-		tx2Hash = tx2.hash
+		tx2Hash = leafInPair.hash
 	}
 
 	if newOffset > offset {
