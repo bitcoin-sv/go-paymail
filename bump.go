@@ -3,6 +3,7 @@ package paymail
 import (
 	"errors"
 	"github.com/libsv/go-bc"
+	"github.com/libsv/go-bt/v2"
 )
 
 // BUMPs represents a slice of BUMPs - BSV Unified Merkle Paths
@@ -21,6 +22,13 @@ type BUMPLeaf struct {
 	duplicate bool
 	offset    uint64
 }
+
+// Flags which are used to determine the type of BUMPLeaf
+const (
+	dataFlag bt.VarInt = iota
+	duplicateFlag
+	txIDFlag
+)
 
 func (b BUMP) calculateMerkleRoots() ([]string, error) {
 	merkleRoots := make([]string, 0)
@@ -50,10 +58,7 @@ func calculateMerkleRoot(baseLeaf BUMPLeaf, bump BUMP) (string, error) {
 	offset := baseLeaf.offset
 
 	for _, bLevel := range bump.path {
-		newOffset := offset - 1
-		if offset%2 == 0 {
-			newOffset = offset + 1
-		}
+		newOffset := getOffsetPair(offset)
 		leafInPair := findLeafByOffset(newOffset, bLevel)
 		if leafInPair == nil {
 			return "", errors.New("could not find pair")
@@ -76,6 +81,13 @@ func calculateMerkleRoot(baseLeaf BUMPLeaf, bump BUMP) (string, error) {
 	}
 
 	return calculatedHash, nil
+}
+
+func getOffsetPair(offset uint64) uint64 {
+	if offset%2 == 0 {
+		return offset + 1
+	}
+	return offset - 1
 }
 
 func prepareNodes(baseLeaf BUMPLeaf, offset uint64, leafInPair BUMPLeaf, newOffset uint64) (string, string) {
