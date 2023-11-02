@@ -21,7 +21,7 @@ jobs:
     - name: Setup golangci-lint
       uses: golangci/golangci-lint-action@v2
       with:
-        version: 1.21
+        version: latest
         skip-go-installation: true
     - name: Run Lint
       run: task lint
