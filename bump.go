@@ -5,20 +5,17 @@ import (
 	"github.com/libsv/go-bc"
 )
 
-// BUMPPaths represents BUMP format for all inputs
-type BUMPPaths []BUMP
+// BUMPs represents a slice of BUMPs - BSV Unified Merkle Paths
+type BUMPs []BUMP
 
 // BUMP is a struct that represents a whole BUMP format
 type BUMP struct {
 	blockHeight uint64
-	path        []BUMPPath
+	path        [][]BUMPLeaf
 }
 
-// BUMPPath is a slice of BUMPLevel objects which represents a path
-type BUMPPath []BUMPPathElement
-
-// BUMPPathElement is a struct that represents a single BUMP transaction
-type BUMPPathElement struct {
+// BUMPLeaf represents each BUMP path element
+type BUMPLeaf struct {
 	hash      string
 	txId      bool
 	duplicate bool
@@ -38,8 +35,8 @@ func (b BUMP) calculateMerkleRoots() ([]string, error) {
 	return merkleRoots, nil
 }
 
-func (bPath BUMPPath) findTxByOffset(offset uint64) *BUMPPathElement {
-	for _, bumpTx := range bPath {
+func findTxByOffset(offset uint64, bumpLeaves []BUMPLeaf) *BUMPLeaf {
+	for _, bumpTx := range bumpLeaves {
 		if bumpTx.offset == offset {
 			return &bumpTx
 		}
@@ -48,7 +45,7 @@ func (bPath BUMPPath) findTxByOffset(offset uint64) *BUMPPathElement {
 }
 
 // calculateMerkleRoots will calculate one merkle root for tx in the BUMPPath
-func calculateMerkleRoot(baseTx BUMPPathElement, bump BUMP) (string, error) {
+func calculateMerkleRoot(baseTx BUMPLeaf, bump BUMP) (string, error) {
 	calculatedHash := baseTx.hash
 	offset := baseTx.offset
 
@@ -57,7 +54,7 @@ func calculateMerkleRoot(baseTx BUMPPathElement, bump BUMP) (string, error) {
 		if offset%2 == 0 {
 			newOffset = offset + 1
 		}
-		tx2 := bLevel.findTxByOffset(newOffset)
+		tx2 := findTxByOffset(newOffset, bLevel)
 		if &tx2 == nil {
 			return "", errors.New("could not find pair")
 		}
@@ -72,7 +69,7 @@ func calculateMerkleRoot(baseTx BUMPPathElement, bump BUMP) (string, error) {
 
 		offset = offset / 2
 
-		baseTx = BUMPPathElement{
+		baseTx = BUMPLeaf{
 			hash:   calculatedHash,
 			offset: offset,
 		}
@@ -81,7 +78,7 @@ func calculateMerkleRoot(baseTx BUMPPathElement, bump BUMP) (string, error) {
 	return calculatedHash, nil
 }
 
-func prepareNodes(baseTx BUMPPathElement, offset uint64, tx2 BUMPPathElement, newOffset uint64) (string, string) {
+func prepareNodes(baseTx BUMPLeaf, offset uint64, tx2 BUMPLeaf, newOffset uint64) (string, string) {
 	var txHash, tx2Hash string
 
 	if baseTx.duplicate {

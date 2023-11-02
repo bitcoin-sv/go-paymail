@@ -29,7 +29,7 @@ type TxData struct {
 }
 
 type DecodedBEEF struct {
-	BUMPs           BUMPPaths
+	BUMPs           BUMPs
 	InputsTxData    []TxData
 	ProcessedTxData TxData
 }
@@ -111,14 +111,14 @@ func decodeBUMPs(beefBytes []byte) ([]BUMP, []byte, error) {
 	return bumps, beefBytes, nil
 }
 
-func decodeBUMPPathsFromStream(hexBytes []byte) ([]BUMPPath, []byte, error) {
+func decodeBUMPPathsFromStream(hexBytes []byte) ([][]BUMPLeaf, []byte, error) {
 	if len(hexBytes) < 1 {
 		return nil, nil, errors.New("cannot decode BUMP paths from stream - no bytes provided")
 	}
 
 	treeHeight, bytesUsed := bt.NewVarIntFromBytes(hexBytes)
 	hexBytes = hexBytes[bytesUsed:]
-	bumpPaths := make([]BUMPPath, 0)
+	bumpPaths := make([][]BUMPLeaf, 0)
 
 	for i := 0; i < int(treeHeight); i++ {
 		if len(hexBytes) < 1 {
@@ -137,8 +137,8 @@ func decodeBUMPPathsFromStream(hexBytes []byte) ([]BUMPPath, []byte, error) {
 	return bumpPaths, hexBytes, nil
 }
 
-func decodeBUMPPath(nLeaves bt.VarInt, hexBytes []byte) (BUMPPath, []byte, error) {
-	var bumpPath BUMPPath
+func decodeBUMPPath(nLeaves bt.VarInt, hexBytes []byte) ([]BUMPLeaf, []byte, error) {
+	bumpPath := make([]BUMPLeaf, 0)
 	for i := 0; i < int(nLeaves); i++ {
 		if len(hexBytes) < 1 {
 			return nil, nil, fmt.Errorf("insufficient bytes to extract offset for %d leaf of %d leaves", i, int(nLeaves))
@@ -159,7 +159,7 @@ func decodeBUMPPath(nLeaves bt.VarInt, hexBytes []byte) (BUMPPath, []byte, error
 		}
 
 		if flag == 1 {
-			bumpPathElement := BUMPPathElement{
+			bumpPathElement := BUMPLeaf{
 				offset:    uint64(offset),
 				duplicate: true,
 			}
@@ -177,13 +177,13 @@ func decodeBUMPPath(nLeaves bt.VarInt, hexBytes []byte) (BUMPPath, []byte, error
 		hash = reverse(hash)
 
 		if flag == 0 {
-			bumpPathElement := BUMPPathElement{
+			bumpPathElement := BUMPLeaf{
 				hash:   hash,
 				offset: uint64(offset),
 			}
 			bumpPath = append(bumpPath, bumpPathElement)
 		} else {
-			bumpPathElement := BUMPPathElement{
+			bumpPathElement := BUMPLeaf{
 				hash:   hash,
 				txId:   true,
 				offset: uint64(offset),
