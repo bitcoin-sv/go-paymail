@@ -3,6 +3,7 @@ package paymail
 import (
 	"context"
 	"errors"
+	"github.com/libsv/go-bt/v2/bscript"
 	"testing"
 
 	"github.com/libsv/go-bt/v2"
@@ -29,38 +30,54 @@ func TestDecodeBEEF_DecodeBEEF_HappyPaths(t *testing.T) {
 	}{
 		{
 			name:      "valid BEEF with 1 CMP and 1 input transaction",
-			hexStream: "0100beef01020101cd73c0c6bb645581816fa960fd2f1636062fcbf23cb57981074ab8d708a76e3b02003470d882cf556a4b943639eba15dc795dffdbebdc98b9a98e3637fda96e3811e01c58e40f22b9e9fcd05a09689a9b19e6e62dbfd3335c5253d09a7a7cd755d9a3c04008c00bb9360e93fb822c84b2e579fa4ce75c8378ae87f67730a49552f73c56ee801da256f78ae0ad74bbf539662cdb9122aa02ba9a9d883f1d52468d96290515adb02b4c8d919190a090e77b73ffcd52b85babaaeeb62da000473102aca7f070facef03e5b331f4961d764373f3a4e2751954e75489fb17902aad583eedbb41dc165a3b02020000000158cb8b052fded9a6c450c4212562df8820359ec34da41286421e0d0f2b7eefee000000006a47304402206b1255cb23454c63b22833de25a3a3ecbdb8d8645ad129d3269cdddf10b2ec98022034cadf46e5bfecc38940e5497ddf5fa9aeb37ff5ec3fe8e21b19cbb64a45ec324121029a82bfce319faccc34095c8405896e1223921917501a4f736a04f126d6a01c12ffffffff0101000000000000001976a914d866ec5ebb0f4e3840351ee61887101e5407562988ac000000000100020000000158cb8b052fded9a6c450c4212562df8820359ec34da41286421e0d0f2b7eefee000000006a47304402206b1255cb23454c63b22833de25a3a3ecbdb8d8645ad129d3269cdddf10b2ec98022034cadf46e5bfecc38940e5497ddf5fa9aeb37ff5ec3fe8e21b19cbb64a45ec324121029a82bfce319faccc34095c8405896e1223921917501a4f736a04f126d6a01c12ffffffff0101000000000000001976a914d866ec5ebb0f4e3840351ee61887101e5407562988ac0000000000",
+			hexStream: "0100beef01fe636d0c0007021400fe507c0c7aa754cef1f7889d5fd395cf1f785dd7de98eed895dbedfe4e5bc70d1502ac4e164f5bc16746bb0868404292ac8318bbac3800e4aad13a014da427adce3e010b00bc4ff395efd11719b277694cface5aa50d085a0bb81f613f70313acd28cf4557010400574b2d9142b8d28b61d88e3b2c3f44d858411356b49a28a4643b6d1a6a092a5201030051a05fc84d531b5d250c23f4f886f6812f9fe3f402d61607f977b4ecd2701c19010000fd781529d58fc2523cf396a7f25440b409857e7e221766c57214b1d38c7b481f01010062f542f45ea3660f86c013ced80534cb5fd4c19d66c56e7e8c5d4bf2d40acc5e010100b121e91836fd7cd5102b654e9f72f3cf6fdbfd0b161c53a9c54b12c841126331020100000001cd4e4cac3c7b56920d1e7655e7e260d31f29d9a388d04910f1bbd72304a79029010000006b483045022100e75279a205a547c445719420aa3138bf14743e3f42618e5f86a19bde14bb95f7022064777d34776b05d816daf1699493fcdf2ef5a5ab1ad710d9c97bfb5b8f7cef3641210263e2dee22b1ddc5e11f6fab8bcd2378bdd19580d640501ea956ec0e786f93e76ffffffff013e660000000000001976a9146bfd5c7fbe21529d45803dbcf0c87dd3c71efbc288ac0000000001000100000001ac4e164f5bc16746bb0868404292ac8318bbac3800e4aad13a014da427adce3e000000006a47304402203a61a2e931612b4bda08d541cfb980885173b8dcf64a3471238ae7abcd368d6402204cbf24f04b9aa2256d8901f0ed97866603d2be8324c2bfb7a37bf8fc90edd5b441210263e2dee22b1ddc5e11f6fab8bcd2378bdd19580d640501ea956ec0e786f93e76ffffffff013c660000000000001976a9146bfd5c7fbe21529d45803dbcf0c87dd3c71efbc288ac0000000000",
 			expectedDecodedBEEF: &DecodedBEEF{
-				CMPSlice: CMPSlice{
-					{
-						{
-							"8c00bb9360e93fb822c84b2e579fa4ce75c8378ae87f67730a49552f73c56ee8": 0x0,
-							"da256f78ae0ad74bbf539662cdb9122aa02ba9a9d883f1d52468d96290515adb": 0x1,
-							"b4c8d919190a090e77b73ffcd52b85babaaeeb62da000473102aca7f070facef": 0x2,
-							"e5b331f4961d764373f3a4e2751954e75489fb17902aad583eedbb41dc165a3b": 0x3,
+				BUMPs: BUMPs{
+					BUMP{
+						blockHeight: 814435,
+						path: [][]BUMPLeaf{
+							{
+								BUMPLeaf{hash: "0dc75b4efeeddb95d8ee98ded75d781fcf95d35f9d88f7f1ce54a77a0c7c50fe", offset: 20},
+								BUMPLeaf{hash: "3ecead27a44d013ad1aae40038acbb1883ac9242406808bb4667c15b4f164eac", txId: true, offset: 21},
+							},
+							{
+								BUMPLeaf{hash: "5745cf28cd3a31703f611fb80b5a080da55acefa4c6977b21917d1ef95f34fbc", offset: 11},
+							},
+							{
+								BUMPLeaf{hash: "522a096a1a6d3b64a4289ab456134158d8443f2c3b8ed8618bd2b842912d4b57", offset: 4},
+							},
+							{
+								BUMPLeaf{hash: "191c70d2ecb477f90716d602f4e39f2f81f686f8f4230c255d1b534dc85fa051", offset: 3},
+							},
+							{
+								BUMPLeaf{hash: "1f487b8cd3b11472c56617227e7e8509b44054f2a796f33c52c28fd5291578fd", offset: 0},
+							},
+							{
+								BUMPLeaf{hash: "5ecc0ad4f24b5d8c7e6ec5669dc1d45fcb3405d8ce13c0860f66a35ef442f562", offset: 1},
+							},
+							{
+								BUMPLeaf{hash: "31631241c8124bc5a9531c160bfddb6fcff3729f4e652b10d57cfd3618e921b1", offset: 1},
+							},
 						},
-						{
-							"3470d882cf556a4b943639eba15dc795dffdbebdc98b9a98e3637fda96e3811e": 0x0, "c58e40f22b9e9fcd05a09689a9b19e6e62dbfd3335c5253d09a7a7cd755d9a3c": 0x1,
-						},
-						{"cd73c0c6bb645581816fa960fd2f1636062fcbf23cb57981074ab8d708a76e3b": 0x1},
 					},
 				},
 				InputsTxData: []TxData{
 					{
 						Transaction: &bt.Tx{
-							Version:  2,
+							Version:  1,
 							LockTime: 0,
 							Inputs: []*bt.Input{
 								{
 									PreviousTxSatoshis: 0,
-									PreviousTxOutIndex: 0,
+									PreviousTxOutIndex: 1,
 									SequenceNumber:     4294967295,
 									PreviousTxScript:   nil,
 								},
 							},
 							Outputs: []*bt.Output{
 								{
-									Satoshis: 1,
+									Satoshis:      26174,
+									LockingScript: bscript.NewFromBytes([]byte("76a9146bfd5c7fbe21529d45803dbcf0c87dd3c71efbc288ac")),
 								},
 							}},
 						PathIndex: func(v bt.VarInt) *bt.VarInt { return &v }(0x0),
@@ -68,7 +85,7 @@ func TestDecodeBEEF_DecodeBEEF_HappyPaths(t *testing.T) {
 				},
 				ProcessedTxData: TxData{
 					Transaction: &bt.Tx{
-						Version:  2,
+						Version:  1,
 						LockTime: 0,
 						Inputs: []*bt.Input{
 							{
@@ -80,106 +97,14 @@ func TestDecodeBEEF_DecodeBEEF_HappyPaths(t *testing.T) {
 						},
 						Outputs: []*bt.Output{
 							{
-								Satoshis: 1,
+								Satoshis:      26172,
+								LockingScript: bscript.NewFromBytes([]byte("76a9146bfd5c7fbe21529d45803dbcf0c87dd3c71efbc288ac")),
 							},
 						}},
 					PathIndex: nil,
 				},
 			},
 			pathIndexForTheOldestInput: func(v bt.VarInt) *bt.VarInt { return &v }(0x0),
-		},
-		{
-			name:      "valid BEEF with 2 CMP and 2 input transaction - all input transactions have no CMP flag set",
-			hexStream: "0100beef02020101cd73c0c6bb645581816fa960fd2f1636062fcbf23cb57981074ab8d708a76e3b02003470d882cf556a4b943639eba15dc795dffdbebdc98b9a98e3637fda96e3811e01c58e40f22b9e9fcd05a09689a9b19e6e62dbfd3335c5253d09a7a7cd755d9a3c04008c00bb9360e93fb822c84b2e579fa4ce75c8378ae87f67730a49552f73c56ee801da256f78ae0ad74bbf539662cdb9122aa02ba9a9d883f1d52468d96290515adb02b4c8d919190a090e77b73ffcd52b85babaaeeb62da000473102aca7f070facef03e5b331f4961d764373f3a4e2751954e75489fb17902aad583eedbb41dc165a3b020101cd73c0c6bb645581816fa960fd2f1636062fcbf23cb57981074ab8d708a76e3b02003470d882cf556a4b943639eba15dc795dffdbebdc98b9a98e3637fda96e3811e01c58e40f22b9e9fcd05a09689a9b19e6e62dbfd3335c5253d09a7a7cd755d9a3c04008c00bb9360e93fb822c84b2e579fa4ce75c8378ae87f67730a49552f73c56ee801da256f78ae0ad74bbf539662cdb9122aa02ba9a9d883f1d52468d96290515adb02b4c8d919190a090e77b73ffcd52b85babaaeeb62da000473102aca7f070facef03e5b331f4961d764373f3a4e2751954e75489fb17902aad583eedbb41dc165a3b03020000000158cb8b052fded9a6c450c4212562df8820359ec34da41286421e0d0f2b7eefee000000006a47304402206b1255cb23454c63b22833de25a3a3ecbdb8d8645ad129d3269cdddf10b2ec98022034cadf46e5bfecc38940e5497ddf5fa9aeb37ff5ec3fe8e21b19cbb64a45ec324121029a82bfce319faccc34095c8405896e1223921917501a4f736a04f126d6a01c12ffffffff0101000000000000001976a914d866ec5ebb0f4e3840351ee61887101e5407562988ac0000000000020000000158cb8b052fded9a6c450c4212562df8820359ec34da41286421e0d0f2b7eefee000000006a47304402206b1255cb23454c63b22833de25a3a3ecbdb8d8645ad129d3269cdddf10b2ec98022034cadf46e5bfecc38940e5497ddf5fa9aeb37ff5ec3fe8e21b19cbb64a45ec324121029a82bfce319faccc34095c8405896e1223921917501a4f736a04f126d6a01c12ffffffff0101000000000000001976a914d866ec5ebb0f4e3840351ee61887101e5407562988ac0000000000020000000158cb8b052fded9a6c450c4212562df8820359ec34da41286421e0d0f2b7eefee000000006a47304402206b1255cb23454c63b22833de25a3a3ecbdb8d8645ad129d3269cdddf10b2ec98022034cadf46e5bfecc38940e5497ddf5fa9aeb37ff5ec3fe8e21b19cbb64a45ec324121029a82bfce319faccc34095c8405896e1223921917501a4f736a04f126d6a01c12ffffffff0101000000000000001976a914d866ec5ebb0f4e3840351ee61887101e5407562988ac0000000000",
-			expectedDecodedBEEF: &DecodedBEEF{
-				CMPSlice: CMPSlice{
-					{
-						{
-							"8c00bb9360e93fb822c84b2e579fa4ce75c8378ae87f67730a49552f73c56ee8": 0x0,
-							"da256f78ae0ad74bbf539662cdb9122aa02ba9a9d883f1d52468d96290515adb": 0x1,
-							"b4c8d919190a090e77b73ffcd52b85babaaeeb62da000473102aca7f070facef": 0x2,
-							"e5b331f4961d764373f3a4e2751954e75489fb17902aad583eedbb41dc165a3b": 0x3,
-						},
-						{
-							"3470d882cf556a4b943639eba15dc795dffdbebdc98b9a98e3637fda96e3811e": 0x0,
-							"c58e40f22b9e9fcd05a09689a9b19e6e62dbfd3335c5253d09a7a7cd755d9a3c": 0x1,
-						},
-						{"cd73c0c6bb645581816fa960fd2f1636062fcbf23cb57981074ab8d708a76e3b": 0x1},
-					},
-					{
-						{
-							"8c00bb9360e93fb822c84b2e579fa4ce75c8378ae87f67730a49552f73c56ee8": 0x0,
-							"da256f78ae0ad74bbf539662cdb9122aa02ba9a9d883f1d52468d96290515adb": 0x1,
-							"b4c8d919190a090e77b73ffcd52b85babaaeeb62da000473102aca7f070facef": 0x2,
-							"e5b331f4961d764373f3a4e2751954e75489fb17902aad583eedbb41dc165a3b": 0x3,
-						},
-						{
-							"3470d882cf556a4b943639eba15dc795dffdbebdc98b9a98e3637fda96e3811e": 0x0,
-							"c58e40f22b9e9fcd05a09689a9b19e6e62dbfd3335c5253d09a7a7cd755d9a3c": 0x1,
-						},
-						{"cd73c0c6bb645581816fa960fd2f1636062fcbf23cb57981074ab8d708a76e3b": 0x1},
-					},
-				},
-				InputsTxData: []TxData{
-					{
-						Transaction: &bt.Tx{
-							Version:  2,
-							LockTime: 0,
-							Inputs: []*bt.Input{
-								{
-									PreviousTxSatoshis: 0,
-									PreviousTxOutIndex: 0,
-									SequenceNumber:     4294967295,
-									PreviousTxScript:   nil,
-								},
-							},
-							Outputs: []*bt.Output{
-								{
-									Satoshis: 1,
-								},
-							}},
-						PathIndex: nil,
-					},
-					{
-						Transaction: &bt.Tx{
-							Version:  2,
-							LockTime: 0,
-							Inputs: []*bt.Input{
-								{
-									PreviousTxSatoshis: 0,
-									PreviousTxOutIndex: 0,
-									SequenceNumber:     4294967295,
-									PreviousTxScript:   nil,
-								},
-							},
-							Outputs: []*bt.Output{
-								{
-									Satoshis: 1,
-								},
-							}},
-						PathIndex: nil,
-					},
-				},
-				ProcessedTxData: TxData{
-					Transaction: &bt.Tx{
-						Version:  2,
-						LockTime: 0,
-						Inputs: []*bt.Input{
-							{
-								PreviousTxSatoshis: 0,
-								PreviousTxOutIndex: 0,
-								SequenceNumber:     4294967295,
-								PreviousTxScript:   nil,
-							},
-						},
-						Outputs: []*bt.Output{
-							{
-								Satoshis: 1,
-							},
-						}},
-				},
-			},
-			pathIndexForTheOldestInput: nil,
 		},
 	}
 	for _, tc := range testCases {
@@ -195,9 +120,12 @@ func TestDecodeBEEF_DecodeBEEF_HappyPaths(t *testing.T) {
 
 			assert.Equal(t, len(tc.expectedDecodedBEEF.InputsTxData), len(decodedBEEF.InputsTxData), "expected %v inputs, but got %v", len(tc.expectedDecodedBEEF.InputsTxData), len(decodedBEEF.InputsTxData))
 
-			assert.Equal(t, len(tc.expectedDecodedBEEF.CMPSlice), len(decodedBEEF.CMPSlice), "expected %v CMPs, but got %v", len(tc.expectedDecodedBEEF.CMPSlice), len(decodedBEEF.CMPSlice))
+			assert.Equal(t, len(tc.expectedDecodedBEEF.BUMPs), len(decodedBEEF.BUMPs), "expected %v BUMPs, but got %v", len(tc.expectedDecodedBEEF.BUMPs), len(decodedBEEF.BUMPs))
 
-			assert.Equal(t, tc.expectedDecodedBEEF.CMPSlice, decodedBEEF.CMPSlice, "expected decoded CMP to be %v, but got %v", tc.expectedDecodedBEEF.CMPSlice, decodedBEEF.CMPSlice)
+			for i, bump := range tc.expectedDecodedBEEF.BUMPs {
+				assert.Equal(t, len(bump.path), len(decodedBEEF.BUMPs[i].path), "expected %v BUMPPaths for %v BUMP, but got %v", len(bump.path), i, len(decodedBEEF.BUMPs[i].path))
+				assert.Equal(t, bump.path, decodedBEEF.BUMPs[i].path, "expected equal BUMPPaths for %v BUMP, expected: %v but got %v", i, bump, len(decodedBEEF.BUMPs[i].path))
+			}
 
 			assert.NotNil(t, decodedBEEF.ProcessedTxData.Transaction, "expected original transaction to be not nil")
 
@@ -225,7 +153,7 @@ func TestDecodeBEEF_DecodeBEEF_HandlingErrors(t *testing.T) {
 			name:                         "unable to decode BEEF - only marker and version has been provided",
 			hexStream:                    "0100beef",
 			expectedDecodedBEEF:          nil,
-			expectedError:                errors.New("cannot decode cmp slice from stream - no bytes provided"),
+			expectedError:                errors.New("cannot decode BUMP - no bytes provided"),
 			expectedCMPForTheOldestInput: false,
 		},
 		{
@@ -236,41 +164,64 @@ func TestDecodeBEEF_DecodeBEEF_HandlingErrors(t *testing.T) {
 			expectedCMPForTheOldestInput: false,
 		},
 		{
-			name:                         "unable to decode height - exceeded maximum allowed value",
-			hexStream:                    "0100beef01660101cd73c0c6bb645581816fa960fd2f1636062fcbf23cb57981074ab8d708a76e3b02003470d882cf556a4b943639eba15dc795dffdbebdc98b9a98e3637fda96e3811e01c58e40f22b9e9fcd05a09689a9b19e6e62dbfd3335c5253d09a7a7cd755d9a3c04008c00bb9360e93fb822c84b2e579fa4ce75c8378ae87f67730a49552f73c56ee801da256f78ae0ad74bbf539662cdb9122aa02ba9a9d883f1d52468d96290515adb02b4c8d919190a090e77b73ffcd52b85babaaeeb62da000473102aca7f070facef03e5b331f4961d764373f3a4e2751954e75489fb17902aad583eedbb41dc165a3b02020000000158cb8b052fded9a6c450c4212562df8820359ec34da41286421e0d0f2b7eefee000000006a47304402206b1255cb23454c63b22833de25a3a3ecbdb8d8645ad129d3269cdddf10b2ec98022034cadf46e5bfecc38940e5497ddf5fa9aeb37ff5ec3fe8e21b19cbb64a45ec324121029a82bfce319faccc34095c8405896e1223921917501a4f736a04f126d6a01c12ffffffff0101000000000000001976a914d866ec5ebb0f4e3840351ee61887101e5407562988ac000000000100020000000158cb8b052fded9a6c450c4212562df8820359ec34da41286421e0d0f2b7eefee000000006a47304402206b1255cb23454c63b22833de25a3a3ecbdb8d8645ad129d3269cdddf10b2ec98022034cadf46e5bfecc38940e5497ddf5fa9aeb37ff5ec3fe8e21b19cbb64a45ec324121029a82bfce319faccc34095c8405896e1223921917501a4f736a04f126d6a01c12ffffffff0101000000000000001976a914d866ec5ebb0f4e3840351ee61887101e5407562988ac0000000000",
-			expectedDecodedBEEF:          nil,
-			expectedError:                errors.New("height exceeds maximum allowed value of 64"),
-			expectedCMPForTheOldestInput: false,
+			name:                "unable to decode BUMP block height - proper BEEF marker and number of bumps",
+			hexStream:           "0100beef01",
+			expectedDecodedBEEF: nil,
+			expectedError:       errors.New("insufficient bytes to extract BUMP blockHeight"),
 		},
 		{
-			name:                "unable to decode nOfLeaves - proper BEEF marker, number of CMPs and starting height, but end of stream at this point",
-			hexStream:           "0100beef0101",
+			name:                "unable to decode BUMP tree height - proper BEEF marker, number of bumps and block height",
+			hexStream:           "0100beef01fe8a6a0c00",
 			expectedDecodedBEEF: nil,
-			expectedError:       errors.New("insufficient bytes to extract Compound Merkle Path at height 1"),
+			expectedError:       errors.New("cannot decode BUMP paths from stream - no bytes provided"),
 		},
 		{
-			name:                "unable to decode CMP offset - proper BEEF marker, number of CMPs and starting height, and number of leaves, but end of stream at this point",
-			hexStream:           "0100beef010101",
+			name:                "unable to decode BUMP number of leaves - proper BEEF marker, number of bumps, block height and tree height but end of stream at this point",
+			hexStream:           "0100beef01fe8a6a0c000c",
 			expectedDecodedBEEF: nil,
-			expectedError:       errors.New("insufficient bytes to extract index 0 leaf of 1 leaves at 1 height"),
+			expectedError:       errors.New("cannot decode BUMP paths number of leaves from stream - no bytes provided"),
 		},
 		{
-			name:                "unable to decode CMP leaf - proper BEEF marker, number of CMPs and starting height, and number of leaves, offset, but hash length is less than 32 bytes",
-			hexStream:           "0100beef01010201cd73c0c6bb645581816fa960fd2f1636062fcbf23cb57981074ab8d708a76e",
+			name:                "unable to decode BUMP leaf - no offset - proper BEEF marker, number of bumps, block height and tree height and nLeaves but end of stream at this point",
+			hexStream:           "0100beef01fe8a6a0c000c04",
 			expectedDecodedBEEF: nil,
-			expectedError:       errors.New("insufficient bytes to extract hash of path with offset 1 at height 1"),
+			expectedError:       errors.New("insufficient bytes to extract offset for 0 leaf of 4 leaves"),
 		},
 		{
-			name:                "not enough transactions provided to decode BEEF properly (0 transactions)",
-			hexStream:           "0100beef01020101cd73c0c6bb645581816fa960fd2f1636062fcbf23cb57981074ab8d708a76e3b02003470d882cf556a4b943639eba15dc795dffdbebdc98b9a98e3637fda96e3811e01c58e40f22b9e9fcd05a09689a9b19e6e62dbfd3335c5253d09a7a7cd755d9a3c04008c00bb9360e93fb822c84b2e579fa4ce75c8378ae87f67730a49552f73c56ee801da256f78ae0ad74bbf539662cdb9122aa02ba9a9d883f1d52468d96290515adb02b4c8d919190a090e77b73ffcd52b85babaaeeb62da000473102aca7f070facef03e5b331f4961d764373f3a4e2751954e75489fb17902aad583eedbb41dc165a3b00",
+			name:                "unable to decode BUMP leaf - no flag - proper BEEF marker, number of bumps, block height and tree height, nLeaves and offset but end of stream at this point",
+			hexStream:           "0100beef01fe8a6a0c000c04fde80b",
 			expectedDecodedBEEF: nil,
-			expectedError:       errors.New("not enough transactions provided to decode BEEF"),
+			expectedError:       errors.New("insufficient bytes to extract flag for 0 leaf of 4 leaves"),
 		},
 		{
-			name:                "invalid HasCMP flag provided for decoded transaction",
-			hexStream:           "0100beef01020101cd73c0c6bb645581816fa960fd2f1636062fcbf23cb57981074ab8d708a76e3b02003470d882cf556a4b943639eba15dc795dffdbebdc98b9a98e3637fda96e3811e01c58e40f22b9e9fcd05a09689a9b19e6e62dbfd3335c5253d09a7a7cd755d9a3c04008c00bb9360e93fb822c84b2e579fa4ce75c8378ae87f67730a49552f73c56ee801da256f78ae0ad74bbf539662cdb9122aa02ba9a9d883f1d52468d96290515adb02b4c8d919190a090e77b73ffcd52b85babaaeeb62da000473102aca7f070facef03e5b331f4961d764373f3a4e2751954e75489fb17902aad583eedbb41dc165a3b02020000000158cb8b052fded9a6c450c4212562df8820359ec34da41286421e0d0f2b7eefee000000006a47304402206b1255cb23454c63b22833de25a3a3ecbdb8d8645ad129d3269cdddf10b2ec98022034cadf46e5bfecc38940e5497ddf5fa9aeb37ff5ec3fe8e21b19cbb64a45ec324121029a82bfce319faccc34095c8405896e1223921917501a4f736a04f126d6a01c12ffffffff0101000000000000001976a914d866ec5ebb0f4e3840351ee61887101e5407562988ac000000000100020000000158cb8b052fded9a6c450c4212562df8820359ec34da41286421e0d0f2b7eefee000000006a47304402206b1255cb23454c63b22833de25a3a3ecbdb8d8645ad129d3269cdddf10b2ec98022034cadf46e5bfecc38940e5497ddf5fa9aeb37ff5ec3fe8e21b19cbb64a45ec324121029a82bfce319faccc34095c8405896e1223921917501a4f736a04f126d6a01c12ffffffff0101000000000000001976a914d866ec5ebb0f4e3840351ee61887101e5407562988ac0000000007",
+			name:                "unable to decode BUMP leaf - wrong flag - proper BEEF marker, number of bumps, block height and tree height, nLeaves and offset",
+			hexStream:           "0100beef01fe8a6a0c000c04fde80b03",
 			expectedDecodedBEEF: nil,
-			expectedError:       errors.New("invalid HasCMP flag for transaction at index 1"),
+			expectedError:       errors.New("invalid flag: 3 for 0 leaf of 4 leaves"),
+		},
+		{
+			name:                "unable to decode BUMP leaf - no hash with flag 0 - proper BEEF marker, number of bumps, block height and tree height, nLeaves, offset and flag",
+			hexStream:           "0100beef01fe8a6a0c000c04fde80b00",
+			expectedDecodedBEEF: nil,
+			expectedError:       errors.New("insufficient bytes to extract hash of path"),
+		},
+		{
+			name:                "unable to decode BUMP leaf - no hash with flag 2 - proper BEEF marker, number of bumps, block height and tree height, nLeaves, offset and flag",
+			hexStream:           "0100beef01fe8a6a0c000c04fde80b00",
+			expectedDecodedBEEF: nil,
+			expectedError:       errors.New("insufficient bytes to extract hash of path"),
+		},
+		{
+			name:                "unable to decode BUMP leaf - flag 1 - proper BEEF marker, number of bumps, block height and tree height, nLeaves, offset and flag but end of stream at this point - flag 1 means that there is no hash",
+			hexStream:           "0100beef01fe8a6a0c000c04fde80b01",
+			expectedDecodedBEEF: nil,
+			expectedError:       errors.New("insufficient bytes to extract offset for 1 leaf of 4 leaves"),
+		},
+		{
+			name:                "unable to decode BUMP leaf - not enough bytes for hash - proper BEEF marker, number of bumps, block height and tree height, nLeaves, offset and flag but with not enough bytes for hash",
+			hexStream:           "0100beef01fe8a6a0c000c04fde80b0011774f01d26412f0d16ea3f0447be0b5ebec67b0782e321a7a01cbdf7f734e",
+			expectedDecodedBEEF: nil,
+			expectedError:       errors.New("insufficient bytes to extract hash of path"),
 		},
 	}
 	for _, tc := range testCases {
@@ -292,7 +243,7 @@ func TestDecodeBEEF_DecodeBEEF_HandlingErrors(t *testing.T) {
 func TestDecodedBeef(t *testing.T) {
 	t.Parallel()
 
-	const validBeefHex = "0100beef01020101cd73c0c6bb645581816fa960fd2f1636062fcbf23cb57981074ab8d708a76e3b02003470d882cf556a4b943639eba15dc795dffdbebdc98b9a98e3637fda96e3811e01c58e40f22b9e9fcd05a09689a9b19e6e62dbfd3335c5253d09a7a7cd755d9a3c04008c00bb9360e93fb822c84b2e579fa4ce75c8378ae87f67730a49552f73c56ee801da256f78ae0ad74bbf539662cdb9122aa02ba9a9d883f1d52468d96290515adb02b4c8d919190a090e77b73ffcd52b85babaaeeb62da000473102aca7f070facef03e5b331f4961d764373f3a4e2751954e75489fb17902aad583eedbb41dc165a3b020100000001d0924efc6eb21c88ec91538edfb1fa8ae73e1e2417d6fdec0119998d6042778b0a0000006a47304402205d31e8777edd5d609d3ad9b3090c37016eacf9ab3b150d8badc6d9088ed1ba99022032af2a0b7b8d9cd6a92da5972dfd9d84722e86c213497bbe5a09d30acf9893ee412102d395073f0b4866d64d10015cb016924b1f79cad522911e0b884cd362304f6fd5ffffffff09f4010000000000001976a9147568534fbfc766d05a85c0a18adf71b736c9ad6888acf4010000000000001976a914005d343495af9904df7058ca255dfc7a6271b80f88acf4010000000000001976a914bdd0a2081a29b10c66b76534de0b3c4742fbe35688acf4010000000000001976a91479e158f460cedabf2ed37793e2c2b8f39c79909688acf4010000000000001976a9141a23b7405448ddb2fc687b8479fe9ba16d83edd888ac88130000000000001976a914d107abe806862ac2afa80e77ae5bc4c38eb93a7f88ac10270000000000001976a9149138e8bc3fad2076a9335b0a1f7ea29502b13ce588ac0000000000000000fd2401006a22314d6a4a7251744a735959647a753254487872654e69524c53586548637a417778550a5361746f73656e6465720a746578742f706c61696e057574662d38017c223150755161374b36324d694b43747373534c4b79316b683536575755374d7455523503534554036170700a7361746f73656e64657204747970650c7265676973746572557365720c7061796d61696c204861736840376538303531633662306330633339373231303238656134326361333836383733323236656263396264353732323336353935376637333461353365633339350970686f6e65486173684037363339633564383239646138373935373030353133613865626338623762656361643532333336346365356335626135666436636263356239626532333261c3090000000000001976a91479dcbb510e68557c8a791e439cd9f8b0d8d3429b88ac00000000010001000000010202f24b9ae7399cc6b218053b3b0800cd48c93131fc71442921eb46e9b2ea5a060000006a4730440220338e92e521529e433a2c6b9afbe02e30602c9a553570855692b03e8cfab5b65802204196d7bf136f9768d094808d6bfd6cade3030bf812affea1d71bd51b1c2b104b412102eb33b0cbffb1e3490033348e9d47bcffbeb2e917210958c013f3260864b86c4bffffffff08f4010000000000001976a914c0b3640ed2d59b31d90f1eca2b87db733fb303db88ac88130000000000001976a91417386cd7256887615d214d3e0f70fede265b52cc88acf4010000000000001976a91402b6128d583aa1588f617e5980f4727891e71a9b88acf4010000000000001976a91449412664a4231edb2dfc03cbabff3b404ea4776588acf4010000000000001976a914cb9610a9d2bf1805022779d6f97e2cfdd7c2c8c488acf4010000000000001976a91416b6a5e45d5b2fb7d64e255504734f7c8f7762fa88ac0000000000000000fd2401006a22314d6a4a7251744a735959647a753254487872654e69524c53586548637a417778550a5361746f73656e6465720a746578742f706c61696e057574662d38017c223150755161374b36324d694b43747373534c4b79316b683536575755374d7455523503534554036170700a7361746f73656e64657204747970650c7265676973746572557365720c7061796d61696c204861736840336135343561343561306535313837666262383264663538376438656266623061336665336130363665333338373034643539396234623132343335333362650970686f6e65486173684066376661396133303131616462356364346535336135363631646564363337633564666363663836323864643130363666663737393764613130383334303261c3090000000000001976a914caaf40bc699eb34363f25e961d72f7045dbd4d2688ac0000000000"
+	const validBeefHex = "0100beef01fe636d0c0007021400fe507c0c7aa754cef1f7889d5fd395cf1f785dd7de98eed895dbedfe4e5bc70d1502ac4e164f5bc16746bb0868404292ac8318bbac3800e4aad13a014da427adce3e010b00bc4ff395efd11719b277694cface5aa50d085a0bb81f613f70313acd28cf4557010400574b2d9142b8d28b61d88e3b2c3f44d858411356b49a28a4643b6d1a6a092a5201030051a05fc84d531b5d250c23f4f886f6812f9fe3f402d61607f977b4ecd2701c19010000fd781529d58fc2523cf396a7f25440b409857e7e221766c57214b1d38c7b481f01010062f542f45ea3660f86c013ced80534cb5fd4c19d66c56e7e8c5d4bf2d40acc5e010100b121e91836fd7cd5102b654e9f72f3cf6fdbfd0b161c53a9c54b12c841126331020100000001cd4e4cac3c7b56920d1e7655e7e260d31f29d9a388d04910f1bbd72304a79029010000006b483045022100e75279a205a547c445719420aa3138bf14743e3f42618e5f86a19bde14bb95f7022064777d34776b05d816daf1699493fcdf2ef5a5ab1ad710d9c97bfb5b8f7cef3641210263e2dee22b1ddc5e11f6fab8bcd2378bdd19580d640501ea956ec0e786f93e76ffffffff013e660000000000001976a9146bfd5c7fbe21529d45803dbcf0c87dd3c71efbc288ac0000000001000100000001ac4e164f5bc16746bb0868404292ac8318bbac3800e4aad13a014da427adce3e000000006a47304402203a61a2e931612b4bda08d541cfb980885173b8dcf64a3471238ae7abcd368d6402204cbf24f04b9aa2256d8901f0ed97866603d2be8324c2bfb7a37bf8fc90edd5b441210263e2dee22b1ddc5e11f6fab8bcd2378bdd19580d640501ea956ec0e786f93e76ffffffff013c660000000000001976a9146bfd5c7fbe21529d45803dbcf0c87dd3c71efbc288ac0000000000"
 	validDecodedBeef, err := DecodeBEEF(validBeefHex)
 	require.Nil(t, err)
 
