@@ -16,8 +16,17 @@ jobs:
       run: |
         curl -sL https://taskfile.dev/install.sh | sh
         sudo mv ./bin/task /usr/local/bin
-    - name: Setup golangci-lint
-      uses: golangci/golangci-lint-action@v2
+    - name: Cache code
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/go/pkg/mod              # Module download cache
+          ~/.cache/go-build         # Build cache (Linux)
+          ~/Library/Caches/go-build # Build cache (Mac)
+          '%LocalAppData%\go-build' # Build cache (Windows)
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
     - name: Run Tests
       run: task test
     - name: Run Lint
