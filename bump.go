@@ -55,7 +55,7 @@ func calculateMerkleRoot(baseTx BUMPLeaf, bump BUMP) (string, error) {
 			newOffset = offset + 1
 		}
 		tx2 := findTxByOffset(newOffset, bLevel)
-		if &tx2 == nil {
+		if tx2 == nil {
 			return "", errors.New("could not find pair")
 		}
 
