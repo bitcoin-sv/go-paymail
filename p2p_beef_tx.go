@@ -187,15 +187,6 @@ func decodeBUMPLevel(nLeaves bt.VarInt, hexBytes []byte) ([]BUMPLeaf, []byte, er
 	return bumpPath, hexBytes, nil
 }
 
-// reverse will reverse a hex string but it takes a pair of character at a time
-func reverse(s string) string {
-	rns := []rune(s)
-	for i, j := 0, len(rns)-1; i < j; i, j = i+2, j-2 {
-		rns[i], rns[j], rns[i+1], rns[j-1] = rns[j-1], rns[i+1], rns[j], rns[i]
-	}
-	return string(rns)
-}
-
 func decodeTransactionsWithPathIndexes(bytes []byte) ([]TxData, error) {
 	nTransactions, offset := bt.NewVarIntFromBytes(bytes)
 	bytes = bytes[offset:]
