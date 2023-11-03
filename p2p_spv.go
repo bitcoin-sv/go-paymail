@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/libsv/go-bt/v2"
 	"github.com/libsv/go-bt/v2/bscript/interpreter"
 )
@@ -11,7 +12,7 @@ import (
 type MerkleRootVerifier interface {
 	VerifyMerkleRoots(
 		ctx context.Context,
-		merkleRoots []string,
+		merkleRoots []MerkleRootConfirmationRequestItem,
 	) error
 }
 
@@ -41,7 +42,7 @@ func ExecuteSimplifiedPaymentVerification(dBeef *DecodedBEEF, provider MerkleRoo
 }
 
 func verifyMerkleRoots(dBeef *DecodedBEEF, provider MerkleRootVerifier) error {
-	merkleRoots, err := dBeef.GetMerkleRoots()
+	merkleRoots, err := dBeef.GetMerkleRootsRequest()
 	if err != nil {
 		return err
 	}

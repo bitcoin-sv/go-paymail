@@ -2,6 +2,7 @@ package paymail
 
 import (
 	"errors"
+
 	"github.com/libsv/go-bc"
 	"github.com/libsv/go-bt/v2"
 )
@@ -30,17 +31,27 @@ const (
 	txIDFlag
 )
 
-func (b BUMP) calculateMerkleRoots() ([]string, error) {
-	merkleRoots := make([]string, 0)
+func (b BUMP) calculateMerkleRoot() (string, error) {
+	merkleRoot := ""
 
 	for _, bumpPathElement := range b.path[0] {
-		merkleRoot, err := calculateMerkleRoot(bumpPathElement, b)
-		if err != nil {
-			return nil, err
+		if bumpPathElement.txId {
+			calcMerkleRoot, err := calculateMerkleRoot(bumpPathElement, b)
+			if err != nil {
+				return "", err
+			}
+
+			if merkleRoot == "" {
+				merkleRoot = calcMerkleRoot
+				continue
+			}
+
+			if calcMerkleRoot != merkleRoot {
+				return "", errors.New("different merkle roots for the same block")
+			}
 		}
-		merkleRoots = append(merkleRoots, merkleRoot)
 	}
-	return merkleRoots, nil
+	return merkleRoot, nil
 }
 
 func findLeafByOffset(offset uint64, bumpLeaves []BUMPLeaf) *BUMPLeaf {
@@ -52,7 +63,7 @@ func findLeafByOffset(offset uint64, bumpLeaves []BUMPLeaf) *BUMPLeaf {
 	return nil
 }
 
-// calculateMerkleRoots will calculate one merkle root for tx in the BUMPPath
+// calculateMerkleRoots will calculate one merkle root for tx in the BUMPLeaf
 func calculateMerkleRoot(baseLeaf BUMPLeaf, bump BUMP) (string, error) {
 	calculatedHash := baseLeaf.hash
 	offset := baseLeaf.offset

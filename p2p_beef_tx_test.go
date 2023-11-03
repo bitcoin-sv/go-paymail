@@ -3,10 +3,10 @@ package paymail
 import (
 	"context"
 	"errors"
-	"github.com/libsv/go-bt/v2/bscript"
 	"testing"
 
 	"github.com/libsv/go-bt/v2"
+	"github.com/libsv/go-bt/v2/bscript"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -15,7 +15,7 @@ import (
 type mockServiceProvider struct{}
 
 // VerifyMerkleRoots is a mock implementation of this interface
-func (m *mockServiceProvider) VerifyMerkleRoots(_ context.Context, _ []string) error {
+func (m *mockServiceProvider) VerifyMerkleRoots(_ context.Context, _ []MerkleRootConfirmationRequestItem) error {
 	// Verify the merkle roots
 	return nil
 }
@@ -79,7 +79,8 @@ func TestDecodeBEEF_DecodeBEEF_HappyPaths(t *testing.T) {
 									Satoshis:      26174,
 									LockingScript: bscript.NewFromBytes([]byte("76a9146bfd5c7fbe21529d45803dbcf0c87dd3c71efbc288ac")),
 								},
-							}},
+							},
+						},
 						PathIndex: func(v bt.VarInt) *bt.VarInt { return &v }(0x0),
 					},
 				},
@@ -100,7 +101,8 @@ func TestDecodeBEEF_DecodeBEEF_HappyPaths(t *testing.T) {
 								Satoshis:      26172,
 								LockingScript: bscript.NewFromBytes([]byte("76a9146bfd5c7fbe21529d45803dbcf0c87dd3c71efbc288ac")),
 							},
-						}},
+						},
+					},
 					PathIndex: nil,
 				},
 			},

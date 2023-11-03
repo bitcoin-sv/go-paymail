@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+
 	"github.com/libsv/go-bt/v2"
 )
 
@@ -35,16 +36,23 @@ type DecodedBEEF struct {
 }
 
 // GetMerkleRoots will calculate the merkle roots for the BUMPs in the BEEF transaction
-func (dBeef *DecodedBEEF) GetMerkleRoots() ([]string, error) {
-	var merkleRoots []string
+func (dBeef *DecodedBEEF) GetMerkleRootsRequest() ([]MerkleRootConfirmationRequestItem, error) {
+	var merkleRootsRequest []MerkleRootConfirmationRequestItem
+
 	for _, bump := range dBeef.BUMPs {
-		partialMerkleRoots, err := bump.calculateMerkleRoots()
+		merkleRoot, err := bump.calculateMerkleRoot()
 		if err != nil {
 			return nil, err
 		}
-		merkleRoots = append(merkleRoots, partialMerkleRoots...)
+
+		request := MerkleRootConfirmationRequestItem{
+			BlockHeight: int32(bump.blockHeight),
+			MerkleRoot:  merkleRoot,
+		}
+		merkleRootsRequest = append(merkleRootsRequest, request)
 	}
-	return merkleRoots, nil
+
+	return merkleRootsRequest, nil
 }
 
 func DecodeBEEF(beefHex string) (*DecodedBEEF, error) {
