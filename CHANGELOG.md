@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.6.0](https://github.com/bitcoin-sv/go-paymail/compare/v0.5.1...v0.6.0) (2023-11-03)
+
+
+### Features
+
+* **BUX-290:** updated calculation and verification of merkle roots ([#37](https://github.com/bitcoin-sv/go-paymail/issues/37)) ([c658f96](https://github.com/bitcoin-sv/go-paymail/commit/c658f964d0d5afd14b49fe26458b9674ed776a96))
+* **BUX-296:** adjust BEEF tx decoding to BUMP structure ([#34](https://github.com/bitcoin-sv/go-paymail/issues/34)) ([2ae3790](https://github.com/bitcoin-sv/go-paymail/commit/2ae3790e077891111538555624cba1fd7c877e2f))
+
 ## [0.5.1](https://github.com/bitcoin-sv/go-paymail/compare/v0.5.0...v0.5.1) (2023-10-13)
 
 
