@@ -36,6 +36,6 @@ type PaymailServiceProvider interface {
 
 	VerifyMerkleRoots(
 		ctx context.Context,
-		merkleProofs []string,
+		merkleProofs []paymail.MerkleRootConfirmationRequestItem,
 	) error
 }

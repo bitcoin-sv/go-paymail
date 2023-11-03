@@ -79,3 +79,10 @@ type AddressInformation struct {
 	PrivateKey  string `json:"-"`            // PrivateKey hex encoded
 	PubKey      string `json:"pubkey"`       // PublicKey hex encoded
 }
+
+// MerkleRootConfirmationRequestItem is a request type for verification
+// of Merkle Roots inclusion in the longest chain.
+type MerkleRootConfirmationRequestItem struct {
+	MerkleRoot  string `json:"merkleRoot"`
+	BlockHeight int32  `json:"blockHeight"`
+}
