@@ -2,13 +2,16 @@ package server
 
 import (
 	"context"
+	"fmt"
+	"log"
 	"net/http"
 
-	"github.com/bitcoin-sv/go-paymail"
 	"github.com/bitcoinschema/go-bitcoin/v2"
 	"github.com/julienschmidt/httprouter"
 	"github.com/libsv/go-bt/v2"
 	"github.com/libsv/go-bt/v2/bscript"
+
+	"github.com/bitcoin-sv/go-paymail"
 )
 
 type p2pReceiveTxReqPayload struct {
@@ -67,13 +70,17 @@ func getProcessedTxData(payload *p2pReceiveTxReqPayload, format p2pPayloadFormat
 	case basicP2pPayload:
 		processedTx, err = bitcoin.TxFromHex(payload.Hex)
 		if err != nil {
-			return nil, nil, &processingError{&parseError{ErrorInvalidParameter, "invalid parameter: hex"}, http.StatusBadRequest}
+			errorMsg := fmt.Sprintf("error while parsing hex: %s", err.Error())
+			log.Println(errorMsg)
+			return nil, nil, &processingError{&parseError{ErrorInvalidParameter, errorMsg}, http.StatusBadRequest}
 		}
 
 	case beefP2pPayload:
 		beefData, err = paymail.DecodeBEEF(payload.Beef)
 		if err != nil {
-			return nil, nil, &processingError{&parseError{ErrorInvalidParameter, "invalid parameter: beef"}, http.StatusBadRequest}
+			errorMsg := fmt.Sprintf("error while parsing beef: %s", err.Error())
+			log.Println(errorMsg)
+			return nil, nil, &processingError{&parseError{ErrorInvalidParameter, errorMsg}, http.StatusBadRequest}
 		}
 
 		processedTx = beefData.ProcessedTxData.Transaction
