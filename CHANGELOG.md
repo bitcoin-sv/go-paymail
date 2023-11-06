@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.0](https://github.com/bitcoin-sv/go-paymail/compare/v0.6.0...v0.7.0) (2023-11-06)
+
+
+### Features
+
+* **BUX-250:** logging and returning more descriptive errors from tx processing ([#40](https://github.com/bitcoin-sv/go-paymail/issues/40)) ([10d1da7](https://github.com/bitcoin-sv/go-paymail/commit/10d1da75f1c210d0c55d9f5138509e60911fb9ac))
+
 ## [0.6.0](https://github.com/bitcoin-sv/go-paymail/compare/v0.5.1...v0.6.0) (2023-11-03)
 
 
