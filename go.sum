@@ -17,12 +17,14 @@ github.com/julienschmidt/httprouter v1.3.0 h1:U0609e9tgbseu3rBINet9P48AI/D3oJs4d
 github.com/julienschmidt/httprouter v1.3.0/go.mod h1:JR6WtHb+2LUe8TCKY3cZOxFyyO8IZAc4RVcycCCAKdM=
 github.com/kr/pretty v0.3.1 h1:flRD4NNwYAUpkphVc1HcthR4KEIFJ65n8Mw5qdRn3LE=
 github.com/kr/text v0.2.0 h1:5Nx0Ya0ZqY2ygV366QzturHI13Jq95ApcVaJBhpS+AY=
-github.com/libsv/go-bc v0.1.17 h1:RHlb7BhkjGatKoGGsxZXiE2xoh5aDQDhgELAD2I4n90=
-github.com/libsv/go-bc v0.1.17/go.mod h1:TydCZiPUpYPTLiYFDrz2Ug+wSzADUHJux4t3DPVPg08=
+github.com/libsv/go-bc v0.1.22 h1:pFdKMRtY/qCDQauodb49BQ6EkUZ7JXaFljpVGj1NXP4=
+github.com/libsv/go-bc v0.1.22/go.mod h1:l6epTfcakN8YKId/hrpUzlu1QeT3ODF1MI3DeYhG1O8=
 github.com/libsv/go-bk v0.1.6 h1:c9CiT5+64HRDbzxPl1v/oiFmbvWZTuUYqywCf+MBs/c=
 github.com/libsv/go-bk v0.1.6/go.mod h1:khJboDoH18FPUaZlzRFKzlVN84d4YfdmlDtdX4LAjQA=
 github.com/libsv/go-bt/v2 v2.2.5 h1:VoggBLMRW9NYoFujqe5bSYKqnw5y+fYfufgERSoubog=
 github.com/libsv/go-bt/v2 v2.2.5/go.mod h1:cV45+jDlPOLfhJLfpLmpQoWzrIvVth9Ao2ZO1f6CcqU=
+github.com/libsv/go-p2p v0.1.3 h1:70v/k7d6mtFPRP8tXYpAMGZNTxqSZAVTbYeTPuTbjTA=
+github.com/libsv/go-p2p v0.1.3/go.mod h1:5+VqOblMYadFH7pmm55PcfbbWcXib8cTh9CHIrrxtZg=
 github.com/maxatome/go-testdeep v1.12.0 h1:Ql7Go8Tg0C1D/uMMX59LAoYK7LffeJQ6X2T04nTH68g=
 github.com/miekg/dns v1.1.55 h1:GoQ4hpsj0nFLYe+bWiCToyrBEJXkQfOOIvFGFy0lEgo=
 github.com/miekg/dns v1.1.55/go.mod h1:uInx36IzPl7FYnDcMeVWxj9byh7DutNykX4G9Sj60FY=
