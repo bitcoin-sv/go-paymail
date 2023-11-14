@@ -31,8 +31,8 @@ type TxData struct {
 
 type DecodedBEEF struct {
 	BUMPs           BUMPs
-	InputsTxData    []TxData
-	ProcessedTxData TxData
+	InputsTxData    []*TxData
+	ProcessedTxData *bt.Tx
 }
 
 // GetMerkleRoots will calculate the merkle roots for the BUMPs in the BEEF transaction
@@ -82,7 +82,7 @@ func DecodeBEEF(beefHex string) (*DecodedBEEF, error) {
 	return &DecodedBEEF{
 		BUMPs:           bumps,
 		InputsTxData:    transactions,
-		ProcessedTxData: processedTx,
+		ProcessedTxData: processedTx.Transaction,
 	}, nil
 }
 
@@ -123,8 +123,8 @@ func decodeBUMPPathsFromStream(hexBytes []byte) ([][]BUMPLeaf, []byte, error) {
 		return nil, nil, errors.New("cannot decode BUMP paths from stream - no bytes provided")
 	}
 
-	treeHeight, bytesUsed := bt.NewVarIntFromBytes(hexBytes)
-	hexBytes = hexBytes[bytesUsed:]
+	treeHeight := hexBytes[0]
+	hexBytes = hexBytes[1:]
 	bumpPaths := make([][]BUMPLeaf, 0)
 
 	for i := 0; i < int(treeHeight); i++ {
@@ -158,8 +158,8 @@ func decodeBUMPLevel(nLeaves bt.VarInt, hexBytes []byte) ([]BUMPLeaf, []byte, er
 			return nil, nil, fmt.Errorf("insufficient bytes to extract flag for %d leaf of %d leaves", i, int(nLeaves))
 		}
 
-		flag, bytesUsed := bt.NewVarIntFromBytes(hexBytes)
-		hexBytes = hexBytes[bytesUsed:]
+		flag := hexBytes[0]
+		hexBytes = hexBytes[1:]
 
 		if flag != dataFlag && flag != duplicateFlag && flag != txIDFlag {
 			return nil, nil, fmt.Errorf("invalid flag: %d for %d leaf of %d leaves", flag, i, int(nLeaves))
@@ -179,8 +179,7 @@ func decodeBUMPLevel(nLeaves bt.VarInt, hexBytes []byte) ([]BUMPLeaf, []byte, er
 		}
 
 		hash := hex.EncodeToString(bt.ReverseBytes(hexBytes[:hashBytesCount]))
-		bytesUsed += hashBytesCount - 1
-		hexBytes = hexBytes[bytesUsed:]
+		hexBytes = hexBytes[hashBytesCount:]
 
 		bumpLeaf := BUMPLeaf{
 			hash:   hash,
@@ -195,11 +194,11 @@ func decodeBUMPLevel(nLeaves bt.VarInt, hexBytes []byte) ([]BUMPLeaf, []byte, er
 	return bumpPath, hexBytes, nil
 }
 
-func decodeTransactionsWithPathIndexes(bytes []byte) ([]TxData, error) {
+func decodeTransactionsWithPathIndexes(bytes []byte) ([]*TxData, error) {
 	nTransactions, offset := bt.NewVarIntFromBytes(bytes)
 	bytes = bytes[offset:]
 
-	var transactions []TxData
+	transactions := make([]*TxData, 0, int(nTransactions))
 
 	for i := 0; i < int(nTransactions); i++ {
 		tx, offset, err := bt.NewTxFromStream(bytes)
@@ -219,7 +218,7 @@ func decodeTransactionsWithPathIndexes(bytes []byte) ([]TxData, error) {
 			return nil, fmt.Errorf("invalid HasCMP flag for transaction at index %d", i)
 		}
 
-		transactions = append(transactions, TxData{
+		transactions = append(transactions, &TxData{
 			Transaction: tx,
 			PathIndex:   pathIndex,
 		})
