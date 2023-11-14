@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.1](https://github.com/bitcoin-sv/go-paymail/compare/v0.7.0...v0.7.1) (2023-11-14)
+
+
+### Bug Fixes
+
+* **BUX-250:** SPV; decoding ([#43](https://github.com/bitcoin-sv/go-paymail/issues/43)) ([5e253d6](https://github.com/bitcoin-sv/go-paymail/commit/5e253d6ef1c259a45752d85475bd5f3db633e8c4))
+
 ## [0.7.0](https://github.com/bitcoin-sv/go-paymail/compare/v0.6.0...v0.7.0) (2023-11-06)
 
 
