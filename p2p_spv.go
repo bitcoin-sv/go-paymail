@@ -56,11 +56,11 @@ func verifyMerkleRoots(dBeef *DecodedBEEF, provider MerkleRootVerifier) error {
 }
 
 func validateScripts(dBeef *DecodedBEEF) error {
-	for _, input := range dBeef.ProcessedTxData.Transaction.Inputs {
-		txId := input.PreviousTxID()
+	for _, input := range dBeef.ProcessedTxData.Inputs {
+		txID := input.PreviousTxIDStr()
 		for j, input2 := range dBeef.InputsTxData {
-			if input2.Transaction.TxID() == string(txId) {
-				result := verifyScripts(dBeef.ProcessedTxData.Transaction, input2.Transaction, j)
+			if input2.Transaction.TxID() == txID {
+				result := verifyScripts(dBeef.ProcessedTxData, input2.Transaction, j)
 				if !result {
 					return errors.New("invalid script")
 				}
@@ -72,20 +72,26 @@ func validateScripts(dBeef *DecodedBEEF) error {
 }
 
 func validateSatoshisSum(dBeef *DecodedBEEF) error {
-	if len(dBeef.ProcessedTxData.Transaction.Outputs) == 0 {
+	if len(dBeef.ProcessedTxData.Outputs) == 0 {
 		return errors.New("invalid output, no outputs")
 	}
 
-	if len(dBeef.ProcessedTxData.Transaction.Inputs) == 0 {
+	if len(dBeef.ProcessedTxData.Inputs) == 0 {
 		return errors.New("invalid input, no inputs")
 	}
 
 	inputSum, outputSum := uint64(0), uint64(0)
-	for i, input := range dBeef.ProcessedTxData.Transaction.Inputs {
-		inputParentTx := dBeef.InputsTxData[i]
+
+	for _, input := range dBeef.ProcessedTxData.Inputs {
+		inputParentTx := findParentForInput(input, dBeef.InputsTxData)
+
+		if inputParentTx == nil {
+			return errors.New("invalid parent transactions, no matching trasactions for input")
+		}
+
 		inputSum += inputParentTx.Transaction.Outputs[input.PreviousTxOutIndex].Satoshis
 	}
-	for _, output := range dBeef.ProcessedTxData.Transaction.Outputs {
+	for _, output := range dBeef.ProcessedTxData.Outputs {
 		outputSum += output.Satoshis
 	}
 
@@ -96,8 +102,8 @@ func validateSatoshisSum(dBeef *DecodedBEEF) error {
 }
 
 func validateLockTime(dBeef *DecodedBEEF) error {
-	if dBeef.ProcessedTxData.Transaction.LockTime == 0 {
-		for _, input := range dBeef.ProcessedTxData.Transaction.Inputs {
+	if dBeef.ProcessedTxData.LockTime == 0 {
+		for _, input := range dBeef.ProcessedTxData.Inputs {
 			if input.SequenceNumber != 0xffffffff {
 				return errors.New("unexpected transaction with nSequence")
 			}
@@ -122,4 +128,16 @@ func verifyScripts(tx, prevTx *bt.Tx, inputIdx int) bool {
 		return false
 	}
 	return true
+}
+
+func findParentForInput(input *bt.Input, parentTxs []*TxData) *TxData {
+	parentID := input.PreviousTxIDStr()
+
+	for _, ptx := range parentTxs {
+		if ptx.Transaction.TxID() == parentID {
+			return ptx
+		}
+	}
+
+	return nil
 }

@@ -4,7 +4,6 @@ import (
 	"errors"
 
 	"github.com/libsv/go-bc"
-	"github.com/libsv/go-bt/v2"
 )
 
 // BUMPs represents a slice of BUMPs - BSV Unified Merkle Paths
@@ -26,7 +25,7 @@ type BUMPLeaf struct {
 
 // Flags which are used to determine the type of BUMPLeaf
 const (
-	dataFlag bt.VarInt = iota
+	dataFlag byte = iota
 	duplicateFlag
 	txIDFlag
 )
