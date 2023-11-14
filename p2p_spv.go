@@ -56,18 +56,18 @@ func verifyMerkleRoots(dBeef *DecodedBEEF, provider MerkleRootVerifier) error {
 }
 
 func validateScripts(dBeef *DecodedBEEF) error {
-	for _, input := range dBeef.ProcessedTxData.Inputs {
-		txID := input.PreviousTxIDStr()
-		for j, input2 := range dBeef.InputsTxData {
-			if input2.Transaction.TxID() == txID {
-				result := verifyScripts(dBeef.ProcessedTxData, input2.Transaction, j)
-				if !result {
-					return errors.New("invalid script")
-				}
-				break
-			}
+	for i, input := range dBeef.ProcessedTxData.Inputs {
+		inputParentTx := findParentForInput(input, dBeef.InputsTxData)
+		if inputParentTx == nil {
+			return errors.New("invalid parent transactions, no matching trasactions for input")
+		}
+
+		result := verifyScripts(dBeef.ProcessedTxData, inputParentTx.Transaction, i)
+		if !result {
+			return errors.New("invalid script")
 		}
 	}
+
 	return nil
 }
 
