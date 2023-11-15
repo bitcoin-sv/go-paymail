@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.2](https://github.com/bitcoin-sv/go-paymail/compare/v0.7.1...v0.7.2) (2023-11-15)
+
+
+### Bug Fixes
+
+* **BUX-250:** fix decode;add spv and decode tests for corrupted/invalid beef ([#45](https://github.com/bitcoin-sv/go-paymail/issues/45)) ([6fb0fc9](https://github.com/bitcoin-sv/go-paymail/commit/6fb0fc9ee537b519a4145a3c3f781830e136cfe4))
+
 ## [0.7.1](https://github.com/bitcoin-sv/go-paymail/compare/v0.7.0...v0.7.1) (2023-11-14)
 
 
