@@ -124,10 +124,6 @@ func decodeBUMPs(beefBytes []byte) ([]BUMP, []byte, error) {
 		bumps = append(bumps, bump)
 	}
 
-	if len(bumps) == 0 {
-		return nil, nil, errors.New("invalid BEEF- lack of BUMPs")
-	}
-
 	return bumps, beefBytes, nil
 }
 
@@ -234,10 +230,6 @@ func decodeTransactionsWithPathIndexes(bytes []byte) ([]*TxData, error) {
 			Transaction: tx,
 			PathIndex:   pathIndex,
 		})
-	}
-
-	if len(transactions) < 2 {
-		return nil, errors.New("invalid BEEF- not enough transactions provided to decode BEEF")
 	}
 
 	return transactions, nil
