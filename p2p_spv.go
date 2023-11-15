@@ -109,7 +109,7 @@ func validateLockTime(dBeef *DecodedBEEF) error {
 			}
 		}
 	} else {
-		return errors.New("nexpected transaction with nLockTime")
+		return errors.New("unexpected transaction with nLockTime")
 	}
 	return nil
 }

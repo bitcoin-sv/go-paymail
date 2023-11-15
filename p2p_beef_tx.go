@@ -22,6 +22,7 @@ const (
 	hashBytesCount    = 32
 	markerBytesCount  = 2
 	versionBytesCount = 2
+	maxTreeHeight     = 64
 )
 
 type TxData struct {
@@ -71,10 +72,6 @@ func DecodeBEEF(beefHex string) (*DecodedBEEF, error) {
 		return nil, err
 	}
 
-	if len(transactions) < 2 {
-		return nil, errors.New("not enough transactions provided to decode BEEF")
-	}
-
 	// get the last transaction as the processed transaction - it should be the last one because of khan's ordering
 	processedTx := transactions[len(transactions)-1]
 	transactions = transactions[:len(transactions)-1]
@@ -91,17 +88,29 @@ func decodeBUMPs(beefBytes []byte) ([]BUMP, []byte, error) {
 		return nil, nil, errors.New("cannot decode BUMP - no bytes provided")
 	}
 
-	bumps := make([]BUMP, 0)
 	nBump, bytesUsed := bt.NewVarIntFromBytes(beefBytes)
+
+	if nBump == 0 {
+		return nil, nil, errors.New("invalid BEEF- lack of BUMPs")
+	}
+
 	beefBytes = beefBytes[bytesUsed:]
 
+	bumps := make([]BUMP, 0, int(nBump))
 	for i := 0; i < int(nBump); i++ {
 		if len(beefBytes) == 0 {
 			return nil, nil, errors.New("insufficient bytes to extract BUMP blockHeight")
 		}
 		blockHeight, bytesUsed := bt.NewVarIntFromBytes(beefBytes)
 		beefBytes = beefBytes[bytesUsed:]
-		bumpPaths, remainingBytes, err := decodeBUMPPathsFromStream(beefBytes)
+
+		treeHeight := beefBytes[0]
+		if int(treeHeight) > maxTreeHeight {
+			return nil, nil, fmt.Errorf("invalid BEEF - treeHeight cannot be grater than %d", maxTreeHeight)
+		}
+		beefBytes = beefBytes[1:]
+
+		bumpPaths, remainingBytes, err := decodeBUMPPathsFromStream(int(treeHeight), beefBytes)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -118,16 +127,10 @@ func decodeBUMPs(beefBytes []byte) ([]BUMP, []byte, error) {
 	return bumps, beefBytes, nil
 }
 
-func decodeBUMPPathsFromStream(hexBytes []byte) ([][]BUMPLeaf, []byte, error) {
-	if len(hexBytes) == 0 {
-		return nil, nil, errors.New("cannot decode BUMP paths from stream - no bytes provided")
-	}
-
-	treeHeight := hexBytes[0]
-	hexBytes = hexBytes[1:]
+func decodeBUMPPathsFromStream(treeHeight int, hexBytes []byte) ([][]BUMPLeaf, []byte, error) {
 	bumpPaths := make([][]BUMPLeaf, 0)
 
-	for i := 0; i < int(treeHeight); i++ {
+	for i := 0; i < treeHeight; i++ {
 		if len(hexBytes) == 0 {
 			return nil, nil, errors.New("cannot decode BUMP paths number of leaves from stream - no bytes provided")
 		}
@@ -196,6 +199,11 @@ func decodeBUMPLevel(nLeaves bt.VarInt, hexBytes []byte) ([]BUMPLeaf, []byte, er
 
 func decodeTransactionsWithPathIndexes(bytes []byte) ([]*TxData, error) {
 	nTransactions, offset := bt.NewVarIntFromBytes(bytes)
+
+	if nTransactions < 2 {
+		return nil, errors.New("invalid BEEF- not enough transactions provided to decode BEEF")
+	}
+
 	bytes = bytes[offset:]
 
 	transactions := make([]*TxData, 0, int(nTransactions))
