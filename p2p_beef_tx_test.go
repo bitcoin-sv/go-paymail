@@ -1,7 +1,6 @@
 package paymail
 
 import (
-	"context"
 	"errors"
 	"testing"
 
@@ -9,15 +8,6 @@ import (
 	"github.com/libsv/go-bt/v2/bscript"
 	"github.com/stretchr/testify/assert"
 )
-
-// Mock implementation of a service provider
-type mockServiceProvider struct{}
-
-// VerifyMerkleRoots is a mock implementation of this interface
-func (m *mockServiceProvider) VerifyMerkleRoots(_ context.Context, _ []MerkleRootConfirmationRequestItem) error {
-	// Verify the merkle roots
-	return nil
-}
 
 func TestDecodeBEEF_DecodeBEEF_HappyPaths(t *testing.T) {
 	testCases := []struct {
@@ -33,29 +23,29 @@ func TestDecodeBEEF_DecodeBEEF_HappyPaths(t *testing.T) {
 			expectedDecodedBEEF: &DecodedBEEF{
 				BUMPs: BUMPs{
 					BUMP{
-						blockHeight: 814435,
-						path: [][]BUMPLeaf{
+						BlockHeight: 814435,
+						Path: [][]BUMPLeaf{
 							{
-								BUMPLeaf{hash: "0dc75b4efeeddb95d8ee98ded75d781fcf95d35f9d88f7f1ce54a77a0c7c50fe", offset: 20},
-								BUMPLeaf{hash: "3ecead27a44d013ad1aae40038acbb1883ac9242406808bb4667c15b4f164eac", txId: true, offset: 21},
+								BUMPLeaf{Hash: "0dc75b4efeeddb95d8ee98ded75d781fcf95d35f9d88f7f1ce54a77a0c7c50fe", offset: 20},
+								BUMPLeaf{Hash: "3ecead27a44d013ad1aae40038acbb1883ac9242406808bb4667c15b4f164eac", txId: true, offset: 21},
 							},
 							{
-								BUMPLeaf{hash: "5745cf28cd3a31703f611fb80b5a080da55acefa4c6977b21917d1ef95f34fbc", offset: 11},
+								BUMPLeaf{Hash: "5745cf28cd3a31703f611fb80b5a080da55acefa4c6977b21917d1ef95f34fbc", offset: 11},
 							},
 							{
-								BUMPLeaf{hash: "522a096a1a6d3b64a4289ab456134158d8443f2c3b8ed8618bd2b842912d4b57", offset: 4},
+								BUMPLeaf{Hash: "522a096a1a6d3b64a4289ab456134158d8443f2c3b8ed8618bd2b842912d4b57", offset: 4},
 							},
 							{
-								BUMPLeaf{hash: "191c70d2ecb477f90716d602f4e39f2f81f686f8f4230c255d1b534dc85fa051", offset: 3},
+								BUMPLeaf{Hash: "191c70d2ecb477f90716d602f4e39f2f81f686f8f4230c255d1b534dc85fa051", offset: 3},
 							},
 							{
-								BUMPLeaf{hash: "1f487b8cd3b11472c56617227e7e8509b44054f2a796f33c52c28fd5291578fd", offset: 0},
+								BUMPLeaf{Hash: "1f487b8cd3b11472c56617227e7e8509b44054f2a796f33c52c28fd5291578fd", offset: 0},
 							},
 							{
-								BUMPLeaf{hash: "5ecc0ad4f24b5d8c7e6ec5669dc1d45fcb3405d8ce13c0860f66a35ef442f562", offset: 1},
+								BUMPLeaf{Hash: "5ecc0ad4f24b5d8c7e6ec5669dc1d45fcb3405d8ce13c0860f66a35ef442f562", offset: 1},
 							},
 							{
-								BUMPLeaf{hash: "31631241c8124bc5a9531c160bfddb6fcff3729f4e652b10d57cfd3618e921b1", offset: 1},
+								BUMPLeaf{Hash: "31631241c8124bc5a9531c160bfddb6fcff3729f4e652b10d57cfd3618e921b1", offset: 1},
 							},
 						},
 					},
@@ -121,8 +111,8 @@ func TestDecodeBEEF_DecodeBEEF_HappyPaths(t *testing.T) {
 			assert.Equal(t, len(tc.expectedDecodedBEEF.BUMPs), len(decodedBEEF.BUMPs), "expected %v BUMPs, but got %v", len(tc.expectedDecodedBEEF.BUMPs), len(decodedBEEF.BUMPs))
 
 			for i, bump := range tc.expectedDecodedBEEF.BUMPs {
-				assert.Equal(t, len(bump.path), len(decodedBEEF.BUMPs[i].path), "expected %v BUMPPaths for %v BUMP, but got %v", len(bump.path), i, len(decodedBEEF.BUMPs[i].path))
-				assert.Equal(t, bump.path, decodedBEEF.BUMPs[i].path, "expected equal BUMPPaths for %v BUMP, expected: %v but got %v", i, bump, len(decodedBEEF.BUMPs[i].path))
+				assert.Equal(t, len(bump.Path), len(decodedBEEF.BUMPs[i].Path), "expected %v BUMPPaths for %v BUMP, but got %v", len(bump.Path), i, len(decodedBEEF.BUMPs[i].Path))
+				assert.Equal(t, bump.Path, decodedBEEF.BUMPs[i].Path, "expected equal BUMPPaths for %v BUMP, expected: %v but got %v", i, bump, len(decodedBEEF.BUMPs[i].Path))
 			}
 
 			assert.NotNil(t, decodedBEEF.ProcessedTxData, "expected original transaction to be not nil")

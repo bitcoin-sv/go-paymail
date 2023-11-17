@@ -11,13 +11,13 @@ type BUMPs []BUMP
 
 // BUMP is a struct that represents a whole BUMP format
 type BUMP struct {
-	blockHeight uint64
-	path        [][]BUMPLeaf
+	BlockHeight uint64
+	Path        [][]BUMPLeaf
 }
 
 // BUMPLeaf represents each BUMP path element
 type BUMPLeaf struct {
-	hash      string
+	Hash      string
 	txId      bool
 	duplicate bool
 	offset    uint64
@@ -33,7 +33,7 @@ const (
 func (b BUMP) calculateMerkleRoot() (string, error) {
 	merkleRoot := ""
 
-	for _, bumpPathElement := range b.path[0] {
+	for _, bumpPathElement := range b.Path[0] {
 		if bumpPathElement.txId {
 			calcMerkleRoot, err := calculateMerkleRoot(bumpPathElement, b)
 			if err != nil {
@@ -64,10 +64,10 @@ func findLeafByOffset(offset uint64, bumpLeaves []BUMPLeaf) *BUMPLeaf {
 
 // calculateMerkleRoots will calculate one merkle root for tx in the BUMPLeaf
 func calculateMerkleRoot(baseLeaf BUMPLeaf, bump BUMP) (string, error) {
-	calculatedHash := baseLeaf.hash
+	calculatedHash := baseLeaf.Hash
 	offset := baseLeaf.offset
 
-	for _, bLevel := range bump.path {
+	for _, bLevel := range bump.Path {
 		newOffset := getOffsetPair(offset)
 		leafInPair := findLeafByOffset(newOffset, bLevel)
 		if leafInPair == nil {
@@ -85,7 +85,7 @@ func calculateMerkleRoot(baseLeaf BUMPLeaf, bump BUMP) (string, error) {
 		offset = offset / 2
 
 		baseLeaf = BUMPLeaf{
-			hash:   calculatedHash,
+			Hash:   calculatedHash,
 			offset: offset,
 		}
 	}
@@ -104,15 +104,15 @@ func prepareNodes(baseLeaf BUMPLeaf, offset uint64, leafInPair BUMPLeaf, newOffs
 	var baseLeafHash, pairLeafHash string
 
 	if baseLeaf.duplicate {
-		baseLeafHash = leafInPair.hash
+		baseLeafHash = leafInPair.Hash
 	} else {
-		baseLeafHash = baseLeaf.hash
+		baseLeafHash = baseLeaf.Hash
 	}
 
 	if leafInPair.duplicate {
-		pairLeafHash = baseLeaf.hash
+		pairLeafHash = baseLeaf.Hash
 	} else {
-		pairLeafHash = leafInPair.hash
+		pairLeafHash = leafInPair.Hash
 	}
 
 	if newOffset > offset {

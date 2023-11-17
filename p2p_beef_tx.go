@@ -28,6 +28,16 @@ const (
 type TxData struct {
 	Transaction *bt.Tx
 	PathIndex   *bt.VarInt
+
+	txID string
+}
+
+func (td *TxData) GetTxID() string {
+	if len(td.txID) == 0 {
+		td.txID = td.Transaction.TxID()
+	}
+
+	return td.txID
 }
 
 type DecodedBEEF struct {
@@ -47,7 +57,7 @@ func (dBeef *DecodedBEEF) GetMerkleRootsRequest() ([]MerkleRootConfirmationReque
 		}
 
 		request := MerkleRootConfirmationRequestItem{
-			BlockHeight: int32(bump.blockHeight),
+			BlockHeight: int32(bump.BlockHeight),
 			MerkleRoot:  merkleRoot,
 		}
 		merkleRootsRequest = append(merkleRootsRequest, request)
@@ -96,8 +106,8 @@ func decodeBUMPs(beefBytes []byte) ([]BUMP, []byte, error) {
 
 	beefBytes = beefBytes[bytesUsed:]
 
-	bumps := make([]BUMP, 0, int(nBump))
-	for i := 0; i < int(nBump); i++ {
+	bumps := make([]BUMP, 0, uint64(nBump))
+	for i := uint64(0); i < uint64(nBump); i++ {
 		if len(beefBytes) == 0 {
 			return nil, nil, errors.New("insufficient bytes to extract BUMP blockHeight")
 		}
@@ -117,8 +127,8 @@ func decodeBUMPs(beefBytes []byte) ([]BUMP, []byte, error) {
 		beefBytes = remainingBytes
 
 		bump := BUMP{
-			blockHeight: uint64(blockHeight),
-			path:        bumpPaths,
+			BlockHeight: uint64(blockHeight),
+			Path:        bumpPaths,
 		}
 
 		bumps = append(bumps, bump)
@@ -185,7 +195,7 @@ func decodeBUMPLevel(nLeaves bt.VarInt, hexBytes []byte) ([]BUMPLeaf, []byte, er
 		hexBytes = hexBytes[hashBytesCount:]
 
 		bumpLeaf := BUMPLeaf{
-			hash:   hash,
+			Hash:   hash,
 			offset: uint64(offset),
 		}
 		if flag == txIDFlag {
@@ -216,6 +226,7 @@ func decodeTransactionsWithPathIndexes(bytes []byte) ([]*TxData, error) {
 		bytes = bytes[offset:]
 
 		var pathIndex *bt.VarInt
+
 		if bytes[0] == HasCMP {
 			value, offset := bt.NewVarIntFromBytes(bytes[1:])
 			pathIndex = &value
