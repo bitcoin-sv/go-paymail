@@ -9,7 +9,7 @@ import (
 )
 
 func verifyMerkleRoots(dBeef *paymail.DecodedBEEF, provider MerkleRootVerifier) error {
-	if err := ensureInputTransactionArePresentInBump(dBeef); err != nil {
+	if err := ensureInputTransactionsArePresentInBump(dBeef); err != nil {
 		return err
 	}
 
@@ -26,7 +26,7 @@ func verifyMerkleRoots(dBeef *paymail.DecodedBEEF, provider MerkleRootVerifier) 
 	return nil
 }
 
-func ensureInputTransactionArePresentInBump(dBeef *paymail.DecodedBEEF) error {
+func ensureInputTransactionsArePresentInBump(dBeef *paymail.DecodedBEEF) error {
 
 	for _, input := range dBeef.ProcessedTxData.Inputs {
 
