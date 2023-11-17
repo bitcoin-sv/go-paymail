@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/bitcoin-sv/go-paymail"
+	"github.com/bitcoin-sv/go-paymail/spv"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -87,7 +88,7 @@ func (c *Configuration) p2pReceiveBeefTx(w http.ResponseWriter, req *http.Reques
 		panic("empty beef after parsing!")
 	}
 
-	err := paymail.ExecuteSimplifiedPaymentVerification(dBeef, c.actions)
+	err := spv.ExecuteSimplifiedPaymentVerification(dBeef, c.actions)
 	if err != nil {
 		ErrorResponse(w, ErrorSimplifiedPaymentVerification, err.Error(), http.StatusExpectationFailed)
 		return

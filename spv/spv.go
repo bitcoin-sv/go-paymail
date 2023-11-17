@@ -1,23 +1,24 @@
-package paymail
+package spv
 
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/libsv/go-bt/v2"
-	"github.com/libsv/go-bt/v2/bscript/interpreter"
+
+	"github.com/bitcoin-sv/go-paymail"
 )
 
 type MerkleRootVerifier interface {
 	VerifyMerkleRoots(
 		ctx context.Context,
-		merkleRoots []MerkleRootConfirmationRequestItem,
+		merkleRoots []paymail.MerkleRootConfirmationRequestItem,
 	) error
 }
 
 // ExecuteSimplifiedPaymentVerification executes the SPV for decoded BEEF tx
-func ExecuteSimplifiedPaymentVerification(dBeef *DecodedBEEF, provider MerkleRootVerifier) error {
+func ExecuteSimplifiedPaymentVerification(dBeef *paymail.DecodedBEEF, provider MerkleRootVerifier) error {
+
 	err := validateSatoshisSum(dBeef)
 	if err != nil {
 		return err
@@ -41,37 +42,7 @@ func ExecuteSimplifiedPaymentVerification(dBeef *DecodedBEEF, provider MerkleRoo
 	return nil
 }
 
-func verifyMerkleRoots(dBeef *DecodedBEEF, provider MerkleRootVerifier) error {
-	merkleRoots, err := dBeef.GetMerkleRootsRequest()
-	if err != nil {
-		return err
-	}
-
-	err = provider.VerifyMerkleRoots(context.Background(), merkleRoots)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func validateScripts(dBeef *DecodedBEEF) error {
-	for i, input := range dBeef.ProcessedTxData.Inputs {
-		inputParentTx := findParentForInput(input, dBeef.InputsTxData)
-		if inputParentTx == nil {
-			return errors.New("invalid parent transactions, no matching trasactions for input")
-		}
-
-		result := verifyScripts(dBeef.ProcessedTxData, inputParentTx.Transaction, i)
-		if !result {
-			return errors.New("invalid script")
-		}
-	}
-
-	return nil
-}
-
-func validateSatoshisSum(dBeef *DecodedBEEF) error {
+func validateSatoshisSum(dBeef *paymail.DecodedBEEF) error {
 	if len(dBeef.ProcessedTxData.Outputs) == 0 {
 		return errors.New("invalid output, no outputs")
 	}
@@ -101,7 +72,7 @@ func validateSatoshisSum(dBeef *DecodedBEEF) error {
 	return nil
 }
 
-func validateLockTime(dBeef *DecodedBEEF) error {
+func validateLockTime(dBeef *paymail.DecodedBEEF) error {
 	if dBeef.ProcessedTxData.LockTime == 0 {
 		for _, input := range dBeef.ProcessedTxData.Inputs {
 			if input.SequenceNumber != 0xffffffff {
@@ -114,27 +85,11 @@ func validateLockTime(dBeef *DecodedBEEF) error {
 	return nil
 }
 
-// Verify locking and unlocking scripts pair
-func verifyScripts(tx, prevTx *bt.Tx, inputIdx int) bool {
-	input := tx.InputIdx(inputIdx)
-	prevOutput := prevTx.OutputIdx(int(input.PreviousTxOutIndex))
-
-	if err := interpreter.NewEngine().Execute(
-		interpreter.WithTx(tx, inputIdx, prevOutput),
-		interpreter.WithForkID(),
-		interpreter.WithAfterGenesis(),
-	); err != nil {
-		fmt.Println(err)
-		return false
-	}
-	return true
-}
-
-func findParentForInput(input *bt.Input, parentTxs []*TxData) *TxData {
+func findParentForInput(input *bt.Input, parentTxs []*paymail.TxData) *paymail.TxData {
 	parentID := input.PreviousTxIDStr()
 
 	for _, ptx := range parentTxs {
-		if ptx.Transaction.TxID() == parentID {
+		if ptx.GetTxID() == parentID {
 			return ptx
 		}
 	}
