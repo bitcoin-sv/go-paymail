@@ -2,7 +2,6 @@ package spv
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/libsv/go-bt/v2"
 	"github.com/libsv/go-bt/v2/bscript/interpreter"
@@ -17,8 +16,8 @@ func validateScripts(dBeef *paymail.DecodedBEEF) error {
 			return errors.New("invalid parent transactions, no matching trasactions for input")
 		}
 
-		result := verifyScripts(dBeef.ProcessedTxData, inputParentTx.Transaction, i)
-		if !result {
+		err := verifyScripts(dBeef.ProcessedTxData, inputParentTx.Transaction, i)
+		if err != nil {
 			return errors.New("invalid script")
 		}
 	}
@@ -27,17 +26,15 @@ func validateScripts(dBeef *paymail.DecodedBEEF) error {
 }
 
 // Verify locking and unlocking scripts pair
-func verifyScripts(tx, prevTx *bt.Tx, inputIdx int) bool {
+func verifyScripts(tx, prevTx *bt.Tx, inputIdx int) error {
 	input := tx.InputIdx(inputIdx)
 	prevOutput := prevTx.OutputIdx(int(input.PreviousTxOutIndex))
 
-	if err := interpreter.NewEngine().Execute(
+	err := interpreter.NewEngine().Execute(
 		interpreter.WithTx(tx, inputIdx, prevOutput),
 		interpreter.WithForkID(),
 		interpreter.WithAfterGenesis(),
-	); err != nil {
-		fmt.Println(err)
-		return false
-	}
-	return true
+	)
+
+	return err
 }

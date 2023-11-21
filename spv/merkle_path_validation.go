@@ -73,8 +73,8 @@ func existsInBumps(ancestorTx *paymail.TxData, bumps paymail.BUMPs) bool {
 	if len(bumps) > bumpIdx {
 		leafs := bumps[bumpIdx].Path[0]
 
-		for _, l := range leafs {
-			if parentTxID == l.Hash {
+		for _, lf := range leafs {
+			if parentTxID == lf.Hash {
 				return true
 			}
 		}

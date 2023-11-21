@@ -4,9 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"github.com/libsv/go-bt/v2"
-
 	"github.com/bitcoin-sv/go-paymail"
+	"github.com/libsv/go-bt/v2"
 )
 
 type MerkleRootVerifier interface {
