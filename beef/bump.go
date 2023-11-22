@@ -1,4 +1,4 @@
-package paymail
+package beef
 
 import (
 	"errors"
@@ -53,15 +53,6 @@ func (b BUMP) calculateMerkleRoot() (string, error) {
 	return merkleRoot, nil
 }
 
-func findLeafByOffset(offset uint64, bumpLeaves []BUMPLeaf) *BUMPLeaf {
-	for _, bumpTx := range bumpLeaves {
-		if bumpTx.offset == offset {
-			return &bumpTx
-		}
-	}
-	return nil
-}
-
 // calculateMerkleRoots will calculate one merkle root for tx in the BUMPLeaf
 func calculateMerkleRoot(baseLeaf BUMPLeaf, bump BUMP) (string, error) {
 	calculatedHash := baseLeaf.Hash
@@ -98,6 +89,15 @@ func getOffsetPair(offset uint64) uint64 {
 		return offset + 1
 	}
 	return offset - 1
+}
+
+func findLeafByOffset(offset uint64, bumpLeaves []BUMPLeaf) *BUMPLeaf {
+	for _, bumpTx := range bumpLeaves {
+		if bumpTx.offset == offset {
+			return &bumpTx
+		}
+	}
+	return nil
 }
 
 func prepareNodes(baseLeaf BUMPLeaf, offset uint64, leafInPair BUMPLeaf, newOffset uint64) (string, string) {

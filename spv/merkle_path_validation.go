@@ -4,12 +4,12 @@ import (
 	"context"
 	"errors"
 
-	"github.com/bitcoin-sv/go-paymail"
+	"github.com/bitcoin-sv/go-paymail/beef"
 	"github.com/libsv/go-bt/v2"
 )
 
-func verifyMerkleRoots(ctx context.Context, dBeef *paymail.DecodedBEEF, provider MerkleRootVerifier) error {
-	if err := ensureInputTransactionsArePresentInBump(dBeef.GetLatestTx(), dBeef); err != nil {
+func verifyMerkleRoots(ctx context.Context, dBeef *beef.DecodedBEEF, provider MerkleRootVerifier) error {
+	if err := ensureInputParentsArePresentInBump(dBeef.GetLatestTx(), dBeef); err != nil {
 		return err
 	}
 
@@ -26,7 +26,7 @@ func verifyMerkleRoots(ctx context.Context, dBeef *paymail.DecodedBEEF, provider
 	return nil
 }
 
-func ensureInputTransactionsArePresentInBump(tx *bt.Tx, dBeef *paymail.DecodedBEEF) error {
+func ensureInputParentsArePresentInBump(tx *bt.Tx, dBeef *beef.DecodedBEEF) error {
 
 	for _, input := range tx.Inputs {
 
@@ -46,23 +46,23 @@ func ensureInputTransactionsArePresentInBump(tx *bt.Tx, dBeef *paymail.DecodedBE
 	return nil
 }
 
-func findMinedAncestors(input *bt.Input, parentTxs []*paymail.TxData, depth uint) []*paymail.TxData {
+func findMinedAncestors(input *bt.Input, parentTxs []*beef.TxData, depth uint) []*beef.TxData {
 	if depth > 64 {
-		return []*paymail.TxData{}
+		return []*beef.TxData{}
 	}
 	depth++
 
 	parent := findParentForInput(input, parentTxs)
 
 	if parent == nil { // oh oh- end of hierarchy
-		return []*paymail.TxData{}
+		return []*beef.TxData{}
 	}
 
 	if !parent.Unmined() {
-		return []*paymail.TxData{parent}
+		return []*beef.TxData{parent}
 	}
 
-	ancestors := make([]*paymail.TxData, 0)
+	ancestors := make([]*beef.TxData, 0)
 
 	for _, in := range parent.Transaction.Inputs {
 		ancestors = append(ancestors, findMinedAncestors(in, parentTxs, depth)...)
@@ -71,7 +71,7 @@ func findMinedAncestors(input *bt.Input, parentTxs []*paymail.TxData, depth uint
 	return ancestors
 }
 
-func existsInBumps(ancestorTx *paymail.TxData, bumps paymail.BUMPs) bool {
+func existsInBumps(ancestorTx *beef.TxData, bumps beef.BUMPs) bool {
 	bumpIdx := int(*ancestorTx.BumpIndex)
 	parentTxID := ancestorTx.GetTxID()
 

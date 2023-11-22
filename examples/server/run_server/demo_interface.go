@@ -45,7 +45,7 @@ func (d *demoServiceProvider) RecordTransaction(ctx context.Context,
 }
 
 // VerifyMerkleRoots is a demo implementation of this interface
-func (d *demoServiceProvider) VerifyMerkleRoots(ctx context.Context, merkleProofs []paymail.MerkleRootConfirmationRequestItem) error {
+func (d *demoServiceProvider) VerifyMerkleRoots(ctx context.Context, merkleProofs []*paymail.MerkleRootConfirmationRequestItem) error {
 	// Verify the Merkle roots
 	return nil
 }

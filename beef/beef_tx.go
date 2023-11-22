@@ -1,10 +1,11 @@
-package paymail
+package beef
 
 import (
 	"encoding/hex"
 	"errors"
 	"fmt"
 
+	"github.com/bitcoin-sv/go-paymail"
 	"github.com/libsv/go-bt/v2"
 )
 
@@ -72,8 +73,8 @@ func DecodeBEEF(beefHex string) (*DecodedBEEF, error) {
 }
 
 // GetMerkleRoots will calculate the merkle roots for the BUMPs in the BEEF transaction
-func (dBeef *DecodedBEEF) GetMerkleRootsRequest() ([]MerkleRootConfirmationRequestItem, error) {
-	var merkleRootsRequest []MerkleRootConfirmationRequestItem
+func (dBeef *DecodedBEEF) GetMerkleRootsRequest() ([]*paymail.MerkleRootConfirmationRequestItem, error) {
+	var merkleRootsRequest []*paymail.MerkleRootConfirmationRequestItem
 
 	for _, bump := range dBeef.BUMPs {
 		merkleRoot, err := bump.calculateMerkleRoot()
@@ -81,11 +82,11 @@ func (dBeef *DecodedBEEF) GetMerkleRootsRequest() ([]MerkleRootConfirmationReque
 			return nil, err
 		}
 
-		request := MerkleRootConfirmationRequestItem{
+		request := paymail.MerkleRootConfirmationRequestItem{
 			BlockHeight: bump.BlockHeight,
 			MerkleRoot:  merkleRoot,
 		}
-		merkleRootsRequest = append(merkleRootsRequest, request)
+		merkleRootsRequest = append(merkleRootsRequest, &request)
 	}
 
 	return merkleRootsRequest, nil

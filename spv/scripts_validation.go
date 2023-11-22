@@ -3,13 +3,12 @@ package spv
 import (
 	"errors"
 
+	"github.com/bitcoin-sv/go-paymail/beef"
 	"github.com/libsv/go-bt/v2"
 	"github.com/libsv/go-bt/v2/bscript/interpreter"
-
-	"github.com/bitcoin-sv/go-paymail"
 )
 
-func validateScripts(tx *bt.Tx, inputTxs []*paymail.TxData) error {
+func validateScripts(tx *bt.Tx, inputTxs []*beef.TxData) error {
 	for i, input := range tx.Inputs {
 		inputParentTx := findParentForInput(input, inputTxs)
 		if inputParentTx == nil {

@@ -1,4 +1,4 @@
-package paymail
+package beef
 
 import (
 	"errors"
