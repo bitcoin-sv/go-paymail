@@ -88,7 +88,7 @@ func (c *Configuration) p2pReceiveBeefTx(w http.ResponseWriter, req *http.Reques
 		panic("empty beef after parsing!")
 	}
 
-	err := spv.ExecuteSimplifiedPaymentVerification(dBeef, c.actions)
+	err := spv.ExecuteSimplifiedPaymentVerification(req.Context(), dBeef, c.actions)
 	if err != nil {
 		ErrorResponse(w, ErrorSimplifiedPaymentVerification, err.Error(), http.StatusExpectationFailed)
 		return

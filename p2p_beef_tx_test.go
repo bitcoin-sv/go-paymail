@@ -15,7 +15,6 @@ func TestDecodeBEEF_DecodeBEEF_HappyPaths(t *testing.T) {
 		hexStream                  string
 		expectedDecodedBEEF        *DecodedBEEF
 		pathIndexForTheOldestInput *bt.VarInt
-		expectedError              error
 	}{
 		{
 			name:      "valid BEEF with 1 CMP and 1 input transaction",
@@ -50,7 +49,7 @@ func TestDecodeBEEF_DecodeBEEF_HappyPaths(t *testing.T) {
 						},
 					},
 				},
-				InputsTxData: []*TxData{
+				Transactions: []*TxData{
 					{
 						Transaction: &bt.Tx{
 							Version:  1,
@@ -70,25 +69,29 @@ func TestDecodeBEEF_DecodeBEEF_HappyPaths(t *testing.T) {
 								},
 							},
 						},
-						PathIndex: func(v bt.VarInt) *bt.VarInt { return &v }(0x0),
+						BumpIndex: func(v bt.VarInt) *bt.VarInt { return &v }(0x0),
 					},
-				},
-				ProcessedTxData: &bt.Tx{
-					Version:  1,
-					LockTime: 0,
-					Inputs: []*bt.Input{
-						{
-							PreviousTxSatoshis: 0,
-							PreviousTxOutIndex: 0,
-							SequenceNumber:     4294967295,
-							PreviousTxScript:   nil,
+
+					{
+						Transaction: &bt.Tx{
+							Version:  1,
+							LockTime: 0,
+							Inputs: []*bt.Input{
+								{
+									PreviousTxSatoshis: 0,
+									PreviousTxOutIndex: 0,
+									SequenceNumber:     4294967295,
+									PreviousTxScript:   nil,
+								},
+							},
+							Outputs: []*bt.Output{
+								{
+									Satoshis:      26172,
+									LockingScript: bscript.NewFromBytes([]byte("76a9146bfd5c7fbe21529d45803dbcf0c87dd3c71efbc288ac")),
+								},
+							},
 						},
-					},
-					Outputs: []*bt.Output{
-						{
-							Satoshis:      26172,
-							LockingScript: bscript.NewFromBytes([]byte("76a9146bfd5c7fbe21529d45803dbcf0c87dd3c71efbc288ac")),
-						},
+						BumpIndex: nil,
 					},
 				},
 			},
@@ -104,9 +107,9 @@ func TestDecodeBEEF_DecodeBEEF_HappyPaths(t *testing.T) {
 			decodedBEEF, err := DecodeBEEF(beef)
 
 			// then
-			assert.Equal(t, tc.expectedError, err, "expected error %v, but got %v", tc.expectedError, err)
+			assert.Nil(t, err)
 
-			assert.Equal(t, len(tc.expectedDecodedBEEF.InputsTxData), len(decodedBEEF.InputsTxData), "expected %v inputs, but got %v", len(tc.expectedDecodedBEEF.InputsTxData), len(decodedBEEF.InputsTxData))
+			assert.Equal(t, len(tc.expectedDecodedBEEF.Transactions), len(decodedBEEF.Transactions), "expected %v inputs, but got %v", len(tc.expectedDecodedBEEF.Transactions), len(decodedBEEF.Transactions))
 
 			assert.Equal(t, len(tc.expectedDecodedBEEF.BUMPs), len(decodedBEEF.BUMPs), "expected %v BUMPs, but got %v", len(tc.expectedDecodedBEEF.BUMPs), len(decodedBEEF.BUMPs))
 
@@ -115,9 +118,7 @@ func TestDecodeBEEF_DecodeBEEF_HappyPaths(t *testing.T) {
 				assert.Equal(t, bump.Path, decodedBEEF.BUMPs[i].Path, "expected equal BUMPPaths for %v BUMP, expected: %v but got %v", i, bump, len(decodedBEEF.BUMPs[i].Path))
 			}
 
-			assert.NotNil(t, decodedBEEF.ProcessedTxData, "expected original transaction to be not nil")
-
-			assert.Equal(t, tc.expectedDecodedBEEF.InputsTxData[0].PathIndex, decodedBEEF.InputsTxData[0].PathIndex, "expected path index for the oldest input to be %v, but got %v", tc.expectedDecodedBEEF.InputsTxData[0].PathIndex, decodedBEEF.InputsTxData[0].PathIndex)
+			assert.Equal(t, tc.expectedDecodedBEEF.Transactions[0].BumpIndex, decodedBEEF.Transactions[0].BumpIndex, "expected path index for the oldest input to be %v, but got %v", tc.expectedDecodedBEEF.Transactions[0].BumpIndex, decodedBEEF.Transactions[0].BumpIndex)
 		})
 	}
 }

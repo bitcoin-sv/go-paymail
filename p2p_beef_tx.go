@@ -27,9 +27,13 @@ const (
 
 type TxData struct {
 	Transaction *bt.Tx
-	PathIndex   *bt.VarInt
+	BumpIndex   *bt.VarInt
 
 	txID string
+}
+
+func (td *TxData) Unmined() bool {
+	return td.BumpIndex == nil
 }
 
 func (td *TxData) GetTxID() string {
@@ -41,29 +45,8 @@ func (td *TxData) GetTxID() string {
 }
 
 type DecodedBEEF struct {
-	BUMPs           BUMPs
-	InputsTxData    []*TxData
-	ProcessedTxData *bt.Tx
-}
-
-// GetMerkleRoots will calculate the merkle roots for the BUMPs in the BEEF transaction
-func (dBeef *DecodedBEEF) GetMerkleRootsRequest() ([]MerkleRootConfirmationRequestItem, error) {
-	var merkleRootsRequest []MerkleRootConfirmationRequestItem
-
-	for _, bump := range dBeef.BUMPs {
-		merkleRoot, err := bump.calculateMerkleRoot()
-		if err != nil {
-			return nil, err
-		}
-
-		request := MerkleRootConfirmationRequestItem{
-			BlockHeight: int32(bump.BlockHeight),
-			MerkleRoot:  merkleRoot,
-		}
-		merkleRootsRequest = append(merkleRootsRequest, request)
-	}
-
-	return merkleRootsRequest, nil
+	BUMPs        BUMPs
+	Transactions []*TxData
 }
 
 func DecodeBEEF(beefHex string) (*DecodedBEEF, error) {
@@ -82,15 +65,34 @@ func DecodeBEEF(beefHex string) (*DecodedBEEF, error) {
 		return nil, err
 	}
 
-	// get the last transaction as the processed transaction - it should be the last one because of khan's ordering
-	processedTx := transactions[len(transactions)-1]
-	transactions = transactions[:len(transactions)-1]
-
 	return &DecodedBEEF{
-		BUMPs:           bumps,
-		InputsTxData:    transactions,
-		ProcessedTxData: processedTx.Transaction,
+		BUMPs:        bumps,
+		Transactions: transactions,
 	}, nil
+}
+
+// GetMerkleRoots will calculate the merkle roots for the BUMPs in the BEEF transaction
+func (dBeef *DecodedBEEF) GetMerkleRootsRequest() ([]MerkleRootConfirmationRequestItem, error) {
+	var merkleRootsRequest []MerkleRootConfirmationRequestItem
+
+	for _, bump := range dBeef.BUMPs {
+		merkleRoot, err := bump.calculateMerkleRoot()
+		if err != nil {
+			return nil, err
+		}
+
+		request := MerkleRootConfirmationRequestItem{
+			BlockHeight: bump.BlockHeight,
+			MerkleRoot:  merkleRoot,
+		}
+		merkleRootsRequest = append(merkleRootsRequest, request)
+	}
+
+	return merkleRootsRequest, nil
+}
+
+func (d *DecodedBEEF) GetLatestTx() *bt.Tx {
+	return d.Transactions[len(d.Transactions)-1].Transaction // get the last transaction as the processed transaction - it should be the last one because of khan's ordering
 }
 
 func decodeBUMPs(beefBytes []byte) ([]BUMP, []byte, error) {
@@ -239,7 +241,7 @@ func decodeTransactionsWithPathIndexes(bytes []byte) ([]*TxData, error) {
 
 		transactions = append(transactions, &TxData{
 			Transaction: tx,
-			PathIndex:   pathIndex,
+			BumpIndex:   pathIndex,
 		})
 	}
 

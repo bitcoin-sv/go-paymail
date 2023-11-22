@@ -9,14 +9,14 @@ import (
 	"github.com/bitcoin-sv/go-paymail"
 )
 
-func validateScripts(dBeef *paymail.DecodedBEEF) error {
-	for i, input := range dBeef.ProcessedTxData.Inputs {
-		inputParentTx := findParentForInput(input, dBeef.InputsTxData)
+func validateScripts(tx *bt.Tx, inputTxs []*paymail.TxData) error {
+	for i, input := range tx.Inputs {
+		inputParentTx := findParentForInput(input, inputTxs)
 		if inputParentTx == nil {
 			return errors.New("invalid parent transactions, no matching trasactions for input")
 		}
 
-		err := verifyScripts(dBeef.ProcessedTxData, inputParentTx.Transaction, i)
+		err := verifyScripts(tx, inputParentTx.Transaction, i)
 		if err != nil {
 			return errors.New("invalid script")
 		}

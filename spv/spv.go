@@ -16,64 +16,48 @@ type MerkleRootVerifier interface {
 }
 
 // ExecuteSimplifiedPaymentVerification executes the SPV for decoded BEEF tx
-func ExecuteSimplifiedPaymentVerification(dBeef *paymail.DecodedBEEF, provider MerkleRootVerifier) error {
+func ExecuteSimplifiedPaymentVerification(ctx context.Context, dBeef *paymail.DecodedBEEF, provider MerkleRootVerifier) error {
 
-	err := validateSatoshisSum(dBeef)
-	if err != nil {
-		return err
-	}
+	for _, txDt := range dBeef.Transactions {
+		tx := txDt.Transaction
 
-	err = validateLockTime(dBeef)
-	if err != nil {
-		return err
-	}
-
-	err = validateScripts(dBeef)
-	if err != nil {
-		return err
-	}
-
-	err = verifyMerkleRoots(dBeef, provider)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func validateSatoshisSum(dBeef *paymail.DecodedBEEF) error {
-	if len(dBeef.ProcessedTxData.Outputs) == 0 {
-		return errors.New("invalid output, no outputs")
-	}
-
-	if len(dBeef.ProcessedTxData.Inputs) == 0 {
-		return errors.New("invalid input, no inputs")
-	}
-
-	inputSum, outputSum := uint64(0), uint64(0)
-
-	for _, input := range dBeef.ProcessedTxData.Inputs {
-		inputParentTx := findParentForInput(input, dBeef.InputsTxData)
-
-		if inputParentTx == nil {
-			return errors.New("invalid parent transactions, no matching trasactions for input")
+		if len(tx.Outputs) == 0 {
+			return errors.New("invalid output, no outputs")
 		}
 
-		inputSum += inputParentTx.Transaction.Outputs[input.PreviousTxOutIndex].Satoshis
-	}
-	for _, output := range dBeef.ProcessedTxData.Outputs {
-		outputSum += output.Satoshis
+		if len(tx.Inputs) == 0 {
+			return errors.New("invalid input, no inputs")
+		}
+
+		err := validateLockTime(tx)
+		if err != nil {
+			return err
+		}
+
+		if txDt.Unmined() {
+			err = validateSatoshisSum(tx, dBeef.Transactions)
+			if err != nil {
+				return err
+			}
+
+			err = validateScripts(tx, dBeef.Transactions)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
-	if inputSum <= outputSum {
-		return errors.New("invalid input and output sum, outputs can not be larger than inputs")
+	err := verifyMerkleRoots(ctx, dBeef, provider)
+	if err != nil {
+		return err
 	}
+
 	return nil
 }
 
-func validateLockTime(dBeef *paymail.DecodedBEEF) error {
-	if dBeef.ProcessedTxData.LockTime == 0 {
-		for _, input := range dBeef.ProcessedTxData.Inputs {
+func validateLockTime(tx *bt.Tx) error {
+	if tx.LockTime == 0 {
+		for _, input := range tx.Inputs {
 			if input.SequenceNumber != 0xffffffff {
 				return errors.New("unexpected transaction with nSequence")
 			}
@@ -81,6 +65,29 @@ func validateLockTime(dBeef *paymail.DecodedBEEF) error {
 	} else {
 		return errors.New("unexpected transaction with nLockTime")
 	}
+	return nil
+}
+
+func validateSatoshisSum(tx *bt.Tx, inputTxs []*paymail.TxData) error {
+	inputSum, outputSum := uint64(0), uint64(0)
+
+	for _, input := range tx.Inputs {
+		inputParentTx := findParentForInput(input, inputTxs)
+
+		if inputParentTx == nil {
+			return errors.New("invalid parent transactions, no matching trasactions for input")
+		}
+
+		inputSum += inputParentTx.Transaction.Outputs[input.PreviousTxOutIndex].Satoshis
+	}
+	for _, output := range tx.Outputs {
+		outputSum += output.Satoshis
+	}
+
+	if inputSum <= outputSum {
+		return errors.New("invalid input and output sum, outputs can not be larger than inputs")
+	}
+
 	return nil
 }
 

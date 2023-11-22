@@ -84,5 +84,5 @@ type AddressInformation struct {
 // of Merkle Roots inclusion in the longest chain.
 type MerkleRootConfirmationRequestItem struct {
 	MerkleRoot  string `json:"merkleRoot"`
-	BlockHeight int32  `json:"blockHeight"`
+	BlockHeight uint64 `json:"blockHeight"`
 }

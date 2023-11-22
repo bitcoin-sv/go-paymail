@@ -83,7 +83,7 @@ func getProcessedTxData(payload *p2pReceiveTxReqPayload, format p2pPayloadFormat
 			return nil, nil, &processingError{&parseError{ErrorInvalidParameter, errorMsg}, http.StatusBadRequest}
 		}
 
-		processedTx = beefData.ProcessedTxData
+		processedTx = beefData.GetLatestTx()
 
 	default:
 		panic("Unexpected transaction format!")
