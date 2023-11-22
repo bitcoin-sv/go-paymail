@@ -5,7 +5,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/bitcoin-sv/go-paymail"
 	"github.com/bitcoin-sv/go-paymail/beef"
 	"github.com/stretchr/testify/require"
 )
@@ -91,7 +90,7 @@ func TestExecuteSimplifiedPaymentVerification_CorruptedTransaction_ReturnError(t
 type mockServiceProvider struct{}
 
 // VerifyMerkleRoots is a mock implementation of this interface
-func (m *mockServiceProvider) VerifyMerkleRoots(_ context.Context, _ []*paymail.MerkleRootConfirmationRequestItem) error {
+func (m *mockServiceProvider) VerifyMerkleRoots(_ context.Context, _ []*MerkleRootConfirmationRequestItem) error {
 	// Verify the merkle roots
 	return nil
 }

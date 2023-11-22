@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 
-	"github.com/bitcoin-sv/go-paymail"
 	"github.com/bitcoin-sv/go-paymail/beef"
 	"github.com/libsv/go-bt/v2"
 )
@@ -12,8 +11,15 @@ import (
 type MerkleRootVerifier interface {
 	VerifyMerkleRoots(
 		ctx context.Context,
-		merkleRoots []*paymail.MerkleRootConfirmationRequestItem,
+		merkleRoots []*MerkleRootConfirmationRequestItem,
 	) error
+}
+
+// MerkleRootConfirmationRequestItem is a request type for verification
+// of Merkle Roots inclusion in the longest chain.
+type MerkleRootConfirmationRequestItem struct {
+	MerkleRoot  string `json:"merkleRoot"`
+	BlockHeight uint64 `json:"blockHeight"`
 }
 
 // ExecuteSimplifiedPaymentVerification executes the SPV for decoded BEEF tx

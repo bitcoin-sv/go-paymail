@@ -30,7 +30,7 @@ const (
 	txIDFlag
 )
 
-func (b BUMP) calculateMerkleRoot() (string, error) {
+func (b BUMP) CalculateMerkleRoot() (string, error) {
 	merkleRoot := ""
 
 	for _, bumpPathElement := range b.Path[0] {
