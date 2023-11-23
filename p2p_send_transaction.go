@@ -24,10 +24,11 @@ Example:
 
 // P2PTransaction is the request body for the P2P transaction request
 type P2PTransaction struct {
-	Hex       string       `json:"hex"`       // The raw transaction, encoded as a hexadecimal string
-	Beef      string       `json:"beef"`      // The transaction in BEEF format
-	MetaData  *P2PMetaData `json:"metadata"`  // An object containing data associated with the transaction
-	Reference string       `json:"reference"` // Reference for the payment (from previous P2P Destination request)
+	Hex         string       `json:"hex"`         // The raw transaction, encoded as a hexadecimal string
+	Beef        string       `json:"beef"`        // The transaction in hex BEEF format
+	DecodedBeef *DecodedBEEF `json:"decodedBeef"` // Decoded BEEF transaction
+	MetaData    *P2PMetaData `json:"metadata"`    // An object containing data associated with the transaction
+	Reference   string       `json:"reference"`   // Reference for the payment (from previous P2P Destination request)
 }
 
 // P2PMetaData is an object containing data associated with the P2P transaction
