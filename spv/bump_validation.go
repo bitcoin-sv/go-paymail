@@ -8,6 +8,8 @@ import (
 	"github.com/libsv/go-bt/v2"
 )
 
+const recursiveMaxDepth = 128 // arbitrarily chosen value
+
 func ensureAncestorsArePresentInBump(tx *bt.Tx, dBeef *beef.DecodedBEEF) error {
 	ancestors, err := findMinedAncestors(tx, dBeef.Transactions)
 	if err != nil {
@@ -15,7 +17,6 @@ func ensureAncestorsArePresentInBump(tx *bt.Tx, dBeef *beef.DecodedBEEF) error {
 	}
 
 	for _, tx := range ancestors {
-
 		if !existsInBumps(tx, dBeef.BUMPs) {
 			return errors.New("invalid BUMP - input mined ancestor is not present in BUMPs")
 		}
@@ -39,7 +40,7 @@ func findMinedAncestors(tx *bt.Tx, ancestors []*beef.TxData) (map[string]*beef.T
 }
 
 func findMinedAncestorsForInput(input *bt.Input, ancestors []*beef.TxData, ma map[string]*beef.TxData, depth uint) error {
-	if depth > 128 {
+	if depth > recursiveMaxDepth { //primitive protection against Cyclic Graph (and therefore infinite loop)
 		return fmt.Errorf("invalid BUMP - cannot find mined parent for input %s on %d depth", input.String(), depth)
 	}
 	depth++

@@ -14,8 +14,8 @@ const (
 )
 
 const (
-	HasNoCMP = 0x00
-	HasCMP   = 0x01
+	HasNoBump = 0x00
+	HasBump   = 0x01
 )
 
 const (
@@ -209,11 +209,11 @@ func decodeTransactionsWithPathIndexes(bytes []byte) ([]*TxData, error) {
 
 		var pathIndex *bt.VarInt
 
-		if bytes[0] == HasCMP {
+		if bytes[0] == HasBump {
 			value, offset := bt.NewVarIntFromBytes(bytes[1:])
 			pathIndex = &value
 			bytes = bytes[1+offset:]
-		} else if bytes[0] == HasNoCMP {
+		} else if bytes[0] == HasNoBump {
 			bytes = bytes[1:]
 		} else {
 			return nil, fmt.Errorf("invalid HasCMP flag for transaction at index %d", i)

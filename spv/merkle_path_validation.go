@@ -11,7 +11,7 @@ func verifyMerkleRoots(ctx context.Context, dBeef *beef.DecodedBEEF, provider Me
 		return err
 	}
 
-	verifyReq, err := getMerkleRootsVeryficationRequests(dBeef.BUMPs)
+	verifyReq, err := getMerkleRootsVerificationRequests(dBeef.BUMPs)
 	if err != nil {
 		return err
 	}
@@ -23,7 +23,7 @@ func verifyMerkleRoots(ctx context.Context, dBeef *beef.DecodedBEEF, provider Me
 	return nil
 }
 
-func getMerkleRootsVeryficationRequests(bumps beef.BUMPs) ([]*MerkleRootConfirmationRequestItem, error) {
+func getMerkleRootsVerificationRequests(bumps beef.BUMPs) ([]*MerkleRootConfirmationRequestItem, error) {
 	var reqItems []*MerkleRootConfirmationRequestItem
 
 	for _, bump := range bumps {
