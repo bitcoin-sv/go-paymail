@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.0](https://github.com/bitcoin-sv/go-paymail/compare/v0.8.0...v0.9.0) (2023-11-24)
+
+
+### Features
+
+* **BUX-172:** verify merkle root for unmined inputs ([#48](https://github.com/bitcoin-sv/go-paymail/issues/48)) ([f719ffa](https://github.com/bitcoin-sv/go-paymail/commit/f719ffa5fffddaa327c0ff0f79cd5c17845eb2f3))
+
 ## [0.8.0](https://github.com/bitcoin-sv/go-paymail/compare/v0.7.2...v0.8.0) (2023-11-24)
 
 
