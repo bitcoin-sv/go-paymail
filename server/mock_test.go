@@ -2,7 +2,9 @@ package server
 
 import (
 	"context"
+
 	"github.com/bitcoin-sv/go-paymail"
+	"github.com/bitcoin-sv/go-paymail/spv"
 )
 
 // Mock implementation of a service provider
@@ -41,7 +43,7 @@ func (m *mockServiceProvider) RecordTransaction(_ context.Context,
 }
 
 // VerifyMerkleRoots is a mock implementation of this interface
-func (m *mockServiceProvider) VerifyMerkleRoots(_ context.Context, _ []paymail.MerkleRootConfirmationRequestItem) error {
+func (m *mockServiceProvider) VerifyMerkleRoots(_ context.Context, _ []*spv.MerkleRootConfirmationRequestItem) error {
 
 	// Verify the merkle roots
 	return nil

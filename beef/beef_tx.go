@@ -1,4 +1,4 @@
-package paymail
+package beef
 
 import (
 	"encoding/hex"
@@ -14,8 +14,8 @@ const (
 )
 
 const (
-	HasNoCMP = 0x00
-	HasCMP   = 0x01
+	HasNoBump = 0x00
+	HasBump   = 0x01
 )
 
 const (
@@ -27,33 +27,26 @@ const (
 
 type TxData struct {
 	Transaction *bt.Tx
-	PathIndex   *bt.VarInt
+	BumpIndex   *bt.VarInt
+
+	txID string
+}
+
+func (td *TxData) Unmined() bool {
+	return td.BumpIndex == nil
+}
+
+func (td *TxData) GetTxID() string {
+	if len(td.txID) == 0 {
+		td.txID = td.Transaction.TxID()
+	}
+
+	return td.txID
 }
 
 type DecodedBEEF struct {
-	BUMPs           BUMPs
-	InputsTxData    []*TxData
-	ProcessedTxData *bt.Tx
-}
-
-// GetMerkleRoots will calculate the merkle roots for the BUMPs in the BEEF transaction
-func (dBeef *DecodedBEEF) GetMerkleRootsRequest() ([]MerkleRootConfirmationRequestItem, error) {
-	var merkleRootsRequest []MerkleRootConfirmationRequestItem
-
-	for _, bump := range dBeef.BUMPs {
-		merkleRoot, err := bump.calculateMerkleRoot()
-		if err != nil {
-			return nil, err
-		}
-
-		request := MerkleRootConfirmationRequestItem{
-			BlockHeight: int32(bump.blockHeight),
-			MerkleRoot:  merkleRoot,
-		}
-		merkleRootsRequest = append(merkleRootsRequest, request)
-	}
-
-	return merkleRootsRequest, nil
+	BUMPs        BUMPs
+	Transactions []*TxData
 }
 
 func DecodeBEEF(beefHex string) (*DecodedBEEF, error) {
@@ -72,15 +65,14 @@ func DecodeBEEF(beefHex string) (*DecodedBEEF, error) {
 		return nil, err
 	}
 
-	// get the last transaction as the processed transaction - it should be the last one because of khan's ordering
-	processedTx := transactions[len(transactions)-1]
-	transactions = transactions[:len(transactions)-1]
-
 	return &DecodedBEEF{
-		BUMPs:           bumps,
-		InputsTxData:    transactions,
-		ProcessedTxData: processedTx.Transaction,
+		BUMPs:        bumps,
+		Transactions: transactions,
 	}, nil
+}
+
+func (d *DecodedBEEF) GetLatestTx() *bt.Tx {
+	return d.Transactions[len(d.Transactions)-1].Transaction // get the last transaction as the processed transaction - it should be the last one because of khan's ordering
 }
 
 func decodeBUMPs(beefBytes []byte) ([]BUMP, []byte, error) {
@@ -96,8 +88,8 @@ func decodeBUMPs(beefBytes []byte) ([]BUMP, []byte, error) {
 
 	beefBytes = beefBytes[bytesUsed:]
 
-	bumps := make([]BUMP, 0, int(nBump))
-	for i := 0; i < int(nBump); i++ {
+	bumps := make([]BUMP, 0, uint64(nBump))
+	for i := uint64(0); i < uint64(nBump); i++ {
 		if len(beefBytes) == 0 {
 			return nil, nil, errors.New("insufficient bytes to extract BUMP blockHeight")
 		}
@@ -117,8 +109,8 @@ func decodeBUMPs(beefBytes []byte) ([]BUMP, []byte, error) {
 		beefBytes = remainingBytes
 
 		bump := BUMP{
-			blockHeight: uint64(blockHeight),
-			path:        bumpPaths,
+			BlockHeight: uint64(blockHeight),
+			Path:        bumpPaths,
 		}
 
 		bumps = append(bumps, bump)
@@ -185,7 +177,7 @@ func decodeBUMPLevel(nLeaves bt.VarInt, hexBytes []byte) ([]BUMPLeaf, []byte, er
 		hexBytes = hexBytes[hashBytesCount:]
 
 		bumpLeaf := BUMPLeaf{
-			hash:   hash,
+			Hash:   hash,
 			offset: uint64(offset),
 		}
 		if flag == txIDFlag {
@@ -216,11 +208,12 @@ func decodeTransactionsWithPathIndexes(bytes []byte) ([]*TxData, error) {
 		bytes = bytes[offset:]
 
 		var pathIndex *bt.VarInt
-		if bytes[0] == HasCMP {
+
+		if bytes[0] == HasBump {
 			value, offset := bt.NewVarIntFromBytes(bytes[1:])
 			pathIndex = &value
 			bytes = bytes[1+offset:]
-		} else if bytes[0] == HasNoCMP {
+		} else if bytes[0] == HasNoBump {
 			bytes = bytes[1:]
 		} else {
 			return nil, fmt.Errorf("invalid HasCMP flag for transaction at index %d", i)
@@ -228,7 +221,7 @@ func decodeTransactionsWithPathIndexes(bytes []byte) ([]*TxData, error) {
 
 		transactions = append(transactions, &TxData{
 			Transaction: tx,
-			PathIndex:   pathIndex,
+			BumpIndex:   pathIndex,
 		})
 	}
 
