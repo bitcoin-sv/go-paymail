@@ -54,8 +54,7 @@ func ExecuteSimplifiedPaymentVerification(ctx context.Context, dBeef *beef.Decod
 		}
 	}
 
-	err := verifyMerkleRoots(ctx, dBeef, provider)
-	if err != nil {
+	if err := verifyMerkleRoots(ctx, dBeef, provider); err != nil {
 		return err
 	}
 
