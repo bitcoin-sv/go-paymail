@@ -56,6 +56,7 @@ func processP2pReceiveTxRequest(c *Configuration, req *http.Request, p httproute
 
 	if format == beefP2pPayload {
 		payload.Hex = tx.String()
+		payload.DecodedBeef = beefData
 	}
 
 	return payload, beefData, md, nil
