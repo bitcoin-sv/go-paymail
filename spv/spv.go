@@ -36,8 +36,7 @@ func ExecuteSimplifiedPaymentVerification(ctx context.Context, dBeef *beef.Decod
 			return errors.New("invalid input, no inputs")
 		}
 
-		err := validateLockTime(tx)
-		if err != nil {
+		if err := validateLockTime(tx); err != nil {
 			return err
 		}
 
