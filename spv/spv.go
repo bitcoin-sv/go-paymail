@@ -41,13 +41,11 @@ func ExecuteSimplifiedPaymentVerification(ctx context.Context, dBeef *beef.Decod
 		}
 
 		if txDt.Unmined() {
-			err = validateSatoshisSum(tx, dBeef.Transactions)
-			if err != nil {
+			if err := validateSatoshisSum(tx, dBeef.Transactions); err != nil {
 				return err
 			}
 
-			err = validateScripts(tx, dBeef.Transactions)
-			if err != nil {
+			if err := validateScripts(tx, dBeef.Transactions); err != nil {
 				return err
 			}
 		}
