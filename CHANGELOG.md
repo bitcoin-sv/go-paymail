@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.0](https://github.com/bitcoin-sv/go-paymail/compare/v0.7.2...v0.8.0) (2023-11-24)
+
+
+### Features
+
+* **BUX-322:** add decoded beef to P2PTransaction ([#51](https://github.com/bitcoin-sv/go-paymail/issues/51)) ([94efda0](https://github.com/bitcoin-sv/go-paymail/commit/94efda042d8b29e6aa589f1a12f549eade023f30))
+
 ## [0.7.2](https://github.com/bitcoin-sv/go-paymail/compare/v0.7.1...v0.7.2) (2023-11-15)
 
 
