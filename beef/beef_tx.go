@@ -75,7 +75,7 @@ func (d *DecodedBEEF) GetLatestTx() *bt.Tx {
 	return d.Transactions[len(d.Transactions)-1].Transaction // get the last transaction as the processed transaction - it should be the last one because of khan's ordering
 }
 
-func decodeBUMPs(beefBytes []byte) ([]BUMP, []byte, error) {
+func decodeBUMPs(beefBytes []byte) ([]*BUMP, []byte, error) {
 	if len(beefBytes) == 0 {
 		return nil, nil, errors.New("cannot decode BUMP - no bytes provided")
 	}
@@ -88,7 +88,7 @@ func decodeBUMPs(beefBytes []byte) ([]BUMP, []byte, error) {
 
 	beefBytes = beefBytes[bytesUsed:]
 
-	bumps := make([]BUMP, 0, uint64(nBump))
+	bumps := make([]*BUMP, 0, uint64(nBump))
 	for i := uint64(0); i < uint64(nBump); i++ {
 		if len(beefBytes) == 0 {
 			return nil, nil, errors.New("insufficient bytes to extract BUMP blockHeight")
@@ -108,7 +108,7 @@ func decodeBUMPs(beefBytes []byte) ([]BUMP, []byte, error) {
 		}
 		beefBytes = remainingBytes
 
-		bump := BUMP{
+		bump := &BUMP{
 			BlockHeight: uint64(blockHeight),
 			Path:        bumpPaths,
 		}
@@ -162,8 +162,8 @@ func decodeBUMPLevel(nLeaves bt.VarInt, hexBytes []byte) ([]BUMPLeaf, []byte, er
 
 		if flag == duplicateFlag {
 			bumpLeaf := BUMPLeaf{
-				offset:    uint64(offset),
-				duplicate: true,
+				Offset:    uint64(offset),
+				Duplicate: true,
 			}
 			bumpPath = append(bumpPath, bumpLeaf)
 			continue
@@ -178,10 +178,10 @@ func decodeBUMPLevel(nLeaves bt.VarInt, hexBytes []byte) ([]BUMPLeaf, []byte, er
 
 		bumpLeaf := BUMPLeaf{
 			Hash:   hash,
-			offset: uint64(offset),
+			Offset: uint64(offset),
 		}
 		if flag == txIDFlag {
-			bumpLeaf.txId = true
+			bumpLeaf.TxId = true
 		}
 		bumpPath = append(bumpPath, bumpLeaf)
 	}
