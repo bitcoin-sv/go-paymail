@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/bitcoin-sv/go-paymail"
@@ -87,11 +88,16 @@ func (c *Configuration) p2pReceiveBeefTx(w http.ResponseWriter, req *http.Reques
 		panic("empty beef after parsing!")
 	}
 
+	fmt.Println("SPV begin...")
+
 	err := paymail.ExecuteSimplifiedPaymentVerification(dBeef, c.actions)
 	if err != nil {
+		fmt.Println(fmt.Sprintf("SPV failed. Reason: %s", err.Error()))
 		ErrorResponse(w, ErrorSimplifiedPaymentVerification, err.Error(), http.StatusExpectationFailed)
 		return
 	}
+
+	fmt.Println("SPV coplete...")
 
 	var response *paymail.P2PTransactionPayload
 	if response, err = c.actions.RecordTransaction(
