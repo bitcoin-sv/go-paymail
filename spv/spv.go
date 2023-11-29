@@ -60,13 +60,12 @@ func ExecuteSimplifiedPaymentVerification(ctx context.Context, dBeef *beef.Decod
 
 func validateLockTime(tx *bt.Tx) error {
 	if tx.LockTime == 0 {
-		for _, input := range tx.Inputs {
-			if input.SequenceNumber != 0xffffffff {
-				return errors.New("unexpected transaction with nSequence")
-			}
+		return nil
+	}
+	for _, input := range tx.Inputs {
+		if input.SequenceNumber != 0xffffffff {
+			return errors.New("nLocktime is set and nSequence is not max, therefore this could be a non-final tx which is not currently supported.")
 		}
-	} else {
-		return errors.New("unexpected transaction with nLockTime")
 	}
 	return nil
 }
