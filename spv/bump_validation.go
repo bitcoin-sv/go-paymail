@@ -8,8 +8,6 @@ import (
 	"github.com/libsv/go-bt/v2"
 )
 
-const recursiveMaxDepth = 128 // arbitrarily chosen value
-
 func ensureAncestorsArePresentInBump(tx *bt.Tx, dBeef *beef.DecodedBEEF) error {
 	ancestors, err := findMinedAncestors(tx, dBeef.Transactions)
 	if err != nil {
@@ -29,9 +27,8 @@ func findMinedAncestors(tx *bt.Tx, ancestors []*beef.TxData) (map[string]*beef.T
 	am := make(map[string]*beef.TxData)
 
 	for _, input := range tx.Inputs {
-		err := findMinedAncestorsForInput(input, ancestors, am, 0)
 
-		if err != nil {
+		if err := findMinedAncestorsForInput(input, ancestors, am); err != nil {
 			return nil, err
 		}
 	}
@@ -39,12 +36,7 @@ func findMinedAncestors(tx *bt.Tx, ancestors []*beef.TxData) (map[string]*beef.T
 	return am, nil
 }
 
-func findMinedAncestorsForInput(input *bt.Input, ancestors []*beef.TxData, ma map[string]*beef.TxData, depth uint) error {
-	if depth > recursiveMaxDepth { //primitive protection against Cyclic Graph (and therefore infinite loop)
-		return fmt.Errorf("invalid BUMP - cannot find mined parent for input %s on %d depth", input.String(), depth)
-	}
-	depth++
-
+func findMinedAncestorsForInput(input *bt.Input, ancestors []*beef.TxData, ma map[string]*beef.TxData) error {
 	parent := findParentForInput(input, ancestors)
 	if parent == nil {
 		return fmt.Errorf("invalid BUMP - cannot find mined parent for input %s", input.String())
@@ -56,7 +48,7 @@ func findMinedAncestorsForInput(input *bt.Input, ancestors []*beef.TxData, ma ma
 	}
 
 	for _, in := range parent.Transaction.Inputs {
-		err := findMinedAncestorsForInput(in, ancestors, ma, depth)
+		err := findMinedAncestorsForInput(in, ancestors, ma) // we don't have to worry about infinite recursion - the graph will always be acyclic due to the nature of the transactions
 		if err != nil {
 			return err
 		}
