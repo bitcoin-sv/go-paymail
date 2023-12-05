@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.4](https://github.com/bitcoin-sv/go-paymail/compare/v0.9.3...v0.9.4) (2023-12-05)
+
+
+### Bug Fixes
+
+* Update nLocktime nSequence handling ([#57](https://github.com/bitcoin-sv/go-paymail/issues/57)) ([92eff98](https://github.com/bitcoin-sv/go-paymail/commit/92eff9847d23c805e910588b90abe67baa7b1c02))
+
 ## [0.9.1](https://github.com/bitcoin-sv/go-paymail/compare/v0.9.0...v0.9.1) (2023-11-24)
 
 
