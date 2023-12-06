@@ -64,7 +64,7 @@ func validateLockTime(tx *bt.Tx) error {
 	}
 	for _, input := range tx.Inputs {
 		if input.SequenceNumber != 0xffffffff {
-			return errors.New("nLocktime is set and nSequence is not max, therefore this could be a non-final tx which is not currently supported.")
+			return errors.New("nLocktime is set and nSequence is not max, therefore this could be a non-final tx which is not currently supported")
 		}
 	}
 	return nil
