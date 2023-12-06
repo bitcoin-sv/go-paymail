@@ -10,10 +10,10 @@ require (
 	github.com/libsv/go-bc v0.1.17
 	github.com/libsv/go-bk v0.1.6
 	github.com/libsv/go-bt/v2 v2.2.5
-	github.com/miekg/dns v1.1.55
+	github.com/miekg/dns v1.1.57
 	github.com/newrelic/go-agent/v3/integrations/nrhttprouter v1.0.2
 	github.com/stretchr/testify v1.8.4
-	golang.org/x/net v0.14.0
+	golang.org/x/net v0.17.0
 )
 
 require (
@@ -23,11 +23,11 @@ require (
 	github.com/newrelic/go-agent/v3 v3.24.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	golang.org/x/crypto v0.13.0 // indirect
+	golang.org/x/crypto v0.14.0 // indirect
 	golang.org/x/mod v0.12.0 // indirect
-	golang.org/x/sys v0.12.0 // indirect
+	golang.org/x/sys v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
-	golang.org/x/tools v0.12.0 // indirect
+	golang.org/x/tools v0.13.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230815205213-6bfd019c3878 // indirect
 	google.golang.org/grpc v1.57.0 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
