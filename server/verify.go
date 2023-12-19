@@ -49,15 +49,6 @@ func (c *Configuration) verifyPubKey(w http.ResponseWriter, req *http.Request, p
 		PubKey:   foundPaymail.PubKey,
 		Match:    foundPaymail.PubKey == incomingPubKey,
 	}
-
-	// Set the response
-	//w.Header().Set("Content-Type", "application/json")
-	//w.WriteHeader(http.StatusOK)
-	//err = json.NewEncoder(w).Encode(verPayload)
-	//
-	//if err != nil {
-	//	ErrorResponse(w, req, ErrorEncodingResponse, err.Error(), http.StatusBadRequest, c.Logger)
-	//	return
-	//}
+	
 	writeJsonResponse(w, req, c.Logger, verPayload)
 }
