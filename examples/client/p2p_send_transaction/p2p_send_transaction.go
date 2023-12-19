@@ -1,26 +1,26 @@
 package main
 
 import (
-	"log"
-
 	"github.com/bitcoin-sv/go-paymail"
+	"github.com/bitcoin-sv/go-paymail/logging"
 )
 
 func main() {
+	logger := logging.GetDefaultLogger()
 
 	// Load the client
 	client, err := paymail.NewClient()
 	if err != nil {
-		log.Fatalf("error loading client: %s", err.Error())
+		logger.Fatal().Msgf("error loading client: %s", err.Error())
 	}
 
 	// Get the capabilities
 	// This is required first to get the corresponding P2P endpoint urls
 	var capabilities *paymail.CapabilitiesResponse
 	if capabilities, err = client.GetCapabilities("moneybutton.com", paymail.DefaultPort); err != nil {
-		log.Fatal("error getting capabilities: " + err.Error())
+		logger.Fatal().Msgf("error getting capabilities: %s", err.Error())
 	}
-	log.Println("found capabilities: ", len(capabilities.Capabilities))
+	logger.Info().Msgf("found capabilities: %d", len(capabilities.Capabilities))
 
 	// Extract the URL from the capabilities response
 	p2pDestinationURL := capabilities.GetString(paymail.BRFCP2PPaymentDestination, "")
@@ -33,9 +33,9 @@ func main() {
 	var destination *paymail.PaymentDestinationResponse
 	destination, err = client.GetP2PPaymentDestination(p2pDestinationURL, "satchmo", "moneybutton.com", paymentRequest)
 	if err != nil {
-		log.Fatal("error getting destination: " + err.Error())
+		logger.Fatal().Msgf("error getting destination: %s", err.Error())
 	}
-	log.Printf("destination returned reference: %s and outputs: %d", destination.Reference, len(destination.Outputs))
+	logger.Info().Msgf("destination returned reference: %s and outputs: %d", destination.Reference, len(destination.Outputs))
 
 	// Create a new P2P transaction
 	rawTransaction := &paymail.P2PTransaction{
@@ -53,7 +53,7 @@ func main() {
 	var transaction *paymail.P2PTransactionResponse
 	transaction, err = client.SendP2PTransaction(p2pSendURL, "satchmo", "moneybutton.com", rawTransaction)
 	if err != nil {
-		log.Fatal("error sending transaction: " + err.Error())
+		logger.Fatal().Msgf("error sending transaction: %s", err.Error())
 	}
-	log.Printf("transaction sent: %s", transaction.TxID)
+	logger.Info().Msgf("transaction sent: %s", transaction.TxID)
 }

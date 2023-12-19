@@ -3,7 +3,7 @@ package server
 
 import (
 	"fmt"
-	"log"
+	"github.com/rs/zerolog"
 	"net/http"
 	"strings"
 )
@@ -20,9 +20,9 @@ func CreateServer(c *Configuration) *http.Server {
 }
 
 // StartServer will run the Paymail server
-func StartServer(srv *http.Server) {
-	log.Println("starting go paymail server...", "address", srv.Addr)
-	log.Fatal(srv.ListenAndServe())
+func StartServer(srv *http.Server, logger *zerolog.Logger) {
+	logger.Info().Str("address", srv.Addr).Msg("starting go paymail server...")
+	logger.Fatal().Msg(srv.ListenAndServe().Error())
 }
 
 // getHost tries its best to return the request host

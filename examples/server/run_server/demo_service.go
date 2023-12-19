@@ -6,7 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"log"
+	"github.com/bitcoin-sv/go-paymail/logging"
 	"strings"
 
 	"github.com/bitcoin-sv/go-paymail"
@@ -162,9 +162,10 @@ func DemoCreateP2PDestinationResponse(_ context.Context, alias, domain string,
 // DemoRecordTransaction will record the tx in the datalayer
 func DemoRecordTransaction(_ context.Context,
 	p2pTx *paymail.P2PTransaction) (*paymail.P2PTransactionPayload, error) {
+	logger := logging.GetDefaultLogger()
 
 	// Record the transaction
-	log.Printf("recording tx... reference: %s\n", p2pTx.Reference)
+	logger.Info().Msgf("recording tx... reference: %s\n", p2pTx.Reference)
 
 	// Broadcast etc...
 

@@ -3,6 +3,8 @@ package server
 import (
 	"encoding/json"
 	"errors"
+	"github.com/bitcoin-sv/go-paymail/logging"
+	"github.com/rs/zerolog"
 	"net/http"
 
 	"github.com/bitcoin-sv/go-paymail"
@@ -10,22 +12,22 @@ import (
 
 // Error codes for server response errors
 const (
-	ErrorFindingPaymail            = "error-finding-paymail"
-	ErrorInvalidDt                 = "invalid-dt"
-	ErrorInvalidParameter          = "invalid-parameter"
-	ErrorInvalidPubKey             = "invalid-pubkey"
-	ErrorInvalidSenderHandle       = "invalid-sender-handle"
-	ErrorInvalidSignature          = "invalid-signature"
-	ErrorMethodNotFound            = "method-405"
-	ErrorMissingField              = "missing-field"
-	ErrorPaymailNotFound           = "not-found"
-	ErrorRecordingTx               = "error-recording-tx"
-	ErrorRequestNotFound           = "request-404"
-	ErrorScript                    = "script-error"
-	ErrorUnknownDomain             = "unknown-domain"
-	ErrorFailedMarshalJSON         = "failed-marshal-json"
-	ErrorEncodingResponse          = "error-encoding-response"
-	ErrorNotImplmented             = "not-implemented"
+	ErrorFindingPaymail                = "error-finding-paymail"
+	ErrorInvalidDt                     = "invalid-dt"
+	ErrorInvalidParameter              = "invalid-parameter"
+	ErrorInvalidPubKey                 = "invalid-pubkey"
+	ErrorInvalidSenderHandle           = "invalid-sender-handle"
+	ErrorInvalidSignature              = "invalid-signature"
+	ErrorMethodNotFound                = "method-405"
+	ErrorMissingField                  = "missing-field"
+	ErrorPaymailNotFound               = "not-found"
+	ErrorRecordingTx                   = "error-recording-tx"
+	ErrorRequestNotFound               = "request-404"
+	ErrorScript                        = "script-error"
+	ErrorUnknownDomain                 = "unknown-domain"
+	ErrorFailedMarshalJSON             = "failed-marshal-json"
+	ErrorEncodingResponse              = "error-encoding-response"
+	ErrorNotImplmented                 = "not-implemented"
 	ErrorSimplifiedPaymentVerification = "spv-failed"
 )
 
@@ -55,14 +57,21 @@ var (
 // ErrorResponse is a standard way to return errors to the client
 //
 // Specs: http://bsvalias.org/99-01-recommendations.html
-func ErrorResponse(w http.ResponseWriter, code, message string, statusCode int) {
+func ErrorResponse(w http.ResponseWriter, req *http.Request, code, message string, statusCode int, log *zerolog.Logger) {
+	if log == nil {
+		log = logging.GetDefaultLogger()
+	}
+
 	srvErr := &paymail.ServerError{Code: code, Message: message}
 	jsonData, err := json.Marshal(srvErr)
 
 	if err != nil {
+		log.Debug().Msgf("%d | %s | %s | %s | %s", http.StatusInternalServerError, req.RemoteAddr, req.Method, req.URL, message)
 		http.Error(w, ErrorFailedMarshalJSON, http.StatusInternalServerError)
 		return
 	}
 
-	writeRespone(w, statusCode, "application/json", jsonData)
+	errorLogger := log.With().Str("code", code).Str("msg", message).Logger()
+
+	writeResponse(w, req, &errorLogger, statusCode, "application/json", jsonData)
 }

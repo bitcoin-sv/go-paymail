@@ -8,7 +8,7 @@ import (
 )
 
 // index basic request to /
-//nolint: revive // do not check for unused param required by interface
+// nolint: revive // do not check for unused param required by interface
 func index(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
 	responseData := map[string]interface{}{"message": "Welcome to the Paymail Server ✌(◕‿-)✌"}
 
@@ -17,7 +17,7 @@ func index(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
 	err := json.NewEncoder(w).Encode(responseData)
 
 	if err != nil {
-		ErrorResponse(w, ErrorEncodingResponse, err.Error(), http.StatusInternalServerError)
+		ErrorResponse(w, req, ErrorEncodingResponse, err.Error(), http.StatusInternalServerError, nil)
 		return
 	}
 }
@@ -28,12 +28,12 @@ func health(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
 }
 
 // notFound handles all 404 requests
-//nolint: revive // do not check for unused param required by interface
+// nolint: revive // do not check for unused param required by interface
 func notFound(w http.ResponseWriter, req *http.Request) {
-	ErrorResponse(w, ErrorRequestNotFound, "request not found", http.StatusNotFound)
+	ErrorResponse(w, req, ErrorRequestNotFound, "request not found", http.StatusNotFound, nil)
 }
 
 // methodNotAllowed handles all 405 requests
 func methodNotAllowed(w http.ResponseWriter, req *http.Request) {
-	ErrorResponse(w, ErrorMethodNotFound, "method "+req.Method+" not allowed", http.StatusMethodNotAllowed)
+	ErrorResponse(w, req, ErrorMethodNotFound, "method "+req.Method+" not allowed", http.StatusMethodNotAllowed, nil)
 }

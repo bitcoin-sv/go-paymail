@@ -37,7 +37,7 @@ func (c *Configuration) p2pReceiveTx(w http.ResponseWriter, req *http.Request, p
 
 	requestPayload, _, md, vErr := processP2pReceiveTxRequest(c, req, p, p2pFormat)
 	if vErr != nil {
-		ErrorResponse(w, vErr.code, vErr.msg, vErr.httpResponseCode)
+		ErrorResponse(w, req, vErr.code, vErr.msg, vErr.httpResponseCode, c.Logger)
 		return
 	}
 
@@ -50,11 +50,11 @@ func (c *Configuration) p2pReceiveTx(w http.ResponseWriter, req *http.Request, p
 	if response, err = c.actions.RecordTransaction(
 		req.Context(), requestPayload.P2PTransaction, md,
 	); err != nil {
-		ErrorResponse(w, ErrorRecordingTx, err.Error(), http.StatusExpectationFailed)
+		ErrorResponse(w, req, ErrorRecordingTx, err.Error(), http.StatusExpectationFailed, c.Logger)
 		return
 	}
 
-	writeJsonResponse(w, http.StatusOK, response)
+	writeJsonResponse(w, req, c.Logger, response)
 }
 
 /*
@@ -76,7 +76,7 @@ func (c *Configuration) p2pReceiveBeefTx(w http.ResponseWriter, req *http.Reques
 
 	requestPayload, dBeef, md, vErr := processP2pReceiveTxRequest(c, req, p, p2pFormat)
 	if vErr != nil {
-		ErrorResponse(w, vErr.code, vErr.msg, vErr.httpResponseCode)
+		ErrorResponse(w, req, vErr.code, vErr.msg, vErr.httpResponseCode, c.Logger)
 		return
 	}
 
@@ -90,7 +90,7 @@ func (c *Configuration) p2pReceiveBeefTx(w http.ResponseWriter, req *http.Reques
 
 	err := spv.ExecuteSimplifiedPaymentVerification(req.Context(), dBeef, c.actions)
 	if err != nil {
-		ErrorResponse(w, ErrorSimplifiedPaymentVerification, err.Error(), http.StatusExpectationFailed)
+		ErrorResponse(w, req, ErrorSimplifiedPaymentVerification, err.Error(), http.StatusExpectationFailed, c.Logger)
 		return
 	}
 
@@ -98,9 +98,9 @@ func (c *Configuration) p2pReceiveBeefTx(w http.ResponseWriter, req *http.Reques
 	if response, err = c.actions.RecordTransaction(
 		req.Context(), requestPayload.P2PTransaction, md,
 	); err != nil {
-		ErrorResponse(w, ErrorRecordingTx, err.Error(), http.StatusExpectationFailed)
+		ErrorResponse(w, req, ErrorRecordingTx, err.Error(), http.StatusExpectationFailed, c.Logger)
 		return
 	}
 
-	writeJsonResponse(w, http.StatusOK, response)
+	writeJsonResponse(w, req, c.Logger, response)
 }

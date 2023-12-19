@@ -16,10 +16,10 @@ func (c *Configuration) publicProfile(w http.ResponseWriter, req *http.Request, 
 	// Parse, sanitize and basic validation
 	alias, domain, address := paymail.SanitizePaymail(incomingPaymail)
 	if len(address) == 0 {
-		ErrorResponse(w, ErrorInvalidParameter, "invalid paymail: "+incomingPaymail, http.StatusBadRequest)
+		ErrorResponse(w, req, ErrorInvalidParameter, "invalid paymail: "+incomingPaymail, http.StatusBadRequest, c.Logger)
 		return
 	} else if !c.IsAllowedDomain(domain) {
-		ErrorResponse(w, ErrorUnknownDomain, "domain unknown: "+domain, http.StatusBadRequest)
+		ErrorResponse(w, req, ErrorUnknownDomain, "domain unknown: "+domain, http.StatusBadRequest, c.Logger)
 		return
 	}
 
@@ -29,10 +29,10 @@ func (c *Configuration) publicProfile(w http.ResponseWriter, req *http.Request, 
 	// Get from the data layer
 	foundPaymail, err := c.actions.GetPaymailByAlias(req.Context(), alias, domain, md)
 	if err != nil {
-		ErrorResponse(w, ErrorFindingPaymail, err.Error(), http.StatusExpectationFailed)
+		ErrorResponse(w, req, ErrorFindingPaymail, err.Error(), http.StatusExpectationFailed, c.Logger)
 		return
 	} else if foundPaymail == nil {
-		ErrorResponse(w, ErrorPaymailNotFound, "paymail not found", http.StatusNotFound)
+		ErrorResponse(w, req, ErrorPaymailNotFound, "paymail not found", http.StatusNotFound, c.Logger)
 		return
 	}
 
@@ -42,5 +42,5 @@ func (c *Configuration) publicProfile(w http.ResponseWriter, req *http.Request, 
 	}
 
 	// Set the response
-	writeJsonResponse(w, http.StatusOK, payload)
+	writeJsonResponse(w, req, c.Logger, payload)
 }

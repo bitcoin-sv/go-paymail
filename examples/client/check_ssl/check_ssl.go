@@ -1,25 +1,25 @@
 package main
 
 import (
-	"log"
-
 	"github.com/bitcoin-sv/go-paymail"
+	"github.com/bitcoin-sv/go-paymail/logging"
 )
 
 func main() {
+	logger := logging.GetDefaultLogger()
 
 	// Load the client
 	client, err := paymail.NewClient()
 	if err != nil {
-		log.Fatalf("error loading client: %s", err.Error())
+		logger.Fatal().Msgf("error loading client: %s", err.Error())
 	}
 
 	// Check the SSL certificate
 	var valid bool
 	if valid, err = client.CheckSSL("moneybutton.com"); err != nil {
-		log.Fatal("error getting SSL certificate: " + err.Error())
+		logger.Fatal().Msg("error getting SSL certificate: " + err.Error())
 	} else if !valid {
-		log.Fatal("SSL certificate validation failed")
+		logger.Fatal().Msg("SSL certificate validation failed")
 	}
-	log.Println("valid SSL certificate found for:", "moneybutton.com")
+	logger.Info().Msg("valid SSL certificate found for: moneybutton.com")
 }
