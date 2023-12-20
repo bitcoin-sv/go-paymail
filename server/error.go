@@ -66,12 +66,18 @@ func ErrorResponse(w http.ResponseWriter, req *http.Request, code, message strin
 	jsonData, err := json.Marshal(srvErr)
 
 	if err != nil {
-		log.Debug().Msgf("%d | %s | %s | %s | %s", http.StatusInternalServerError, req.RemoteAddr, req.Method, req.URL, message)
+		log.Debug().
+			Str("logger", "http-error").
+			Msgf("%d | %s | %s | %s | %s", http.StatusInternalServerError, req.RemoteAddr, req.Method, req.URL, message)
 		http.Error(w, ErrorFailedMarshalJSON, http.StatusInternalServerError)
 		return
 	}
 
-	errorLogger := log.With().Str("code", code).Str("msg", message).Logger()
+	errorLogger := log.With().
+		Str("logger", "http-error").
+		Str("code", code).
+		Str("msg", message).
+		Logger()
 
 	writeResponse(w, req, &errorLogger, statusCode, "application/json", jsonData)
 }

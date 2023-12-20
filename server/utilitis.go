@@ -17,14 +17,21 @@ func writeJsonResponse(w http.ResponseWriter, req *http.Request, log *zerolog.Lo
 		return
 	}
 
-	writeResponse(w, req, log, http.StatusOK, "application/json", jsonData)
+	responseLogger := log.With().Str("logger", "http-response").Logger()
+
+	writeResponse(w, req, &responseLogger, http.StatusOK, "application/json", jsonData)
 }
 
 func writeResponse(w http.ResponseWriter, req *http.Request, log *zerolog.Logger, statusCode int, contentType string, responseData []byte) {
 	w.Header().Set("Content-Type", contentType)
 	w.WriteHeader(statusCode)
 
-	log.Debug().Msgf("%d | %s | %s | %s ", statusCode, req.RemoteAddr, req.Method, req.URL)
+	log.Debug().
+		Str("method", req.Method).
+		Int("status", statusCode).
+		Str("remote", req.RemoteAddr).
+		Str("url", req.URL.String()).
+		Msgf("%d | %s | %s | %s ", statusCode, req.RemoteAddr, req.Method, req.URL)
 
 	if responseData != nil {
 		_, err := w.Write(responseData)
