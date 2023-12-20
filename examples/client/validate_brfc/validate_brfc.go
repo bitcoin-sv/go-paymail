@@ -2,12 +2,10 @@ package main
 
 import (
 	"github.com/bitcoin-sv/go-paymail"
-	"github.com/bitcoin-sv/go-paymail/logging"
+	"log"
 )
 
 func main() {
-	logger := logging.GetDefaultLogger()
-
 	// Start with a BRFC specification
 	existingBRFC := &paymail.BRFCSpec{
 		Author:  "MrZ",
@@ -18,10 +16,10 @@ func main() {
 
 	// Validate the BRFC ID
 	if valid, id, err := existingBRFC.Validate(); err != nil {
-		logger.Fatal().Msgf("error validating BRFC id: %s", err.Error())
+		log.Fatalf("error validating BRFC id: %s", err.Error())
 	} else if !valid {
-		logger.Fatal().Msgf("brfc is invalid: %s", id)
+		log.Fatalf("brfc is invalid: %s", id)
 	} else if valid {
-		logger.Info().Msgf("brfc: %s is valid", existingBRFC.ID)
+		log.Printf("brfc: %s is valid", existingBRFC.ID)
 	}
 }

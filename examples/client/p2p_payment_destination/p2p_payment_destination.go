@@ -2,25 +2,23 @@ package main
 
 import (
 	"github.com/bitcoin-sv/go-paymail"
-	"github.com/bitcoin-sv/go-paymail/logging"
+	"log"
 )
 
 func main() {
-	logger := logging.GetDefaultLogger()
-
 	// Load the client
 	client, err := paymail.NewClient()
 	if err != nil {
-		logger.Fatal().Msgf("error loading client: %s", err.Error())
+		log.Fatalf("error loading client: %s", err.Error())
 	}
 
 	// Get the capabilities
 	// This is required first to get the corresponding P2P PaymentResolution endpoint url
 	var capabilities *paymail.CapabilitiesResponse
 	if capabilities, err = client.GetCapabilities("moneybutton.com", paymail.DefaultPort); err != nil {
-		logger.Fatal().Msgf("error getting capabilities: %s", err.Error())
+		log.Fatalf("error getting capabilities: %s", err.Error())
 	}
-	logger.Info().Msgf("found capabilities: %d", len(capabilities.Capabilities))
+	log.Printf("found capabilities: %d", len(capabilities.Capabilities))
 
 	// Extract the URL from the capabilities response
 	p2pURL := capabilities.GetString(paymail.BRFCP2PPaymentDestination, "")
@@ -32,7 +30,7 @@ func main() {
 	var destination *paymail.PaymentDestinationResponse
 	destination, err = client.GetP2PPaymentDestination(p2pURL, "mrz", "moneybutton.com", paymentRequest)
 	if err != nil {
-		logger.Fatal().Msgf("error getting destination: %s", err.Error())
+		log.Fatalf("error getting destination: %s", err.Error())
 	}
-	logger.Info().Msgf("destination returned reference: %s and outputs: %d", destination.Reference, len(destination.Outputs))
+	log.Printf("destination returned reference: %s and outputs: %d", destination.Reference, len(destination.Outputs))
 }

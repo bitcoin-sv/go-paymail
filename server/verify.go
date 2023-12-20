@@ -49,6 +49,6 @@ func (c *Configuration) verifyPubKey(w http.ResponseWriter, req *http.Request, p
 		PubKey:   foundPaymail.PubKey,
 		Match:    foundPaymail.PubKey == incomingPubKey,
 	}
-	
+
 	writeJsonResponse(w, req, c.Logger, verPayload)
 }
