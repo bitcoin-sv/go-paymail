@@ -15,7 +15,7 @@ require (
 	github.com/rs/zerolog v1.31.0
 	github.com/stretchr/testify v1.8.4
 	go.elastic.co/ecszerolog v0.2.0
-	golang.org/x/net v0.14.0
+	golang.org/x/net v0.19.0
 )
 
 require (
@@ -23,6 +23,8 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/libsv/go-p2p v0.1.5 // indirect
+	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/newrelic/go-agent/v3 v3.29.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
