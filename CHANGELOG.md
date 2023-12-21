@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.0](https://github.com/bitcoin-sv/go-paymail/compare/v0.10.0...v0.11.0) (2023-12-21)
+
+
+### Features
+
+* **BUX-420:** go version and workflows update ([#64](https://github.com/bitcoin-sv/go-paymail/issues/64)) ([64a7bd4](https://github.com/bitcoin-sv/go-paymail/commit/64a7bd4122342794ad57535a52583f5acdc47670))
+
 ## [0.10.0](https://github.com/bitcoin-sv/go-paymail/compare/v0.9.4...v0.10.0) (2023-12-21)
 
 
