@@ -7,7 +7,6 @@ import (
 )
 
 func main() {
-
 	// Load the client
 	client, err := paymail.NewClient()
 	if err != nil {
@@ -21,5 +20,5 @@ func main() {
 	} else if !valid {
 		log.Fatal("SSL certificate validation failed")
 	}
-	log.Println("valid SSL certificate found for:", "moneybutton.com")
+	log.Println("valid SSL certificate found for: moneybutton.com")
 }

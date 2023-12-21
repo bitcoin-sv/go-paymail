@@ -12,7 +12,9 @@ require (
 	github.com/libsv/go-bt/v2 v2.2.5
 	github.com/miekg/dns v1.1.55
 	github.com/newrelic/go-agent/v3/integrations/nrhttprouter v1.0.2
+	github.com/rs/zerolog v1.31.0
 	github.com/stretchr/testify v1.8.4
+	go.elastic.co/ecszerolog v0.2.0
 	golang.org/x/net v0.14.0
 )
 
@@ -20,12 +22,14 @@ require (
 	github.com/bitcoinsv/bsvd v0.0.0-20190609155523-4c29707f7173 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
+	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/newrelic/go-agent/v3 v3.24.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	golang.org/x/crypto v0.13.0 // indirect
 	golang.org/x/mod v0.12.0 // indirect
-	golang.org/x/sys v0.12.0 // indirect
+	golang.org/x/sys v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/tools v0.12.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230815205213-6bfd019c3878 // indirect

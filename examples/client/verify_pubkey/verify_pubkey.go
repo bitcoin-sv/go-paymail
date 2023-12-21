@@ -1,13 +1,11 @@
 package main
 
 import (
-	"log"
-
 	"github.com/bitcoin-sv/go-paymail"
+	"log"
 )
 
 func main() {
-
 	// Load the client
 	client, err := paymail.NewClient()
 	if err != nil {
@@ -18,9 +16,9 @@ func main() {
 	// This is required first to get the corresponding VerifyPubKey endpoint url
 	var capabilities *paymail.CapabilitiesResponse
 	if capabilities, err = client.GetCapabilities("moneybutton.com", paymail.DefaultPort); err != nil {
-		log.Fatal("error getting capabilities: " + err.Error())
+		log.Fatalf("error getting capabilities: %s", err.Error())
 	}
-	log.Println("found capabilities: ", len(capabilities.Capabilities))
+	log.Printf("found capabilities: %d", len(capabilities.Capabilities))
 
 	// Extract the verify URL from the capabilities response
 	verifyURL := capabilities.GetString(paymail.BRFCVerifyPublicKeyOwner, "")
@@ -29,7 +27,7 @@ func main() {
 	var verification *paymail.VerificationResponse
 	verification, err = client.VerifyPubKey(verifyURL, "mrz", "moneybutton.com", "02ead23149a1e33df17325ec7a7ba9e0b20c674c57c630f527d69b866aa9b65b10")
 	if err != nil {
-		log.Fatal("error getting verification: " + err.Error())
+		log.Fatalf("error getting verification: %s", err.Error())
 	}
 	if verification.Match {
 		log.Printf("pubkey: %s matched handle: %s", verification.PubKey[:12]+"...", verification.Handle)

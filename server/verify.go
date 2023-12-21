@@ -1,7 +1,6 @@
 package server
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/bitcoin-sv/go-paymail"
@@ -18,16 +17,16 @@ func (c *Configuration) verifyPubKey(w http.ResponseWriter, req *http.Request, p
 	// Parse, sanitize and basic validation
 	alias, domain, address := paymail.SanitizePaymail(incomingPaymail)
 	if len(address) == 0 {
-		ErrorResponse(w, ErrorInvalidParameter, "invalid paymail: "+incomingPaymail, http.StatusBadRequest)
+		ErrorResponse(w, req, ErrorInvalidParameter, "invalid paymail: "+incomingPaymail, http.StatusBadRequest, c.Logger)
 		return
 	} else if !c.IsAllowedDomain(domain) {
-		ErrorResponse(w, ErrorUnknownDomain, "domain unknown: "+domain, http.StatusBadRequest)
+		ErrorResponse(w, req, ErrorUnknownDomain, "domain unknown: "+domain, http.StatusBadRequest, c.Logger)
 		return
 	}
 
 	// Basic validation on pubkey
 	if len(incomingPubKey) != paymail.PubKeyLength {
-		ErrorResponse(w, ErrorInvalidPubKey, "invalid pubkey: "+incomingPubKey, http.StatusBadRequest)
+		ErrorResponse(w, req, ErrorInvalidPubKey, "invalid pubkey: "+incomingPubKey, http.StatusBadRequest, c.Logger)
 		return
 	}
 
@@ -37,10 +36,10 @@ func (c *Configuration) verifyPubKey(w http.ResponseWriter, req *http.Request, p
 	// Get from the data layer
 	foundPaymail, err := c.actions.GetPaymailByAlias(req.Context(), alias, domain, md)
 	if err != nil {
-		ErrorResponse(w, ErrorFindingPaymail, err.Error(), http.StatusExpectationFailed)
+		ErrorResponse(w, req, ErrorFindingPaymail, err.Error(), http.StatusExpectationFailed, c.Logger)
 		return
 	} else if foundPaymail == nil {
-		ErrorResponse(w, ErrorPaymailNotFound, "paymail not found", http.StatusNotFound)
+		ErrorResponse(w, req, ErrorPaymailNotFound, "paymail not found: "+incomingPaymail, http.StatusBadRequest, c.Logger)
 		return
 	}
 
@@ -51,13 +50,5 @@ func (c *Configuration) verifyPubKey(w http.ResponseWriter, req *http.Request, p
 		Match:    foundPaymail.PubKey == incomingPubKey,
 	}
 
-	// Set the response
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	err = json.NewEncoder(w).Encode(verPayload)
-
-	if err != nil {
-		ErrorResponse(w, ErrorEncodingResponse, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	writeJsonResponse(w, req, c.Logger, verPayload)
 }

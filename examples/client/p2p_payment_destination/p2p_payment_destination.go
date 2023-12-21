@@ -1,13 +1,11 @@
 package main
 
 import (
-	"log"
-
 	"github.com/bitcoin-sv/go-paymail"
+	"log"
 )
 
 func main() {
-
 	// Load the client
 	client, err := paymail.NewClient()
 	if err != nil {
@@ -18,9 +16,9 @@ func main() {
 	// This is required first to get the corresponding P2P PaymentResolution endpoint url
 	var capabilities *paymail.CapabilitiesResponse
 	if capabilities, err = client.GetCapabilities("moneybutton.com", paymail.DefaultPort); err != nil {
-		log.Fatal("error getting capabilities: " + err.Error())
+		log.Fatalf("error getting capabilities: %s", err.Error())
 	}
-	log.Println("found capabilities: ", len(capabilities.Capabilities))
+	log.Printf("found capabilities: %d", len(capabilities.Capabilities))
 
 	// Extract the URL from the capabilities response
 	p2pURL := capabilities.GetString(paymail.BRFCP2PPaymentDestination, "")
@@ -32,7 +30,7 @@ func main() {
 	var destination *paymail.PaymentDestinationResponse
 	destination, err = client.GetP2PPaymentDestination(p2pURL, "mrz", "moneybutton.com", paymentRequest)
 	if err != nil {
-		log.Fatal("error getting destination: " + err.Error())
+		log.Fatalf("error getting destination: %s", err.Error())
 	}
 	log.Printf("destination returned reference: %s and outputs: %d", destination.Reference, len(destination.Outputs))
 }

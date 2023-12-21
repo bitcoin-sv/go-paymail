@@ -34,38 +34,38 @@ func (c *Configuration) resolveAddress(w http.ResponseWriter, req *http.Request,
 	// Parse, sanitize and basic validation
 	alias, domain, paymailAddress := paymail.SanitizePaymail(incomingPaymail)
 	if len(paymailAddress) == 0 {
-		ErrorResponse(w, ErrorInvalidParameter, "invalid paymail: "+incomingPaymail, http.StatusBadRequest)
+		ErrorResponse(w, req, ErrorInvalidParameter, "invalid paymail: "+incomingPaymail, http.StatusBadRequest, c.Logger)
 		return
 	} else if !c.IsAllowedDomain(domain) {
-		ErrorResponse(w, ErrorUnknownDomain, "domain unknown: "+domain, http.StatusBadRequest)
+		ErrorResponse(w, req, ErrorUnknownDomain, "domain unknown: "+domain, http.StatusBadRequest, c.Logger)
 		return
 	}
 
 	var senderRequest paymail.SenderRequest
 	err := json.NewDecoder(req.Body).Decode(&senderRequest)
 	if err != nil {
-		ErrorResponse(w, ErrorInvalidParameter, "invalid request body", http.StatusBadRequest)
+		ErrorResponse(w, req, ErrorInvalidParameter, "invalid request body: "+err.Error(), http.StatusBadRequest, c.Logger)
 		return
 	}
 
 	// Check for required fields
 	if len(senderRequest.SenderHandle) == 0 {
-		ErrorResponse(w, ErrorInvalidSenderHandle, "senderHandle is empty", http.StatusBadRequest)
+		ErrorResponse(w, req, ErrorInvalidSenderHandle, "senderHandle is empty", http.StatusBadRequest, c.Logger)
 		return
 	} else if len(senderRequest.Dt) == 0 {
-		ErrorResponse(w, ErrorInvalidDt, "dt is empty", http.StatusBadRequest)
+		ErrorResponse(w, req, ErrorInvalidDt, "dt is empty", http.StatusBadRequest, c.Logger)
 		return
 	}
 
 	// Validate the timestamp
 	if err = paymail.ValidateTimestamp(senderRequest.Dt); err != nil {
-		ErrorResponse(w, ErrorInvalidDt, "invalid dt: "+err.Error(), http.StatusBadRequest)
+		ErrorResponse(w, req, ErrorInvalidDt, "invalid dt: "+err.Error(), http.StatusBadRequest, c.Logger)
 		return
 	}
 
 	// Basic validation on sender handle
 	if err = paymail.ValidatePaymail(senderRequest.SenderHandle); err != nil {
-		ErrorResponse(w, ErrorInvalidSenderHandle, "invalid senderHandle: "+err.Error(), http.StatusBadRequest)
+		ErrorResponse(w, req, ErrorInvalidSenderHandle, "invalid senderHandle: "+err.Error(), http.StatusBadRequest, c.Logger)
 		return
 	}
 
@@ -77,24 +77,24 @@ func (c *Configuration) resolveAddress(w http.ResponseWriter, req *http.Request,
 			var senderPubKey *bec.PublicKey
 			senderPubKey, err = getSenderPubKey(senderRequest.SenderHandle)
 			if err != nil {
-				ErrorResponse(w, ErrorInvalidSenderHandle, "invalid senderHandle: "+err.Error(), http.StatusBadRequest)
+				ErrorResponse(w, req, ErrorInvalidSenderHandle, "invalid senderHandle: "+err.Error(), http.StatusBadRequest, c.Logger)
 				return
 			}
 
 			// Derive address from pubKey
 			var rawAddress *bscript.Address
 			if rawAddress, err = bitcoin.GetAddressFromPubKey(senderPubKey, true); err != nil {
-				ErrorResponse(w, ErrorInvalidSenderHandle, "invalid senderHandle: "+err.Error(), http.StatusBadRequest)
+				ErrorResponse(w, req, ErrorInvalidSenderHandle, "invalid senderHandle: "+err.Error(), http.StatusBadRequest, c.Logger)
 				return
 			}
 
 			// Verify the signature
 			if err = senderRequest.Verify(rawAddress.AddressString, senderRequest.Signature); err != nil {
-				ErrorResponse(w, ErrorInvalidSignature, "invalid signature: "+err.Error(), http.StatusBadRequest)
+				ErrorResponse(w, req, ErrorInvalidSignature, "invalid signature: "+err.Error(), http.StatusBadRequest, c.Logger)
 				return
 			}
 		} else {
-			ErrorResponse(w, ErrorInvalidSignature, "missing required signature", http.StatusBadRequest)
+			ErrorResponse(w, req, ErrorInvalidSignature, "missing required signature", http.StatusBadRequest, c.Logger)
 			return
 		}
 	}
@@ -106,10 +106,10 @@ func (c *Configuration) resolveAddress(w http.ResponseWriter, req *http.Request,
 	// Get from the data layer
 	foundPaymail, err := c.actions.GetPaymailByAlias(req.Context(), alias, domain, md)
 	if err != nil {
-		ErrorResponse(w, ErrorFindingPaymail, err.Error(), http.StatusExpectationFailed)
+		ErrorResponse(w, req, ErrorFindingPaymail, err.Error(), http.StatusExpectationFailed, c.Logger)
 		return
 	} else if foundPaymail == nil {
-		ErrorResponse(w, ErrorPaymailNotFound, "paymail not found", http.StatusNotFound)
+		ErrorResponse(w, req, ErrorPaymailNotFound, "paymail not found", http.StatusNotFound, c.Logger)
 		return
 	}
 
@@ -118,12 +118,12 @@ func (c *Configuration) resolveAddress(w http.ResponseWriter, req *http.Request,
 	if response, err = c.actions.CreateAddressResolutionResponse(
 		req.Context(), alias, domain, c.SenderValidationEnabled, md,
 	); err != nil {
-		ErrorResponse(w, ErrorScript, "error creating output script: "+err.Error(), http.StatusExpectationFailed)
+		ErrorResponse(w, req, ErrorScript, "error creating output script: "+err.Error(), http.StatusExpectationFailed, c.Logger)
 		return
 	}
 
 	// Set the response
-	writeJsonResponse(w, http.StatusOK, response)
+	writeJsonResponse(w, req, c.Logger, response)
 }
 
 // getSenderPubKey will fetch the pubKey from a PKI request for the sender handle

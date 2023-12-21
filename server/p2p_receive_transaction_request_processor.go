@@ -3,7 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
-	"log"
+	"github.com/rs/zerolog"
 	"net/http"
 
 	"github.com/bitcoinschema/go-bitcoin/v2"
@@ -44,7 +44,7 @@ func processP2pReceiveTxRequest(c *Configuration, req *http.Request, p httproute
 		return returnError(&processingError{vErr, http.StatusExpectationFailed})
 	}
 
-	tx, beefData, pErr := getProcessedTxData(payload, format)
+	tx, beefData, pErr := getProcessedTxData(payload, format, c.Logger)
 	if pErr != nil {
 		return returnError(pErr)
 	}
@@ -63,7 +63,7 @@ func processP2pReceiveTxRequest(c *Configuration, req *http.Request, p httproute
 	return payload, beefData, md, nil
 }
 
-func getProcessedTxData(payload *p2pReceiveTxReqPayload, format p2pPayloadFormat) (*bt.Tx, *beef.DecodedBEEF, *processingError) {
+func getProcessedTxData(payload *p2pReceiveTxReqPayload, format p2pPayloadFormat, log *zerolog.Logger) (*bt.Tx, *beef.DecodedBEEF, *processingError) {
 	var processedTx *bt.Tx
 	var beefData *beef.DecodedBEEF
 	var err error
@@ -73,7 +73,7 @@ func getProcessedTxData(payload *p2pReceiveTxReqPayload, format p2pPayloadFormat
 		processedTx, err = bitcoin.TxFromHex(payload.Hex)
 		if err != nil {
 			errorMsg := fmt.Sprintf("error while parsing hex: %s", err.Error())
-			log.Println(errorMsg)
+			log.Error().Msg(errorMsg)
 			return nil, nil, &processingError{&parseError{ErrorInvalidParameter, errorMsg}, http.StatusBadRequest}
 		}
 
@@ -81,7 +81,7 @@ func getProcessedTxData(payload *p2pReceiveTxReqPayload, format p2pPayloadFormat
 		beefData, err = beef.DecodeBEEF(payload.Beef)
 		if err != nil {
 			errorMsg := fmt.Sprintf("error while parsing beef: %s", err.Error())
-			log.Println(errorMsg)
+			log.Error().Msg(errorMsg)
 			return nil, nil, &processingError{&parseError{ErrorInvalidParameter, errorMsg}, http.StatusBadRequest}
 		}
 

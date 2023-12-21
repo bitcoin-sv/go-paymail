@@ -40,16 +40,15 @@ func BeefCapabilities(c *paymail.CapabilitiesPayload) *paymail.CapabilitiesPaylo
 //
 // Specs: http://bsvalias.org/02-02-capability-discovery.html
 func (c *Configuration) showCapabilities(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
-
 	// Check the domain (allowed, and used for capabilities response)
 	// todo: bake this into middleware? This is protecting the "req" domain name (like CORs)
 	domain := getHost(req)
 	if !c.IsAllowedDomain(domain) {
-		ErrorResponse(w, ErrorUnknownDomain, "domain unknown: "+domain, http.StatusBadRequest)
+		ErrorResponse(w, req, ErrorUnknownDomain, "domain unknown: "+domain, http.StatusBadRequest, c.Logger)
 		return
 	}
 
 	// Set the service URL
 	capabilities := c.EnrichCapabilities(domain)
-	writeJsonResponse(w, http.StatusOK, capabilities)
+	writeJsonResponse(w, req, c.Logger, capabilities)
 }

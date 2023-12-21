@@ -8,7 +8,6 @@ import (
 )
 
 func main() {
-
 	// Load the client
 	client, err := paymail.NewClient()
 	if err != nil {
@@ -19,9 +18,9 @@ func main() {
 	// This is required first to get the corresponding AddressResolution endpoint url
 	var capabilities *paymail.CapabilitiesResponse
 	if capabilities, err = client.GetCapabilities("moneybutton.com", paymail.DefaultPort); err != nil {
-		log.Fatal("error getting capabilities: " + err.Error())
+		log.Fatalf("error getting capabilities: %s", err.Error())
 	}
-	log.Println("found capabilities: ", len(capabilities.Capabilities))
+	log.Printf("found capabilities: %d", len(capabilities.Capabilities))
 
 	// Extract the resolution URL from the capabilities response
 	resolveURL := capabilities.GetString(paymail.BRFCBasicAddressResolution, paymail.BRFCPaymentDestination)
@@ -36,7 +35,7 @@ func main() {
 	// Get the address resolution results
 	var resolution *paymail.ResolutionResponse
 	if resolution, err = client.ResolveAddress(resolveURL, "mrz", "moneybutton.com", senderRequest); err != nil {
-		log.Fatal("error getting resolution: " + err.Error())
+		log.Fatalf("error getting resolution: %s", err.Error())
 	}
-	log.Println("resolved address:", resolution.Address)
+	log.Printf("resolved address: %v", resolution.Address)
 }

@@ -1,6 +1,8 @@
 package server
 
 import (
+	"github.com/bitcoin-sv/go-paymail/logging"
+	"github.com/rs/zerolog"
 	"time"
 
 	"github.com/bitcoin-sv/go-paymail"
@@ -25,6 +27,7 @@ func defaultConfigOptions() *Configuration {
 		SenderValidationEnabled:          DefaultSenderValidation,
 		ServiceName:                      paymail.DefaultServiceName,
 		Timeout:                          DefaultTimeout,
+		Logger:                           logging.GetDefaultLogger(),
 	}
 }
 
@@ -119,5 +122,12 @@ func WithPort(port int) ConfigOps {
 func WithDomainValidationDisabled() ConfigOps {
 	return func(c *Configuration) {
 		c.PaymailDomainsValidationDisabled = true
+	}
+}
+
+// WithLogger will set a custom logger
+func WithLogger(logger *zerolog.Logger) ConfigOps {
+	return func(c *Configuration) {
+		c.Logger = logger
 	}
 }

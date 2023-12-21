@@ -1,17 +1,18 @@
 package main
 
 import (
-	"log"
+	"github.com/bitcoin-sv/go-paymail/logging"
 	"time"
 
 	"github.com/bitcoin-sv/go-paymail/server"
 )
 
 func main() {
+	logger := logging.GetDefaultLogger()
 
 	// initialize the demo database
 	if err := InitDemoDatabase(); err != nil {
-		log.Fatal(err.Error())
+		logger.Fatal().Msg(err.Error())
 	}
 
 	// Custom server with lots of customizable goodies
@@ -27,9 +28,9 @@ func main() {
 		server.WithTimeout(15*time.Second),
 	)
 	if err != nil {
-		log.Fatal(err.Error())
+		logger.Fatal().Msg(err.Error())
 	}
 
 	// Create & start the server
-	server.StartServer(server.CreateServer(config))
+	server.StartServer(server.CreateServer(config), config.Logger)
 }

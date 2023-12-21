@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/rs/zerolog"
 	"strings"
 	"time"
 
@@ -20,6 +21,7 @@ type Configuration struct {
 	SenderValidationEnabled          bool                         `json:"sender_validation_enabled"`
 	ServiceName                      string                       `json:"service_name"`
 	Timeout                          time.Duration                `json:"timeout"`
+	Logger                           *zerolog.Logger              `json:"logger"`
 
 	// private
 	actions PaymailServiceProvider
@@ -175,5 +177,6 @@ func NewConfig(serviceProvider PaymailServiceProvider, opts ...ConfigOps) (*Conf
 	// Set the service provider
 	config.actions = serviceProvider
 
+	config.Logger.Debug().Msg("New config loaded")
 	return config, nil
 }
