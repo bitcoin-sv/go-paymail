@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.0](https://github.com/bitcoin-sv/go-paymail/compare/v0.9.4...v0.10.0) (2023-12-21)
+
+
+### Features
+
+* **BUX-206:** unify logs ([#63](https://github.com/bitcoin-sv/go-paymail/issues/63)) ([849f4db](https://github.com/bitcoin-sv/go-paymail/commit/849f4dbea0de1d66ee89c7cb677f87536e89404a))
+
 ## [0.9.4](https://github.com/bitcoin-sv/go-paymail/compare/v0.9.3...v0.9.4) (2023-12-05)
 
 
