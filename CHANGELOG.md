@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.0](https://github.com/bitcoin-sv/go-paymail/compare/v0.11.0...v0.12.0) (2024-01-05)
+
+
+### Features
+
+* **BUX-437:** go-resty version update to avoid security alert ([#69](https://github.com/bitcoin-sv/go-paymail/issues/69)) ([c9d0558](https://github.com/bitcoin-sv/go-paymail/commit/c9d0558040f8853609a33d98f65a1f351dad085d))
+
 ## [0.11.0](https://github.com/bitcoin-sv/go-paymail/compare/v0.10.0...v0.11.0) (2023-12-21)
 
 
