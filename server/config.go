@@ -1,30 +1,34 @@
 package server
 
 import (
-	"github.com/rs/zerolog"
 	"strings"
 	"time"
+
+	"github.com/rs/zerolog"
 
 	"github.com/bitcoin-sv/go-paymail"
 )
 
 // Configuration paymail server configuration object
 type Configuration struct {
-	APIVersion                       string                       `json:"api_version"`
-	BasicRoutes                      *basicRoutes                 `json:"basic_routes"`
-	BSVAliasVersion                  string                       `json:"bsv_alias_version"`
-	Capabilities                     *paymail.CapabilitiesPayload `json:"capabilities"`
-	PaymailDomains                   []*Domain                    `json:"paymail_domains"`
-	PaymailDomainsValidationDisabled bool                         `json:"paymail_domains_validation_disabled"`
-	Port                             int                          `json:"port"`
-	Prefix                           string                       `json:"prefix"`
-	SenderValidationEnabled          bool                         `json:"sender_validation_enabled"`
-	ServiceName                      string                       `json:"service_name"`
-	Timeout                          time.Duration                `json:"timeout"`
-	Logger                           *zerolog.Logger              `json:"logger"`
+	APIVersion                       string          `json:"api_version"`
+	BasicRoutes                      *basicRoutes    `json:"basic_routes"`
+	BSVAliasVersion                  string          `json:"bsv_alias_version"`
+	PaymailDomains                   []*Domain       `json:"paymail_domains"`
+	PaymailDomainsValidationDisabled bool            `json:"paymail_domains_validation_disabled"`
+	Port                             int             `json:"port"`
+	Prefix                           string          `json:"prefix"`
+	SenderValidationEnabled          bool            `json:"sender_validation_enabled"`
+	GenericCapabilitiesEnabled       bool            `json:"generic_capabilities_enabled"`
+	P2PCapabilitiesEnabled           bool            `json:"p2p_capabilities_enabled"`
+	BeefCapabilitiesEnabled          bool            `json:"beef_capabilities_enabled"`
+	ServiceName                      string          `json:"service_name"`
+	Timeout                          time.Duration   `json:"timeout"`
+	Logger                           *zerolog.Logger `json:"logger"`
 
 	// private
-	actions PaymailServiceProvider
+	actions      PaymailServiceProvider
+	capabilities map[string]CapabilityInterface
 }
 
 // Domain is the Paymail Domain information
@@ -53,12 +57,11 @@ func (c *Configuration) Validate() error {
 		return ErrServiceNameMissing
 	}
 
-	// Validate (basic checks for existence of capabilities)
-	if c.Capabilities == nil {
-		return ErrCapabilitiesMissing
-	} else if len(c.Capabilities.BsvAlias) == 0 {
+	if c.BSVAliasVersion == "" {
 		return ErrBsvAliasMissing
-	} else if len(c.Capabilities.Capabilities) == 0 {
+	}
+
+	if c.capabilities == nil || len(c.capabilities) == 0 {
 		return ErrCapabilitiesMissing
 	}
 
@@ -115,22 +118,6 @@ func (c *Configuration) AddDomain(domain string) (err error) {
 	return
 }
 
-// EnrichCapabilities will update the capabilities with the appropriate service url
-func (c *Configuration) EnrichCapabilities(domain string) *paymail.CapabilitiesPayload {
-	capabilities := &paymail.CapabilitiesPayload{
-		BsvAlias:     c.Capabilities.BsvAlias,
-		Capabilities: make(map[string]interface{}),
-	}
-	for key, val := range c.Capabilities.Capabilities {
-		if w, ok := val.(string); ok {
-			capabilities.Capabilities[key] = GenerateServiceURL(c.Prefix, domain, c.APIVersion, c.ServiceName) + w
-		} else {
-			capabilities.Capabilities[key] = val
-		}
-	}
-	return capabilities
-}
-
 // GenerateServiceURL will create the service URL
 func GenerateServiceURL(prefix, domain, apiVersion, serviceName string) string {
 
@@ -168,6 +155,19 @@ func NewConfig(serviceProvider PaymailServiceProvider, opts ...ConfigOps) (*Conf
 	for _, opt := range opts {
 		opt(config)
 	}
+
+	var capabilities []CapabilityInterface
+	if config.GenericCapabilitiesEnabled {
+		capabilities = append(capabilities, MakeGenericCapabilities(config)...)
+	}
+	if config.P2PCapabilitiesEnabled {
+		capabilities = append(capabilities, MakeP2PCapabilities(config)...)
+	}
+	if config.BeefCapabilitiesEnabled {
+		capabilities = append(capabilities, MakeBeefCapabilities(config)...)
+	}
+
+	config.capabilities = extendCapabilitiesMap(config.capabilities, capabilities)
 
 	// Validate the configuration
 	if err := config.Validate(); err != nil {

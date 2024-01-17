@@ -71,45 +71,16 @@ func (c *Configuration) registerPaymailRoutes(router *nrhttprouter.Router) {
 		c.showCapabilities,
 	)
 
-	// PKI request (public key information)
-	router.GET(
-		"/"+c.APIVersion+"/"+c.ServiceName+"/id/:paymailAddress",
-		c.showPKI,
-	)
-
-	// Verify PubKey request (public key verification to paymail address)
-	router.GET(
-		"/"+c.APIVersion+"/"+c.ServiceName+"/verify-pubkey/:paymailAddress/:pubKey",
-		c.verifyPubKey,
-	)
-
-	// Payment Destination request (address resolution)
-	router.POST(
-		"/"+c.APIVersion+"/"+c.ServiceName+"/address/:paymailAddress",
-		c.resolveAddress,
-	)
-
-	// Public Profile request (returns Name & Avatar)
-	router.GET(
-		"/"+c.APIVersion+"/"+c.ServiceName+"/public-profile/:paymailAddress",
-		c.publicProfile,
-	)
-
-	// P2P Destination request (returns output & reference)
-	router.POST(
-		"/"+c.APIVersion+"/"+c.ServiceName+"/p2p-payment-destination/:paymailAddress",
-		c.p2pDestination,
-	)
-
-	// P2P Receive Tx request (receives the P2P transaction, broadcasts, returns tx_id)
-	router.POST(
-		"/"+c.APIVersion+"/"+c.ServiceName+"/receive-transaction/:paymailAddress",
-		c.p2pReceiveTx,
-	)
-
-	// P2P BEEF capability Receive Tx request
-	router.POST(
-		"/"+c.APIVersion+"/"+c.ServiceName+"/beef/:paymailAddress",
-		c.p2pReceiveBeefTx,
-	)
+	for key, cap := range c.capabilities {
+		endpoint, ok := cap.Value().(CapabilityEndpoint)
+		if !ok {
+			continue
+		}
+		c.Logger.Info().Msgf("Registering endpoint for capability: %s", key)
+		router.Handle(
+			endpoint.Method,
+			endpoint.Path,
+			endpoint.Handler,
+		)
+	}
 }

@@ -14,7 +14,6 @@ func testConfig(t *testing.T, domain string) *Configuration {
 	c, err := NewConfig(
 		new(mockServiceProvider),
 		WithDomain(domain),
-		WithGenericCapabilities(),
 	)
 	require.NoError(t, err)
 	require.NotNil(t, c)
@@ -62,39 +61,37 @@ func TestConfiguration_Validate(t *testing.T) {
 		assert.ErrorIs(t, err, ErrServiceNameMissing)
 	})
 
-	t.Run("missing capabilities", func(t *testing.T) {
+	t.Run("missing bsv alias", func(t *testing.T) {
 		c := &Configuration{
 			Port:           12345,
 			ServiceName:    "test",
 			PaymailDomains: []*Domain{{Name: "test.com"}},
-		}
-		err := c.Validate()
-		require.Error(t, err)
-		assert.ErrorIs(t, err, ErrCapabilitiesMissing)
-	})
-
-	t.Run("invalid capabilities", func(t *testing.T) {
-		c := &Configuration{
-			Port:           12345,
-			ServiceName:    "test",
-			PaymailDomains: []*Domain{{Name: "test.com"}},
-			Capabilities: &paymail.CapabilitiesPayload{
-				BsvAlias: "",
-			},
 		}
 		err := c.Validate()
 		require.Error(t, err)
 		assert.ErrorIs(t, err, ErrBsvAliasMissing)
 	})
 
+	t.Run("missing capabilities", func(t *testing.T) {
+		c := &Configuration{
+			Port:            12345,
+			ServiceName:     "test",
+			PaymailDomains:  []*Domain{{Name: "test.com"}},
+			BSVAliasVersion: paymail.DefaultBsvAliasVersion,
+			capabilities:    nil,
+		}
+		err := c.Validate()
+		require.Error(t, err)
+		assert.ErrorIs(t, err, ErrCapabilitiesMissing)
+	})
+
 	t.Run("zero capabilities", func(t *testing.T) {
 		c := &Configuration{
-			Port:           12345,
-			ServiceName:    "test",
-			PaymailDomains: []*Domain{{Name: "test.com"}},
-			Capabilities: &paymail.CapabilitiesPayload{
-				BsvAlias: "test",
-			},
+			Port:            12345,
+			ServiceName:     "test",
+			PaymailDomains:  []*Domain{{Name: "test.com"}},
+			BSVAliasVersion: paymail.DefaultBsvAliasVersion,
+			capabilities:    make(map[string]CapabilityInterface),
 		}
 		err := c.Validate()
 		require.Error(t, err)
@@ -103,22 +100,25 @@ func TestConfiguration_Validate(t *testing.T) {
 
 	t.Run("basic valid configuration", func(t *testing.T) {
 		c := &Configuration{
-			Port:           12345,
-			ServiceName:    "test",
-			PaymailDomains: []*Domain{{Name: "test.com"}},
-			Capabilities:   GenericCapabilities("test", false),
+			Port:            12345,
+			ServiceName:     "test",
+			BSVAliasVersion: paymail.DefaultBsvAliasVersion,
+			PaymailDomains:  []*Domain{{Name: "test.com"}},
 		}
+		c.capabilities = generateCapabilitiesMap(MakeGenericCapabilities(c))
 		err := c.Validate()
 		require.NoError(t, err)
 	})
 
 	t.Run("configuration with domain validation disabled", func(t *testing.T) {
 		c := &Configuration{
-			Port:           12345,
-			ServiceName:    "test",
-			PaymailDomains: []*Domain{},
-			Capabilities:   GenericCapabilities("test", false),
+			Port:                             12345,
+			ServiceName:                      "test",
+			BSVAliasVersion:                  paymail.DefaultBsvAliasVersion,
+			PaymailDomains:                   []*Domain{},
+			PaymailDomainsValidationDisabled: false,
 		}
+		c.capabilities = generateCapabilitiesMap(MakeGenericCapabilities(c))
 		assert.False(t, c.PaymailDomainsValidationDisabled)
 		err := c.Validate()
 		assert.ErrorIs(t, err, ErrDomainMissing)
@@ -126,6 +126,26 @@ func TestConfiguration_Validate(t *testing.T) {
 		c.PaymailDomainsValidationDisabled = true
 		err = c.Validate()
 		assert.NoError(t, err)
+	})
+
+	t.Run("configuration with SenderValidationEnabled", func(t *testing.T) {
+		c := &Configuration{
+			Port:                    12345,
+			ServiceName:             "test",
+			BSVAliasVersion:         paymail.DefaultBsvAliasVersion,
+			PaymailDomains:          []*Domain{{Name: "test.com"}},
+			SenderValidationEnabled: false,
+		}
+		c.capabilities = generateCapabilitiesMap(MakeGenericCapabilities(c))
+		err := c.Validate()
+		assert.NoError(t, err)
+		assert.False(t, c.capabilities[paymail.BRFCSenderValidation].Value().(bool))
+
+		c.SenderValidationEnabled = true
+		c.capabilities = generateCapabilitiesMap(MakeGenericCapabilities(c))
+		err = c.Validate()
+		assert.NoError(t, err)
+		assert.True(t, c.capabilities[paymail.BRFCSenderValidation].Value().(bool))
 	})
 }
 
@@ -237,7 +257,6 @@ func TestConfiguration_EnrichCapabilities(t *testing.T) {
 
 		capabilities := c.EnrichCapabilities(testDomain)
 		assert.Equal(t, 5, len(capabilities.Capabilities))
-		assert.Equal(t, paymail.DefaultBsvAliasVersion, c.Capabilities.BsvAlias)
 		assert.Equal(t, "https://"+testDomain+"/v1/bsvalias/address/{alias}@{domain.tld}", capabilities.Capabilities[paymail.BRFCPaymentDestination])
 		assert.Equal(t, "https://"+testDomain+"/v1/bsvalias/id/{alias}@{domain.tld}", capabilities.Capabilities[paymail.BRFCPki])
 		assert.Equal(t, "https://"+testDomain+"/v1/bsvalias/public-profile/{alias}@{domain.tld}", capabilities.Capabilities[paymail.BRFCPublicProfile])
@@ -318,7 +337,7 @@ func TestNewConfig(t *testing.T) {
 		)
 		require.NoError(t, err)
 		require.NotNil(t, c)
-		assert.Equal(t, 5, len(c.Capabilities.Capabilities))
+		assert.Equal(t, 5, len(c.capabilities))
 		assert.Equal(t, "test.com", c.PaymailDomains[0].Name)
 	})
 
@@ -374,19 +393,24 @@ func TestNewConfig(t *testing.T) {
 		)
 		require.NoError(t, err)
 		require.NotNil(t, c)
-		assert.Equal(t, 7, len(c.Capabilities.Capabilities))
+		assert.Equal(t, 7, len(c.capabilities))
 	})
 
 	t.Run("with custom capabilities", func(t *testing.T) {
 		c, err := NewConfig(
 			new(mockServiceProvider),
 			WithDomain("test.com"),
-			WithCapabilities(GenericCapabilities("test", false)),
+			WithCapabilities([]CapabilityInterface{
+				&BooleanCapability{
+					key:   "test",
+					value: true,
+				},
+			}),
 		)
 		require.NoError(t, err)
 		require.NotNil(t, c)
-		assert.Equal(t, 5, len(c.Capabilities.Capabilities))
-		assert.Equal(t, "test", c.Capabilities.BsvAlias)
+		assert.Equal(t, 6, len(c.capabilities))
+		assert.True(t, c.capabilities["test"].Value().(bool))
 	})
 
 	t.Run("with beef capabilities", func(t *testing.T) {
@@ -398,7 +422,7 @@ func TestNewConfig(t *testing.T) {
 		)
 		require.NoError(t, err)
 		require.NotNil(t, c)
-		assert.Equal(t, 8, len(c.Capabilities.Capabilities))
+		assert.Equal(t, 8, len(c.capabilities))
 	})
 
 	t.Run("with basic routes", func(t *testing.T) {
