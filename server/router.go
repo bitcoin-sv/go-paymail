@@ -71,16 +71,12 @@ func (c *Configuration) registerPaymailRoutes(router *nrhttprouter.Router) {
 		c.showCapabilities,
 	)
 
-	for key, cap := range c.capabilities {
-		endpoint, ok := cap.Value().(CapabilityEndpoint)
-		if !ok {
-			continue
-		}
+	for key, cap := range c.callableCapabilities {
 		c.Logger.Info().Msgf("Registering endpoint for capability: %s", key)
 		router.Handle(
-			endpoint.Method,
-			endpoint.Path,
-			endpoint.Handler,
+			cap.Method,
+			cap.Path,
+			cap.Handler,
 		)
 	}
 }

@@ -31,7 +31,8 @@ func defaultConfigOptions() *Configuration {
 		ServiceName:                      paymail.DefaultServiceName,
 		Timeout:                          DefaultTimeout,
 		Logger:                           logging.GetDefaultLogger(),
-		capabilities:                     make(map[string]CapabilityInterface),
+		callableCapabilities:             make(CallableCapabilitiesMap),
+		staticCapabilities:               make(StaticCapabilitiesMap),
 	}
 }
 
@@ -58,10 +59,17 @@ func WithBeefCapabilities() ConfigOps {
 }
 
 // WithCapabilities will modify the capabilities
-func WithCapabilities(capabilities []CapabilityInterface) ConfigOps {
+func WithCapabilities(customCapabilities map[string]any) ConfigOps {
 	return func(c *Configuration) {
-		if capabilities != nil {
-			c.capabilities = extendCapabilitiesMap(c.capabilities, capabilities)
+		if customCapabilities != nil {
+			for key, cap := range customCapabilities {
+				switch typedCap := cap.(type) {
+				case CallableCapability:
+					c.callableCapabilities[key] = typedCap
+				default:
+					c.staticCapabilities[key] = typedCap
+				}
+			}
 		}
 	}
 }

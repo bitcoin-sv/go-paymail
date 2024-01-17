@@ -27,8 +27,9 @@ type Configuration struct {
 	Logger                           *zerolog.Logger `json:"logger"`
 
 	// private
-	actions      PaymailServiceProvider
-	capabilities map[string]CapabilityInterface
+	actions              PaymailServiceProvider
+	callableCapabilities CallableCapabilitiesMap
+	staticCapabilities   StaticCapabilitiesMap
 }
 
 // Domain is the Paymail Domain information
@@ -61,7 +62,7 @@ func (c *Configuration) Validate() error {
 		return ErrBsvAliasMissing
 	}
 
-	if c.capabilities == nil || len(c.capabilities) == 0 {
+	if c.callableCapabilities == nil || len(c.callableCapabilities) == 0 {
 		return ErrCapabilitiesMissing
 	}
 
@@ -156,18 +157,15 @@ func NewConfig(serviceProvider PaymailServiceProvider, opts ...ConfigOps) (*Conf
 		opt(config)
 	}
 
-	var capabilities []CapabilityInterface
 	if config.GenericCapabilitiesEnabled {
-		capabilities = append(capabilities, MakeGenericCapabilities(config)...)
+		config.SetGenericCapabilities()
 	}
 	if config.P2PCapabilitiesEnabled {
-		capabilities = append(capabilities, MakeP2PCapabilities(config)...)
+		config.SetP2PCapabilities()
 	}
 	if config.BeefCapabilitiesEnabled {
-		capabilities = append(capabilities, MakeBeefCapabilities(config)...)
+		config.SetBeefCapabilities()
 	}
-
-	config.capabilities = extendCapabilitiesMap(config.capabilities, capabilities)
 
 	// Validate the configuration
 	if err := config.Validate(); err != nil {

@@ -7,131 +7,80 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-type CapabilityEndpoint struct {
+type CallableCapability struct {
 	Path    string
 	Method  string
 	Handler httprouter.Handle
 }
 
-type CapabilityInterface interface {
-	Key() string
-	Value() interface{}
-}
+type CallableCapabilitiesMap map[string]CallableCapability
+type StaticCapabilitiesMap map[string]any
 
-type CallableCapability struct {
-	key      string
-	endpoint CapabilityEndpoint
-}
-
-func (c *CallableCapability) Key() string {
-	return c.key
-}
-
-func (c *CallableCapability) Value() interface{} {
-	return c.endpoint
-}
-
-type BooleanCapability struct {
-	key   string
-	value bool
-}
-
-func (c *BooleanCapability) Key() string {
-	return c.key
-}
-
-func (c *BooleanCapability) Value() interface{} {
-	return c.value
-}
-
-func MakeGenericCapabilities(c *Configuration) []CapabilityInterface {
-	return []CapabilityInterface{
-		&CallableCapability{
-			key: paymail.BRFCPaymentDestination,
-			endpoint: CapabilityEndpoint{
+func (c *Configuration) SetGenericCapabilities() {
+	_addCapabilities(c.callableCapabilities,
+		CallableCapabilitiesMap{
+			paymail.BRFCPaymentDestination: CallableCapability{
 				Path:    "/address/{alias}@{domain.tld}",
 				Method:  http.MethodPost,
 				Handler: c.resolveAddress,
 			},
-		},
-		&CallableCapability{
-			key: paymail.BRFCPki,
-			endpoint: CapabilityEndpoint{
+			paymail.BRFCPki: CallableCapability{
 				Path:    "/id/{alias}@{domain.tld}",
 				Method:  http.MethodGet,
 				Handler: c.showPKI,
 			},
-		},
-		&CallableCapability{
-			key: paymail.BRFCPublicProfile,
-			endpoint: CapabilityEndpoint{
+			paymail.BRFCPublicProfile: CallableCapability{
 				Path:    "/public-profile/{alias}@{domain.tld}",
 				Method:  http.MethodGet,
 				Handler: c.publicProfile,
 			},
-		},
-		&BooleanCapability{
-			key:   paymail.BRFCSenderValidation,
-			value: c.SenderValidationEnabled,
-		},
-		&CallableCapability{
-			key: paymail.BRFCVerifyPublicKeyOwner,
-			endpoint: CapabilityEndpoint{
+			paymail.BRFCVerifyPublicKeyOwner: CallableCapability{
 				Path:    "/verify-pubkey/{alias}@{domain.tld}/{pubkey}",
 				Method:  http.MethodGet,
 				Handler: c.verifyPubKey,
 			},
 		},
-	}
+	)
+	_addCapabilities(c.staticCapabilities,
+		StaticCapabilitiesMap{
+			paymail.BRFCSenderValidation: c.SenderValidationEnabled,
+		},
+	)
 }
 
-func MakeP2PCapabilities(c *Configuration) []CapabilityInterface {
-	return []CapabilityInterface{
-		&CallableCapability{
-			key: paymail.BRFCP2PTransactions,
-			endpoint: CapabilityEndpoint{
+func (c *Configuration) SetP2PCapabilities() {
+	_addCapabilities(c.callableCapabilities,
+		CallableCapabilitiesMap{
+			paymail.BRFCP2PTransactions: CallableCapability{
 				Path:    "/receive-transaction/{alias}@{domain.tld}",
 				Method:  http.MethodPost,
 				Handler: c.p2pReceiveTx,
 			},
-		},
-		&CallableCapability{
-			key: paymail.BRFCP2PPaymentDestination,
-			endpoint: CapabilityEndpoint{
+			paymail.BRFCP2PPaymentDestination: CallableCapability{
 				Path:    "/p2p-payment-destination/{alias}@{domain.tld}",
 				Method:  http.MethodPost,
 				Handler: c.p2pDestination,
 			},
 		},
-	}
+	)
 }
 
-func MakeBeefCapabilities(c *Configuration) []CapabilityInterface {
-	return []CapabilityInterface{
-		&CallableCapability{
-			key: paymail.BRFCBeefTransaction,
-			endpoint: CapabilityEndpoint{
+func (c *Configuration) SetBeefCapabilities() {
+	_addCapabilities(c.callableCapabilities,
+		CallableCapabilitiesMap{
+			paymail.BRFCBeefTransaction: CallableCapability{
 				Path:    "/beef/{alias}@{domain.tld}",
 				Method:  http.MethodPost,
 				Handler: c.p2pReceiveBeefTx,
 			},
 		},
-	}
-}
-func generateCapabilitiesMap(array []CapabilityInterface) map[string]CapabilityInterface {
-	dictionary := make(map[string]CapabilityInterface)
-	for _, capability := range array {
-		dictionary[capability.Key()] = capability
-	}
-	return dictionary
+	)
 }
 
-func extendCapabilitiesMap(base map[string]CapabilityInterface, array []CapabilityInterface) map[string]CapabilityInterface {
-	newElements := generateCapabilitiesMap(array)
-	for key, val := range newElements {
+func _addCapabilities[T any](base map[string]T, newCaps map[string]T) {
+	for key, val := range newCaps {
 		base[key] = val
 	}
-	return base
 }
 
 // showCapabilities will return the service discovery results for the server
@@ -158,13 +107,11 @@ func (c *Configuration) EnrichCapabilities(domain string) *paymail.CapabilitiesP
 		BsvAlias:     c.BSVAliasVersion,
 		Capabilities: make(map[string]interface{}),
 	}
-	for key, cap := range c.capabilities {
-		switch capValue := cap.Value().(type) {
-		case CapabilityEndpoint:
-			payload.Capabilities[key] = GenerateServiceURL(c.Prefix, domain, c.APIVersion, c.ServiceName) + string(capValue.Path)
-		default:
-			payload.Capabilities[key] = capValue
-		}
+	for key, cap := range c.staticCapabilities {
+		payload.Capabilities[key] = cap
+	}
+	for key, cap := range c.callableCapabilities {
+		payload.Capabilities[key] = GenerateServiceURL(c.Prefix, domain, c.APIVersion, c.ServiceName) + string(cap.Path)
 	}
 	return payload
 }
