@@ -29,7 +29,7 @@ Incoming Data Object Example:
 //
 // Specs: http://bsvalias.org/04-01-basic-address-resolution.html
 func (c *Configuration) resolveAddress(w http.ResponseWriter, req *http.Request, p httprouter.Params) {
-	incomingPaymail := p.ByName("paymailAddress")
+	incomingPaymail := p.ByName(PaymailAddressParamName)
 
 	// Parse, sanitize and basic validation
 	alias, domain, paymailAddress := paymail.SanitizePaymail(incomingPaymail)

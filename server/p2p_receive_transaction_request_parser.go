@@ -13,7 +13,7 @@ type parseError struct {
 }
 
 func parseP2pReceiveTxRequest(c *Configuration, req *http.Request, params httprouter.Params, format p2pPayloadFormat) (*p2pReceiveTxReqPayload, *parseError) {
-	incomingPaymail := params.ByName("paymailAddress")
+	incomingPaymail := params.ByName(PaymailAddressParamName)
 
 	alias, domain, paymailAddress := paymail.SanitizePaymail(incomingPaymail)
 	if len(paymailAddress) == 0 {

@@ -11,7 +11,7 @@ import (
 //
 // Specs: https://github.com/bitcoin-sv-specs/brfc-paymail/pull/7/files
 func (c *Configuration) publicProfile(w http.ResponseWriter, req *http.Request, p httprouter.Params) {
-	incomingPaymail := p.ByName("paymailAddress")
+	incomingPaymail := p.ByName(PaymailAddressParamName)
 
 	// Parse, sanitize and basic validation
 	alias, domain, address := paymail.SanitizePaymail(incomingPaymail)

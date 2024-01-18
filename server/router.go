@@ -1,7 +1,9 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/newrelic/go-agent/v3/integrations/nrhttprouter"
 )
@@ -21,18 +23,7 @@ func Handlers(configuration *Configuration) *nrhttprouter.Router {
 }
 
 // RegisterBasicRoutes register the basic routes to the http router
-func (c *Configuration) RegisterBasicRoutes(r *nrhttprouter.Router) {
-	c.registerBasicRoutes(r)
-}
-
-// RegisterRoutes register all the available paymail routes to the http router
-func (c *Configuration) RegisterRoutes(r *nrhttprouter.Router) {
-	c.registerPaymailRoutes(r)
-}
-
-// registerBasicRoutes will register basic server related routes
-func (c *Configuration) registerBasicRoutes(router *nrhttprouter.Router) {
-
+func (c *Configuration) RegisterBasicRoutes(router *nrhttprouter.Router) {
 	// Skip if not set
 	if c.BasicRoutes == nil {
 		return
@@ -62,21 +53,27 @@ func (c *Configuration) registerBasicRoutes(router *nrhttprouter.Router) {
 	}
 }
 
-// registerPaymailRoutes will register all paymail related routes
-func (c *Configuration) registerPaymailRoutes(router *nrhttprouter.Router) {
-
-	// Capabilities (service discovery)
-	router.GET(
-		"/.well-known/"+c.ServiceName,
-		c.showCapabilities,
-	)
+// RegisterRoutes register all the available paymail routes to the http router
+func (c *Configuration) RegisterRoutes(router *nrhttprouter.Router) {
+	router.GET("/.well-known/"+c.ServiceName, c.showCapabilities) // Capabilities (service discovery)
 
 	for key, cap := range c.callableCapabilities {
-		c.Logger.Info().Msgf("Registering endpoint for capability: %s", key)
+		routerPath := c.templateToRouterPath(cap.Path)
 		router.Handle(
 			cap.Method,
-			cap.Path,
+			routerPath,
 			cap.Handler,
 		)
+
+		c.Logger.Info().Msgf("Registering endpoint for capability: %s", key)
+		c.Logger.Debug().Msgf("Endpoint[%s]: %s %s", key, cap.Method, routerPath)
 	}
+}
+
+func (c *Configuration) templateToRouterPath(template string) string {
+	urlParam := func(name string) string { return ":" + name }
+
+	template = strings.ReplaceAll(template, PaymailAddressTemplate, urlParam(PaymailAddressParamName))
+	template = strings.ReplaceAll(template, PubKeyTemplate, urlParam(PubKeyParamName))
+	return fmt.Sprintf("/%s/%s/%s", c.APIVersion, c.ServiceName, strings.TrimPrefix(template, "/"))
 }

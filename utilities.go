@@ -149,8 +149,8 @@ func SanitizeDomain(original string) (string, error) {
 		return original, nil
 	}
 
-	// Missing http?
-	if !strings.Contains(original, "http") {
+	// The http part is temporary, we just need it to parse the url
+	if !strings.HasPrefix(original, "http") {
 		original = "http://" + strings.TrimSpace(original)
 	}
 
@@ -160,13 +160,17 @@ func SanitizeDomain(original string) (string, error) {
 		return original, err
 	}
 
-	// Generally all domains should be uniform and lowercase
-	u.Host = strings.ToLower(u.Host)
-
-	// Remove leading www.
+	u.Host = strings.ToLower(u.Host) // Generally all domains should be uniform and lowercase
 	u.Host = strings.TrimPrefix(u.Host, "www.")
+	u.Host = removePort(u.Host)
 
 	return u.Host, nil
+}
+
+// removePort will attempt to remove the port if found
+func removePort(host string) string {
+	re := regexp.MustCompile(`:\d*$`)
+	return re.ReplaceAllString(host, "")
 }
 
 // SanitizeEmail will take an input and return the sanitized version

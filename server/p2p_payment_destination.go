@@ -23,7 +23,7 @@ type p2pDestinationRequestBody struct {
 //
 // Specs: https://docs.moneybutton.com/docs/paymail-07-p2p-payment-destination.html
 func (c *Configuration) p2pDestination(w http.ResponseWriter, req *http.Request, p httprouter.Params) {
-	incomingPaymail := p.ByName("paymailAddress")
+	incomingPaymail := p.ByName(PaymailAddressParamName)
 
 	// Parse, sanitize and basic validation
 	alias, domain, paymailAddress := paymail.SanitizePaymail(incomingPaymail)

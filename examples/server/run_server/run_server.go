@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/bitcoin-sv/go-paymail/logging"
 	"time"
+
+	"github.com/bitcoin-sv/go-paymail/logging"
 
 	"github.com/bitcoin-sv/go-paymail/server"
 )
@@ -27,6 +28,7 @@ func main() {
 		server.WithServiceName("BsvAliasCustom"),
 		server.WithTimeout(15*time.Second),
 	)
+	config.Prefix = "http://"
 	if err != nil {
 		logger.Fatal().Msg(err.Error())
 	}

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/bitcoin-sv/go-paymail"
@@ -20,22 +21,22 @@ func (c *Configuration) SetGenericCapabilities() {
 	_addCapabilities(c.callableCapabilities,
 		CallableCapabilitiesMap{
 			paymail.BRFCPaymentDestination: CallableCapability{
-				Path:    "/address/{alias}@{domain.tld}",
+				Path:    fmt.Sprintf("/address/%s", PaymailAddressTemplate),
 				Method:  http.MethodPost,
 				Handler: c.resolveAddress,
 			},
 			paymail.BRFCPki: CallableCapability{
-				Path:    "/id/{alias}@{domain.tld}",
+				Path:    fmt.Sprintf("/id/%s", PaymailAddressTemplate),
 				Method:  http.MethodGet,
 				Handler: c.showPKI,
 			},
 			paymail.BRFCPublicProfile: CallableCapability{
-				Path:    "/public-profile/{alias}@{domain.tld}",
+				Path:    fmt.Sprintf("/public-profile/%s", PaymailAddressTemplate),
 				Method:  http.MethodGet,
 				Handler: c.publicProfile,
 			},
 			paymail.BRFCVerifyPublicKeyOwner: CallableCapability{
-				Path:    "/verify-pubkey/{alias}@{domain.tld}/{pubkey}",
+				Path:    fmt.Sprintf("/verify-pubkey/%s/%s", PaymailAddressTemplate, PubKeyTemplate),
 				Method:  http.MethodGet,
 				Handler: c.verifyPubKey,
 			},
@@ -52,12 +53,12 @@ func (c *Configuration) SetP2PCapabilities() {
 	_addCapabilities(c.callableCapabilities,
 		CallableCapabilitiesMap{
 			paymail.BRFCP2PTransactions: CallableCapability{
-				Path:    "/receive-transaction/{alias}@{domain.tld}",
+				Path:    fmt.Sprintf("/receive-transaction/%s", PaymailAddressTemplate),
 				Method:  http.MethodPost,
 				Handler: c.p2pReceiveTx,
 			},
 			paymail.BRFCP2PPaymentDestination: CallableCapability{
-				Path:    "/p2p-payment-destination/{alias}@{domain.tld}",
+				Path:    fmt.Sprintf("/p2p-payment-destination/%s", PaymailAddressTemplate),
 				Method:  http.MethodPost,
 				Handler: c.p2pDestination,
 			},
@@ -69,7 +70,7 @@ func (c *Configuration) SetBeefCapabilities() {
 	_addCapabilities(c.callableCapabilities,
 		CallableCapabilitiesMap{
 			paymail.BRFCBeefTransaction: CallableCapability{
-				Path:    "/beef/{alias}@{domain.tld}",
+				Path:    fmt.Sprintf("/beef/%s", PaymailAddressTemplate),
 				Method:  http.MethodPost,
 				Handler: c.p2pReceiveBeefTx,
 			},
@@ -90,7 +91,13 @@ func _addCapabilities[T any](base map[string]T, newCaps map[string]T) {
 func (c *Configuration) showCapabilities(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
 	// Check the domain (allowed, and used for capabilities response)
 	// todo: bake this into middleware? This is protecting the "req" domain name (like CORs)
-	domain := getHost(req)
+	domain := ""
+	if req.URL.IsAbs() || len(req.URL.Host) == 0 {
+		domain = req.Host
+	} else {
+		domain = req.URL.Host
+	}
+
 	if !c.IsAllowedDomain(domain) {
 		ErrorResponse(w, req, ErrorUnknownDomain, "domain unknown: "+domain, http.StatusBadRequest, c.Logger)
 		return
