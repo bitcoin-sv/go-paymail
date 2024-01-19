@@ -33,7 +33,7 @@ func main() {
 		server.WithTimeout(15*time.Second),
 		server.WithCapabilities(customCapabilities()),
 	)
-	config.Prefix = "http://"
+	config.Prefix = "http://" //normally paymail requires https, but for demo purposes we'll use http
 	if err != nil {
 		logger.Fatal().Msg(err.Error())
 	}
@@ -45,9 +45,9 @@ func main() {
 func customCapabilities() map[string]any {
 	exampleBrfcKey := "406cef0ae2d6"
 	return map[string]any{
-		"custom_static_cap_boolean": false,
-		"custom_static_int":         10,
-		exampleBrfcKey:              true,
+		"custom_static_boolean": false,
+		"custom_static_int":     10,
+		exampleBrfcKey:          true,
 		"custom_callable_cap": server.CallableCapability{
 			Path:   fmt.Sprintf("/display_paymail/%s", server.PaymailAddressTemplate),
 			Method: http.MethodGet,
@@ -58,10 +58,7 @@ func customCapabilities() map[string]any {
 					"paymail": incomingPaymail,
 				}
 
-				// Set the content type to application/json
 				w.Header().Set("Content-Type", "application/json")
-
-				// Write the JSON response
 				json.NewEncoder(w).Encode(response)
 			},
 		},
