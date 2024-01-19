@@ -137,6 +137,7 @@ func TestConfiguration_Validate(t *testing.T) {
 	t.Run("configuration with SenderValidationEnabled", func(t *testing.T) {
 		c := &Configuration{
 			Port:                    12345,
+			Prefix:                  "https://",
 			ServiceName:             "test",
 			BSVAliasVersion:         paymail.DefaultBsvAliasVersion,
 			PaymailDomains:          []*Domain{{Name: "test.com"}},
@@ -147,13 +148,17 @@ func TestConfiguration_Validate(t *testing.T) {
 		c.SetGenericCapabilities()
 		err := c.Validate()
 		assert.NoError(t, err)
-		assert.False(t, c.EnrichCapabilities("test.com").Capabilities[paymail.BRFCSenderValidation].(bool))
+		caps, err := c.EnrichCapabilities("test.com")
+		assert.NoError(t, err)
+		assert.False(t, caps.Capabilities[paymail.BRFCSenderValidation].(bool))
 
 		c.SenderValidationEnabled = true
 		c.SetGenericCapabilities()
 		err = c.Validate()
 		assert.NoError(t, err)
-		assert.True(t, c.EnrichCapabilities("test.com").Capabilities[paymail.BRFCSenderValidation].(bool))
+		caps, err = c.EnrichCapabilities("test.com")
+		assert.NoError(t, err)
+		assert.True(t, caps.Capabilities[paymail.BRFCSenderValidation].(bool))
 	})
 }
 
@@ -263,13 +268,14 @@ func TestConfiguration_EnrichCapabilities(t *testing.T) {
 		c := testConfig(t, testDomain)
 		require.NotNil(t, c)
 
-		capabilities := c.EnrichCapabilities(testDomain)
-		assert.Equal(t, 5, len(capabilities.Capabilities))
-		assert.Equal(t, "https://"+testDomain+"/v1/bsvalias/address/{alias}@{domain.tld}", capabilities.Capabilities[paymail.BRFCPaymentDestination])
-		assert.Equal(t, "https://"+testDomain+"/v1/bsvalias/id/{alias}@{domain.tld}", capabilities.Capabilities[paymail.BRFCPki])
-		assert.Equal(t, "https://"+testDomain+"/v1/bsvalias/public-profile/{alias}@{domain.tld}", capabilities.Capabilities[paymail.BRFCPublicProfile])
-		assert.Equal(t, "https://"+testDomain+"/v1/bsvalias/verify-pubkey/{alias}@{domain.tld}/{pubkey}", capabilities.Capabilities[paymail.BRFCVerifyPublicKeyOwner])
-		assert.Equal(t, false, capabilities.Capabilities[paymail.BRFCSenderValidation])
+		caps, err := c.EnrichCapabilities(testDomain)
+		assert.NoError(t, err)
+		assert.Equal(t, 5, len(caps.Capabilities))
+		assert.Equal(t, "https://"+testDomain+"/v1/bsvalias/address/{alias}@{domain.tld}", caps.Capabilities[paymail.BRFCPaymentDestination])
+		assert.Equal(t, "https://"+testDomain+"/v1/bsvalias/id/{alias}@{domain.tld}", caps.Capabilities[paymail.BRFCPki])
+		assert.Equal(t, "https://"+testDomain+"/v1/bsvalias/public-profile/{alias}@{domain.tld}", caps.Capabilities[paymail.BRFCPublicProfile])
+		assert.Equal(t, "https://"+testDomain+"/v1/bsvalias/verify-pubkey/{alias}@{domain.tld}/{pubkey}", caps.Capabilities[paymail.BRFCVerifyPublicKeyOwner])
+		assert.Equal(t, false, caps.Capabilities[paymail.BRFCSenderValidation])
 	})
 
 	t.Run("multiple times", func(t *testing.T) {
@@ -277,11 +283,23 @@ func TestConfiguration_EnrichCapabilities(t *testing.T) {
 		c := testConfig(t, testDomain)
 		require.NotNil(t, c)
 
-		capabilities := c.EnrichCapabilities(testDomain)
-		assert.Equal(t, 5, len(capabilities.Capabilities))
+		caps, err := c.EnrichCapabilities(testDomain)
+		assert.NoError(t, err)
+		assert.Equal(t, 5, len(caps.Capabilities))
 
-		capabilities = c.EnrichCapabilities(testDomain)
-		assert.Equal(t, 5, len(capabilities.Capabilities))
+		caps, err = c.EnrichCapabilities(testDomain)
+		assert.NoError(t, err)
+		assert.Equal(t, 5, len(caps.Capabilities))
+	})
+
+	t.Run("empty domain and prefix", func(t *testing.T) {
+		testDomain := "test.com"
+		c := testConfig(t, testDomain)
+		require.NotNil(t, c)
+
+		c.Prefix = ""
+		_, err := c.EnrichCapabilities("")
+		assert.Error(t, err)
 	})
 }
 
@@ -290,33 +308,42 @@ func TestGenerateServiceURL(t *testing.T) {
 	t.Parallel()
 
 	t.Run("valid values", func(t *testing.T) {
-		u := GenerateServiceURL("https://", "test.com", "v1", "bsvalias")
+		u, err := GenerateServiceURL("https://", "test.com", "v1", "bsvalias")
+		assert.NoError(t, err)
 		assert.Equal(t, "https://test.com/v1/bsvalias", u)
 	})
 
 	t.Run("all invalid values", func(t *testing.T) {
-		u := GenerateServiceURL("", "", "", "")
-		assert.Equal(t, "", u)
+		_, err := GenerateServiceURL("", "", "", "")
+		assert.Error(t, err)
 	})
 
 	t.Run("missing prefix", func(t *testing.T) {
-		u := GenerateServiceURL("", "test.com", "v1", "")
-		assert.Equal(t, "", u)
+		_, err := GenerateServiceURL("", "test.com", "v1", "")
+		assert.Error(t, err)
 	})
 
 	t.Run("missing domain", func(t *testing.T) {
-		u := GenerateServiceURL("https://", "", "v1", "")
-		assert.Equal(t, "", u)
+		_, err := GenerateServiceURL("https://", "", "v1", "")
+		assert.Error(t, err)
 	})
 
 	t.Run("no api version", func(t *testing.T) {
-		u := GenerateServiceURL("https://", "test", "", "bsvalias")
+		u, err := GenerateServiceURL("https://", "test", "", "bsvalias")
+		assert.NoError(t, err)
 		assert.Equal(t, "https://test/bsvalias", u)
 	})
 
 	t.Run("no service name", func(t *testing.T) {
-		u := GenerateServiceURL("https://", "test", "v1", "")
+		u, err := GenerateServiceURL("https://", "test", "v1", "")
+		assert.NoError(t, err)
 		assert.Equal(t, "https://test/v1", u)
+	})
+
+	t.Run("service with explicit port", func(t *testing.T) {
+		u, err := GenerateServiceURL("https://", "test:1234", "v1", "bsvalias")
+		assert.NoError(t, err)
+		assert.Equal(t, "https://test:1234/v1/bsvalias", u)
 	})
 }
 

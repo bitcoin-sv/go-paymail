@@ -25,6 +25,8 @@ func TestSanitizePaymail(t *testing.T) {
 		{"TEST@domain.com", "test", "domain.com", "test@domain.com"},
 		{"TEST@Domain.com", "test", "domain.com", "test@domain.com"},
 		{"TEST@DomaiN.COM", "test", "domain.com", "test@domain.com"},
+		{"mailto:TEST@DomaiN.COM", "test", "domain.com", "test@domain.com"},
+		{"MailTO:TEST@DomaiN.COM", "test", "domain.com", "test@domain.com"},
 		{"@DomaiN.COM", "", "domain.com", ""},
 		{"test@", "test", "", ""},
 		{"test@domain", "test", "domain", "test@domain"},

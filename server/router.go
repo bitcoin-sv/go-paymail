@@ -10,16 +10,12 @@ import (
 
 // Handlers are used to isolate loading the routes (used for testing)
 func Handlers(configuration *Configuration) *nrhttprouter.Router {
+	router := nrhttprouter.New(nil)
 
-	// Create a new router
-	r := nrhttprouter.New(nil)
+	configuration.RegisterBasicRoutes(router)
+	configuration.RegisterRoutes(router)
 
-	// Register the routes
-	configuration.RegisterBasicRoutes(r)
-	configuration.RegisterRoutes(r)
-
-	// Return the router
-	return r
+	return router
 }
 
 // RegisterBasicRoutes register the basic routes to the http router
@@ -55,7 +51,7 @@ func (c *Configuration) RegisterBasicRoutes(router *nrhttprouter.Router) {
 
 // RegisterRoutes register all the available paymail routes to the http router
 func (c *Configuration) RegisterRoutes(router *nrhttprouter.Router) {
-	router.GET("/.well-known/"+c.ServiceName, c.showCapabilities) // Capabilities (service discovery)
+	router.GET("/.well-known/"+c.ServiceName, c.showCapabilities) // service discovery
 
 	for key, cap := range c.callableCapabilities {
 		routerPath := c.templateToRouterPath(cap.Path)
@@ -71,9 +67,11 @@ func (c *Configuration) RegisterRoutes(router *nrhttprouter.Router) {
 }
 
 func (c *Configuration) templateToRouterPath(template string) string {
-	urlParam := func(name string) string { return ":" + name }
-
-	template = strings.ReplaceAll(template, PaymailAddressTemplate, urlParam(PaymailAddressParamName))
-	template = strings.ReplaceAll(template, PubKeyTemplate, urlParam(PubKeyParamName))
+	template = strings.ReplaceAll(template, PaymailAddressTemplate, _routerParam(PaymailAddressParamName))
+	template = strings.ReplaceAll(template, PubKeyTemplate, _routerParam(PubKeyParamName))
 	return fmt.Sprintf("/%s/%s/%s", c.APIVersion, c.ServiceName, strings.TrimPrefix(template, "/"))
+}
+
+func _routerParam(name string) string {
+	return ":" + name
 }

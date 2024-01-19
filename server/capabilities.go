@@ -89,27 +89,35 @@ func _addCapabilities[T any](base map[string]T, newCaps map[string]T) {
 //
 // Specs: http://bsvalias.org/02-02-capability-discovery.html
 func (c *Configuration) showCapabilities(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
-	// Check the domain (allowed, and used for capabilities response)
-	// todo: bake this into middleware? This is protecting the "req" domain name (like CORs)
-	domain := ""
+	// Check the host (allowed, and used for capabilities response)
+	// todo: bake this into middleware? This is protecting the "req" host name (like CORs)
+	host := ""
 	if req.URL.IsAbs() || len(req.URL.Host) == 0 {
-		domain = req.Host
+		host = req.Host
 	} else {
-		domain = req.URL.Host
+		host = req.URL.Host
 	}
 
-	if !c.IsAllowedDomain(domain) {
-		ErrorResponse(w, req, ErrorUnknownDomain, "domain unknown: "+domain, http.StatusBadRequest, c.Logger)
+	if !c.IsAllowedDomain(host) {
+		ErrorResponse(w, req, ErrorUnknownDomain, "domain unknown: "+host, http.StatusBadRequest, c.Logger)
 		return
 	}
 
-	// Set the service URL
-	capabilities := c.EnrichCapabilities(domain)
+	capabilities, err := c.EnrichCapabilities(host)
+	if err != nil {
+		ErrorResponse(w, req, ErrorEncodingResponse, err.Error(), http.StatusBadRequest, c.Logger)
+		return
+	}
+
 	writeJsonResponse(w, req, c.Logger, capabilities)
 }
 
 // EnrichCapabilities will update the capabilities with the appropriate service url
-func (c *Configuration) EnrichCapabilities(domain string) *paymail.CapabilitiesPayload {
+func (c *Configuration) EnrichCapabilities(host string) (*paymail.CapabilitiesPayload, error) {
+	serviceUrl, err := GenerateServiceURL(c.Prefix, host, c.APIVersion, c.ServiceName)
+	if err != nil {
+		return nil, err
+	}
 	payload := &paymail.CapabilitiesPayload{
 		BsvAlias:     c.BSVAliasVersion,
 		Capabilities: make(map[string]interface{}),
@@ -118,7 +126,7 @@ func (c *Configuration) EnrichCapabilities(domain string) *paymail.CapabilitiesP
 		payload.Capabilities[key] = cap
 	}
 	for key, cap := range c.callableCapabilities {
-		payload.Capabilities[key] = GenerateServiceURL(c.Prefix, domain, c.APIVersion, c.ServiceName) + string(cap.Path)
+		payload.Capabilities[key] = serviceUrl + string(cap.Path)
 	}
-	return payload
+	return payload, nil
 }

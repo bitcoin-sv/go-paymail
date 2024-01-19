@@ -8,12 +8,10 @@ import (
 	"time"
 )
 
-// emptySpace is an empty space for replacing
-var emptySpace = []byte("")
-
 var (
 	emailRegExp    = regexp.MustCompile(`[^a-zA-Z0-9-_.@+]`)
 	pathNameRegExp = regexp.MustCompile(`[^a-zA-Z0-9-_]`)
+	portRegExp     = regexp.MustCompile(`:\d*$`)
 )
 
 // SanitisedPaymail contains elements of a sanitized paymail address.
@@ -47,7 +45,7 @@ func ValidateAndSanitisePaymail(paymail string, isBeta bool) (*SanitisedPaymail,
 func SanitizePaymail(paymailAddress string) (alias, domain, address string) {
 
 	// Sanitize the paymail address
-	address = SanitizeEmail(paymailAddress, false)
+	address = SanitizeEmail(paymailAddress)
 
 	// Split the email parts (alias @ domain)
 	parts := strings.Split(address, "@")
@@ -149,12 +147,11 @@ func SanitizeDomain(original string) (string, error) {
 		return original, nil
 	}
 
-	// The http part is temporary, we just need it to parse the url
 	if !strings.HasPrefix(original, "http") {
+		// The http part is temporary, we just need it for url.Parse to work
 		original = "http://" + strings.TrimSpace(original)
 	}
 
-	// Try to parse the url
 	u, err := url.Parse(original)
 	if err != nil {
 		return original, err
@@ -167,10 +164,8 @@ func SanitizeDomain(original string) (string, error) {
 	return u.Host, nil
 }
 
-// removePort will attempt to remove the port if found
 func removePort(host string) string {
-	re := regexp.MustCompile(`:\d*$`)
-	return re.ReplaceAllString(host, "")
+	return portRegExp.ReplaceAllString(host, "")
 }
 
 // SanitizeEmail will take an input and return the sanitized version
@@ -178,37 +173,29 @@ func removePort(host string) string {
 // This will sanitize the email address (force to lowercase, remove spaces, etc.)
 // Example: SanitizeEmail("  John.Doe@Gmail  ", false)
 // Result:  johndoe@gmail
-func SanitizeEmail(original string, preserveCase bool) string {
+func SanitizeEmail(original string) string {
+	original = strings.ToLower(original)
+	original = strings.Replace(original, "mailto:", "", -1)
+	original = strings.TrimSpace(original)
 
-	// Leave the email address in its original case
-	if preserveCase {
-		return string(emailRegExp.ReplaceAll(
-			[]byte(strings.Replace(original, "mailto:", "", -1)), emptySpace),
-		)
-	}
-
-	// Standard is forced to lowercase
-	return string(emailRegExp.ReplaceAll(
-		[]byte(strings.ToLower(strings.Replace(original, "mailto:", "", -1))), emptySpace),
-	)
+	return emailRegExp.ReplaceAllString(original, "")
 }
 
 // SanitizePathName returns a formatted path compliant name.
 //
 //	View examples: sanitize_test.go
 func SanitizePathName(original string) string {
-	return string(pathNameRegExp.ReplaceAll([]byte(original), emptySpace))
+	return pathNameRegExp.ReplaceAllString(original, "")
 }
 
 // replaceAliasDomain will replace the alias and domain with the correct values
 func replaceAliasDomain(urlString, alias, domain string) string {
-	return strings.Replace(
-		strings.Replace(urlString, "{alias}", alias, -1),
-		"{domain.tld}", domain, -1,
-	)
+	urlString = strings.ReplaceAll(urlString, "{alias}", alias)
+	urlString = strings.ReplaceAll(urlString, "{domain.tld}", domain)
+	return urlString
 }
 
 // replacePubKey will replace the PubKey with the correct values
 func replacePubKey(urlString, pubKey string) string {
-	return strings.Replace(urlString, "{pubkey}", pubKey, -1)
+	return strings.ReplaceAll(urlString, "{pubkey}", pubKey)
 }

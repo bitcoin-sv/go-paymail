@@ -29,9 +29,9 @@ func TestCreateServer(t *testing.T) {
 	})
 }
 
-// TestStart will test the method Start()
-func TestStart(t *testing.T) {
-	t.Run("run server", func(t *testing.T) {
+// TestWithServer will test if the server is running and responding to capabilities discovery & each capability is accessible
+func TestWithServer(t *testing.T) {
+	t.Run("run server and check capabilities", func(t *testing.T) {
 		config, _ := NewConfig(new(mockServiceProvider), WithDomain("domain.com"))
 		config.Prefix = "http://"
 
@@ -48,16 +48,19 @@ func TestStart(t *testing.T) {
 		var result map[string]interface{}
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		assert.NoError(t, err)
+		assert.Equal(t, result["bsvalias"], config.BSVAliasVersion)
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
 		resp.Body.Close()
 
 		capabilities := result["capabilities"].(map[string]interface{})
 		assert.NotNil(t, capabilities)
 		assert.Greater(t, len(capabilities), 0)
 
+		//Check if all callable capabilities are accessible by trying to make a request to each one of them
 		for _, cap := range capabilities {
 			capUrl, ok := cap.(string)
 			if !ok {
-				continue
+				continue //skip static capabilities
 			}
 
 			capUrl = strings.ReplaceAll(capUrl, PaymailAddressTemplate, "example@domain.com")
@@ -66,11 +69,10 @@ func TestStart(t *testing.T) {
 			_, err := url.Parse(capUrl)
 			assert.NoError(t, err, "Endpoint %s is not a valid URL", capUrl)
 
-			_, err = http.Get(capUrl) //only check whether this endpoint is reachable even if "get" method is not allowed
+			_, err = http.Get(capUrl)
+
+			//Only verify if the current 'capUrl' endpoint is accessible, even if the 'GET' method is not permitted for it.
 			assert.NoError(t, err)
 		}
-
-		assert.Equal(t, result["bsvalias"], config.BSVAliasVersion)
-		assert.Equal(t, http.StatusOK, resp.StatusCode)
 	})
 }

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"slices"
 	"strings"
 	"time"
 
@@ -70,29 +71,20 @@ func (c *Configuration) Validate() error {
 }
 
 // IsAllowedDomain will return true if it's an allowed paymail domain
-func (c *Configuration) IsAllowedDomain(domain string) (success bool) {
-
+func (c *Configuration) IsAllowedDomain(domain string) bool {
 	if c.PaymailDomainsValidationDisabled {
-		success = true
-		return
+		return true
 	}
 
-	// Sanitize the domain (standard)
 	var err error
 	if domain, err = paymail.SanitizeDomain(domain); err != nil {
-		// todo: log the error? This should rarely occur
-		return
+		c.Logger.Warn().Err(err).Msg("failed to sanitize domain")
+		return false
 	}
 
-	// Loop all domains check
-	for _, d := range c.PaymailDomains {
-		if strings.EqualFold(d.Name, domain) {
-			success = true
-			break
-		}
-	}
-
-	return
+	return slices.ContainsFunc(c.PaymailDomains, func(d *Domain) bool {
+		return strings.EqualFold(d.Name, domain)
+	})
 }
 
 // AddDomain will add the domain if it does not exist
@@ -120,25 +112,23 @@ func (c *Configuration) AddDomain(domain string) (err error) {
 }
 
 // GenerateServiceURL will create the service URL
-func GenerateServiceURL(prefix, domain, apiVersion, serviceName string) string {
-
-	// Require prefix or domain
+func GenerateServiceURL(prefix, domain, apiVersion, serviceName string) (string, error) {
 	if len(prefix) == 0 || len(domain) == 0 {
-		return ""
+		return "", ErrPrefixOrDomainMissing
 	}
-	u := prefix + domain
-
-	// Set the api version
+	strBuilder := new(strings.Builder)
+	strBuilder.WriteString(prefix)
+	strBuilder.WriteString(domain)
 	if len(apiVersion) > 0 {
-		u = u + "/" + apiVersion
+		strBuilder.WriteString("/")
+		strBuilder.WriteString(apiVersion)
 	}
-
-	// Set the service name
 	if len(serviceName) > 0 {
-		u = u + "/" + serviceName
+		strBuilder.WriteString("/")
+		strBuilder.WriteString(serviceName)
 	}
 
-	return u
+	return strBuilder.String(), nil
 }
 
 // NewConfig will make a new server configuration
