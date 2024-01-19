@@ -61,14 +61,12 @@ func WithBeefCapabilities() ConfigOps {
 // WithCapabilities will modify the capabilities
 func WithCapabilities(customCapabilities map[string]any) ConfigOps {
 	return func(c *Configuration) {
-		if customCapabilities != nil {
-			for key, cap := range customCapabilities {
-				switch typedCap := cap.(type) {
-				case CallableCapability:
-					c.callableCapabilities[key] = typedCap
-				default:
-					c.staticCapabilities[key] = typedCap
-				}
+		for key, cap := range customCapabilities {
+			switch typedCap := cap.(type) {
+			case CallableCapability:
+				c.callableCapabilities[key] = typedCap
+			default:
+				c.staticCapabilities[key] = typedCap
 			}
 		}
 	}

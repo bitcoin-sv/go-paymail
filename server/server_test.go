@@ -38,7 +38,8 @@ func TestWithServer(t *testing.T) {
 		server := httptest.NewServer(Handlers(config))
 		defer server.Close()
 
-		config.AddDomain(server.URL)
+		err := config.AddDomain(server.URL)
+		assert.NoError(t, err)
 
 		resp, err := http.Get(fmt.Sprintf("%s/.well-known/bsvalias", server.URL))
 		if err != nil {
