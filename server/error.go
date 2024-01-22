@@ -3,9 +3,10 @@ package server
 import (
 	"encoding/json"
 	"errors"
+	"net/http"
+
 	"github.com/bitcoin-sv/go-paymail/logging"
 	"github.com/rs/zerolog"
-	"net/http"
 
 	"github.com/bitcoin-sv/go-paymail"
 )
@@ -52,6 +53,9 @@ var (
 
 	// ErrFailedMarshalJSON is when the JSON marshal fails
 	ErrFailedMarshalJSON = errors.New("failed to marshal JSON response")
+
+	//GenerateServiceURL is when the service URL cannot be generated
+	ErrPrefixOrDomainMissing = errors.New("prefix or domain is missing")
 )
 
 // ErrorResponse is a standard way to return errors to the client

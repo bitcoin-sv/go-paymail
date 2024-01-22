@@ -1,38 +1,25 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/newrelic/go-agent/v3/integrations/nrhttprouter"
 )
 
 // Handlers are used to isolate loading the routes (used for testing)
 func Handlers(configuration *Configuration) *nrhttprouter.Router {
+	router := nrhttprouter.New(nil)
 
-	// Create a new router
-	r := nrhttprouter.New(nil)
+	configuration.RegisterBasicRoutes(router)
+	configuration.RegisterRoutes(router)
 
-	// Register the routes
-	configuration.RegisterBasicRoutes(r)
-	configuration.RegisterRoutes(r)
-
-	// Return the router
-	return r
+	return router
 }
 
 // RegisterBasicRoutes register the basic routes to the http router
-func (c *Configuration) RegisterBasicRoutes(r *nrhttprouter.Router) {
-	c.registerBasicRoutes(r)
-}
-
-// RegisterRoutes register all the available paymail routes to the http router
-func (c *Configuration) RegisterRoutes(r *nrhttprouter.Router) {
-	c.registerPaymailRoutes(r)
-}
-
-// registerBasicRoutes will register basic server related routes
-func (c *Configuration) registerBasicRoutes(router *nrhttprouter.Router) {
-
+func (c *Configuration) RegisterBasicRoutes(router *nrhttprouter.Router) {
 	// Skip if not set
 	if c.BasicRoutes == nil {
 		return
@@ -62,54 +49,29 @@ func (c *Configuration) registerBasicRoutes(router *nrhttprouter.Router) {
 	}
 }
 
-// registerPaymailRoutes will register all paymail related routes
-func (c *Configuration) registerPaymailRoutes(router *nrhttprouter.Router) {
+// RegisterRoutes register all the available paymail routes to the http router
+func (c *Configuration) RegisterRoutes(router *nrhttprouter.Router) {
+	router.GET("/.well-known/"+c.ServiceName, c.showCapabilities) // service discovery
 
-	// Capabilities (service discovery)
-	router.GET(
-		"/.well-known/"+c.ServiceName,
-		c.showCapabilities,
-	)
+	for key, cap := range c.callableCapabilities {
+		routerPath := c.templateToRouterPath(cap.Path)
+		router.Handle(
+			cap.Method,
+			routerPath,
+			cap.Handler,
+		)
 
-	// PKI request (public key information)
-	router.GET(
-		"/"+c.APIVersion+"/"+c.ServiceName+"/id/:paymailAddress",
-		c.showPKI,
-	)
+		c.Logger.Info().Msgf("Registering endpoint for capability: %s", key)
+		c.Logger.Debug().Msgf("Endpoint[%s]: %s %s", key, cap.Method, routerPath)
+	}
+}
 
-	// Verify PubKey request (public key verification to paymail address)
-	router.GET(
-		"/"+c.APIVersion+"/"+c.ServiceName+"/verify-pubkey/:paymailAddress/:pubKey",
-		c.verifyPubKey,
-	)
+func (c *Configuration) templateToRouterPath(template string) string {
+	template = strings.ReplaceAll(template, PaymailAddressTemplate, _routerParam(PaymailAddressParamName))
+	template = strings.ReplaceAll(template, PubKeyTemplate, _routerParam(PubKeyParamName))
+	return fmt.Sprintf("/%s/%s/%s", c.APIVersion, c.ServiceName, strings.TrimPrefix(template, "/"))
+}
 
-	// Payment Destination request (address resolution)
-	router.POST(
-		"/"+c.APIVersion+"/"+c.ServiceName+"/address/:paymailAddress",
-		c.resolveAddress,
-	)
-
-	// Public Profile request (returns Name & Avatar)
-	router.GET(
-		"/"+c.APIVersion+"/"+c.ServiceName+"/public-profile/:paymailAddress",
-		c.publicProfile,
-	)
-
-	// P2P Destination request (returns output & reference)
-	router.POST(
-		"/"+c.APIVersion+"/"+c.ServiceName+"/p2p-payment-destination/:paymailAddress",
-		c.p2pDestination,
-	)
-
-	// P2P Receive Tx request (receives the P2P transaction, broadcasts, returns tx_id)
-	router.POST(
-		"/"+c.APIVersion+"/"+c.ServiceName+"/receive-transaction/:paymailAddress",
-		c.p2pReceiveTx,
-	)
-
-	// P2P BEEF capability Receive Tx request
-	router.POST(
-		"/"+c.APIVersion+"/"+c.ServiceName+"/beef/:paymailAddress",
-		c.p2pReceiveBeefTx,
-	)
+func _routerParam(name string) string {
+	return ":" + name
 }

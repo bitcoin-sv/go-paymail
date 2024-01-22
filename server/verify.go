@@ -11,8 +11,8 @@ import (
 //
 // Specs: https://bsvalias.org/05-verify-public-key-owner.html
 func (c *Configuration) verifyPubKey(w http.ResponseWriter, req *http.Request, p httprouter.Params) {
-	incomingPaymail := p.ByName("paymailAddress")
-	incomingPubKey := p.ByName("pubKey")
+	incomingPaymail := p.ByName(PaymailAddressParamName)
+	incomingPubKey := p.ByName(PubKeyParamName)
 
 	// Parse, sanitize and basic validation
 	alias, domain, address := paymail.SanitizePaymail(incomingPaymail)

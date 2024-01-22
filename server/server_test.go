@@ -1,9 +1,12 @@
 package server
 
 import (
-	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -14,10 +17,9 @@ import (
 // TestCreateServer will test the method CreateServer()
 func TestCreateServer(t *testing.T) {
 	t.Run("valid config", func(t *testing.T) {
-		config := &Configuration{
-			Port:    12345,
-			Timeout: 10 * time.Second,
-		}
+		config := testConfig(t, "localhost")
+		config.Port = 12345
+		config.Timeout = 10 * time.Second
 		s := CreateServer(config)
 		require.NotNil(t, s)
 		assert.IsType(t, &http.Server{}, s)
@@ -27,68 +29,51 @@ func TestCreateServer(t *testing.T) {
 	})
 }
 
-// TestStart will test the method Start()
-func TestStart(t *testing.T) {
-	t.Run("run server", func(t *testing.T) {
-		/*
-			// todo: run in a non-blocking way to test
-				config := &Configuration{
-					Port:    12345,
-					Timeout: 10 * time.Second,
-				}
-				s := CreateServer(config)
-				StartServer(s)
-		*/
-	})
-}
+// TestWithServer will test if the server is running and responding to capabilities discovery & each capability is accessible
+func TestWithServer(t *testing.T) {
+	t.Run("run server and check capabilities", func(t *testing.T) {
+		config, _ := NewConfig(new(mockServiceProvider), WithDomain("domain.com"))
+		config.Prefix = "http://"
 
-// Test_removePort will test the method removePort()
-func Test_removePort(t *testing.T) {
-	testDomain := "domain.com"
+		server := httptest.NewServer(Handlers(config))
+		defer server.Close()
 
-	t.Run("valid removal", func(t *testing.T) {
-		host := testDomain + ":1234"
-		rp := removePort(host)
-		assert.Equal(t, rp, testDomain)
-	})
+		err := config.AddDomain(server.URL)
+		assert.NoError(t, err)
 
-	t.Run("valid removal (no port)", func(t *testing.T) {
-		host := testDomain + ":"
-		rp := removePort(host)
-		assert.Equal(t, rp, testDomain)
-	})
+		resp, err := http.Get(fmt.Sprintf("%s/.well-known/bsvalias", server.URL))
+		if err != nil {
+			t.Fatalf("Failed to make GET request: %v", err)
+		}
 
-	t.Run("no port", func(t *testing.T) {
-		rp := removePort(testDomain)
-		assert.Equal(t, rp, testDomain)
-	})
-}
+		var result map[string]interface{}
+		err = json.NewDecoder(resp.Body).Decode(&result)
+		assert.NoError(t, err)
+		assert.Equal(t, result["bsvalias"], config.BSVAliasVersion)
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+		resp.Body.Close()
 
-// Test_getHost will test the method getHost()
-func Test_getHost(t *testing.T) {
-	testDomain := "domain.com"
+		capabilities := result["capabilities"].(map[string]interface{})
+		assert.NotNil(t, capabilities)
+		assert.Greater(t, len(capabilities), 0)
 
-	t.Run("valid host with port", func(t *testing.T) {
-		req, err := http.NewRequestWithContext(
-			context.Background(), http.MethodGet,
-			"http://"+testDomain+":1234", nil,
-		)
-		require.NoError(t, err)
-		require.NotNil(t, req)
+		//Check if all callable capabilities are accessible by trying to make a request to each one of them
+		for _, cap := range capabilities {
+			capUrl, ok := cap.(string)
+			if !ok {
+				continue //skip static capabilities
+			}
 
-		host := getHost(req)
-		assert.Equal(t, testDomain, host)
-	})
+			capUrl = strings.ReplaceAll(capUrl, PaymailAddressTemplate, "example@domain.com")
+			capUrl = strings.ReplaceAll(capUrl, PubKeyTemplate, "xpub")
 
-	t.Run("valid host with no port", func(t *testing.T) {
-		req, err := http.NewRequestWithContext(
-			context.Background(), http.MethodGet,
-			"http://"+testDomain+"/", nil,
-		)
-		require.NoError(t, err)
-		require.NotNil(t, req)
+			_, err := url.Parse(capUrl)
+			assert.NoError(t, err, "Endpoint %s is not a valid URL", capUrl)
 
-		host := getHost(req)
-		assert.Equal(t, testDomain, host)
+			_, err = http.Get(capUrl)
+
+			//Only verify if the current 'capUrl' endpoint is accessible, even if the 'GET' method is not permitted for it.
+			assert.NoError(t, err)
+		}
 	})
 }

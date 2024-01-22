@@ -12,7 +12,7 @@ import (
 // Specs: http://bsvalias.org/03-public-key-infrastructure.html
 func (c *Configuration) showPKI(w http.ResponseWriter, req *http.Request, p httprouter.Params) {
 
-	incomingPaymail := p.ByName("paymailAddress")
+	incomingPaymail := p.ByName(PaymailAddressParamName)
 
 	// Parse, sanitize and basic validation
 	alias, domain, address := paymail.SanitizePaymail(incomingPaymail)
