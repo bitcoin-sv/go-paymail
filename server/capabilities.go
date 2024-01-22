@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/bitcoin-sv/go-paymail"
 	"github.com/julienschmidt/httprouter"
@@ -114,7 +115,7 @@ func (c *Configuration) showCapabilities(w http.ResponseWriter, req *http.Reques
 
 // EnrichCapabilities will update the capabilities with the appropriate service url
 func (c *Configuration) EnrichCapabilities(host string) (*paymail.CapabilitiesPayload, error) {
-	serviceUrl, err := GenerateServiceURL(c.Prefix, host, c.APIVersion, c.ServiceName)
+	serviceUrl, err := generateServiceURL(c.Prefix, host, c.APIVersion, c.ServiceName)
 	if err != nil {
 		return nil, err
 	}
@@ -129,4 +130,23 @@ func (c *Configuration) EnrichCapabilities(host string) (*paymail.CapabilitiesPa
 		payload.Capabilities[key] = serviceUrl + string(cap.Path)
 	}
 	return payload, nil
+}
+
+func generateServiceURL(prefix, domain, apiVersion, serviceName string) (string, error) {
+	if len(prefix) == 0 || len(domain) == 0 {
+		return "", ErrPrefixOrDomainMissing
+	}
+	strBuilder := new(strings.Builder)
+	strBuilder.WriteString(prefix)
+	strBuilder.WriteString(domain)
+	if len(apiVersion) > 0 {
+		strBuilder.WriteString("/")
+		strBuilder.WriteString(apiVersion)
+	}
+	if len(serviceName) > 0 {
+		strBuilder.WriteString("/")
+		strBuilder.WriteString(serviceName)
+	}
+
+	return strBuilder.String(), nil
 }

@@ -111,26 +111,6 @@ func (c *Configuration) AddDomain(domain string) (err error) {
 	return
 }
 
-// GenerateServiceURL will create the service URL
-func GenerateServiceURL(prefix, domain, apiVersion, serviceName string) (string, error) {
-	if len(prefix) == 0 || len(domain) == 0 {
-		return "", ErrPrefixOrDomainMissing
-	}
-	strBuilder := new(strings.Builder)
-	strBuilder.WriteString(prefix)
-	strBuilder.WriteString(domain)
-	if len(apiVersion) > 0 {
-		strBuilder.WriteString("/")
-		strBuilder.WriteString(apiVersion)
-	}
-	if len(serviceName) > 0 {
-		strBuilder.WriteString("/")
-		strBuilder.WriteString(serviceName)
-	}
-
-	return strBuilder.String(), nil
-}
-
 // NewConfig will make a new server configuration
 func NewConfig(serviceProvider PaymailServiceProvider, opts ...ConfigOps) (*Configuration, error) {
 
