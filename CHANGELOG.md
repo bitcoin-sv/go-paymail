@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.1](https://github.com/bitcoin-sv/go-paymail/compare/v0.12.0...v0.12.1) (2024-01-22)
+
+
+### Bug Fixes
+
+* **BUX-497:** Routes are hardcoded instead of initialized by configured capabilities ([#71](https://github.com/bitcoin-sv/go-paymail/issues/71)) ([8e14dd0](https://github.com/bitcoin-sv/go-paymail/commit/8e14dd09fe732b3b27de1bf7303e2cee777ffac2))
+
 ## [0.12.0](https://github.com/bitcoin-sv/go-paymail/compare/v0.11.0...v0.12.0) (2024-01-05)
 
 
