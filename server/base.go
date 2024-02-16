@@ -1,39 +1,31 @@
 package server
 
 import (
-	"encoding/json"
+	"github.com/gin-gonic/gin"
 	"net/http"
-
-	"github.com/julienschmidt/httprouter"
 )
 
 // index basic request to /
 // nolint: revive // do not check for unused param required by interface
-func index(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
+func index(c *gin.Context) {
 	responseData := map[string]interface{}{"message": "Welcome to the Paymail Server ✌(◕‿-)✌"}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	err := json.NewEncoder(w).Encode(responseData)
-
-	if err != nil {
-		ErrorResponse(w, req, ErrorEncodingResponse, err.Error(), http.StatusInternalServerError, nil)
-		return
-	}
+	c.Header("Content-Type", "application/json")
+	c.JSON(http.StatusOK, responseData)
 }
 
 // health is a basic request to return a health response
-func health(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
-	w.WriteHeader(http.StatusOK)
+func health(c *gin.Context) {
+	c.Status(http.StatusOK)
 }
 
 // notFound handles all 404 requests
 // nolint: revive // do not check for unused param required by interface
-func notFound(w http.ResponseWriter, req *http.Request) {
-	ErrorResponse(w, req, ErrorRequestNotFound, "request not found", http.StatusNotFound, nil)
+func notFound(c *gin.Context) {
+	c.JSON(http.StatusNotFound, "request not found")
 }
 
 // methodNotAllowed handles all 405 requests
-func methodNotAllowed(w http.ResponseWriter, req *http.Request) {
-	ErrorResponse(w, req, ErrorMethodNotFound, "method "+req.Method+" not allowed", http.StatusMethodNotAllowed, nil)
+func methodNotAllowed(c *gin.Context) {
+	c.JSON(http.StatusMethodNotAllowed, "method"+c.Request.Method+" not allowed")
 }

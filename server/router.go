@@ -2,24 +2,23 @@ package server
 
 import (
 	"fmt"
-	"net/http"
+	"github.com/gin-gonic/gin"
 	"strings"
-
-	"github.com/newrelic/go-agent/v3/integrations/nrhttprouter"
 )
 
 // Handlers are used to isolate loading the routes (used for testing)
-func Handlers(configuration *Configuration) *nrhttprouter.Router {
-	router := nrhttprouter.New(nil)
+func Handlers(configuration *Configuration) *gin.Engine {
+	engine := gin.New()
+	engine.Use(gin.LoggerWithWriter(configuration.Logger), gin.Recovery())
 
-	configuration.RegisterBasicRoutes(router)
-	configuration.RegisterRoutes(router)
+	configuration.RegisterBasicRoutes(engine)
+	configuration.RegisterRoutes(engine)
 
-	return router
+	return engine
 }
 
 // RegisterBasicRoutes register the basic routes to the http router
-func (c *Configuration) RegisterBasicRoutes(router *nrhttprouter.Router) {
+func (c *Configuration) RegisterBasicRoutes(engine *gin.Engine) {
 	// Skip if not set
 	if c.BasicRoutes == nil {
 		return
@@ -27,35 +26,35 @@ func (c *Configuration) RegisterBasicRoutes(router *nrhttprouter.Router) {
 
 	// Set the main index page (navigating to slash)
 	if c.BasicRoutes.AddIndexRoute {
-		router.GET("/", index)
+		engine.GET("/", index)
 		// router.OPTIONS("/", router.SetCrossOriginHeaders) // Disabled for security
 	}
 
 	// Set the health request (used for load balancers)
 	if c.BasicRoutes.AddHealthRoute {
-		router.GET("/health", health)
-		router.OPTIONS("/health", health)
-		router.HEAD("/health", health)
+		engine.GET("/health", health)
+		engine.OPTIONS("/health", health)
+		engine.HEAD("/health", health)
 	}
 
 	// Set the 404 handler (any request not detected)
 	if c.BasicRoutes.Add404Route {
-		router.NotFound = http.HandlerFunc(notFound)
+		engine.NoRoute(notFound)
 	}
 
 	// Set the method not allowed
 	if c.BasicRoutes.AddNotAllowed {
-		router.MethodNotAllowed = http.HandlerFunc(methodNotAllowed)
+		engine.NoMethod(methodNotAllowed)
 	}
 }
 
 // RegisterRoutes register all the available paymail routes to the http router
-func (c *Configuration) RegisterRoutes(router *nrhttprouter.Router) {
-	router.GET("/.well-known/"+c.ServiceName, c.showCapabilities) // service discovery
+func (c *Configuration) RegisterRoutes(engine *gin.Engine) {
+	engine.GET("/.well-known/"+c.ServiceName, c.showCapabilities) // service discovery
 
 	for key, cap := range c.callableCapabilities {
 		routerPath := c.templateToRouterPath(cap.Path)
-		router.Handle(
+		engine.Handle(
 			cap.Method,
 			routerPath,
 			cap.Handler,
