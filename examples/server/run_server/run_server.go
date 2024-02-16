@@ -1,15 +1,14 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"net/http"
 	"time"
 
 	"github.com/bitcoin-sv/go-paymail/logging"
 
 	"github.com/bitcoin-sv/go-paymail/server"
-	"github.com/julienschmidt/httprouter"
 )
 
 func main() {
@@ -51,15 +50,15 @@ func customCapabilities() map[string]any {
 		"custom_callable_cap": server.CallableCapability{
 			Path:   fmt.Sprintf("/display_paymail/%s", server.PaymailAddressTemplate),
 			Method: http.MethodGet,
-			Handler: func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-				incomingPaymail := p.ByName(server.PaymailAddressParamName)
+			Handler: func(c *gin.Context) {
+				incomingPaymail := c.Param(server.PaymailAddressParamName)
 
 				response := map[string]string{
 					"paymail": incomingPaymail,
 				}
 
-				w.Header().Set("Content-Type", "application/json")
-				json.NewEncoder(w).Encode(response)
+				c.Header("Content-Type", "application/json")
+				c.JSON(http.StatusOK, response)
 			},
 		},
 	}
