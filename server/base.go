@@ -18,14 +18,3 @@ func index(c *gin.Context) {
 func health(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
-
-// notFound handles all 404 requests
-// nolint: revive // do not check for unused param required by interface
-func notFound(c *gin.Context) {
-	c.JSON(http.StatusNotFound, "request not found")
-}
-
-// methodNotAllowed handles all 405 requests
-func methodNotAllowed(c *gin.Context) {
-	c.JSON(http.StatusMethodNotAllowed, "method"+c.Request.Method+" not allowed")
-}

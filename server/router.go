@@ -36,16 +36,6 @@ func (c *Configuration) RegisterBasicRoutes(engine *gin.Engine) {
 		engine.OPTIONS("/health", health)
 		engine.HEAD("/health", health)
 	}
-
-	// Set the 404 handler (any request not detected)
-	if c.BasicRoutes.Add404Route {
-		engine.NoRoute(notFound)
-	}
-
-	// Set the method not allowed
-	if c.BasicRoutes.AddNotAllowed {
-		engine.NoMethod(methodNotAllowed)
-	}
 }
 
 // RegisterRoutes register all the available paymail routes to the http router
