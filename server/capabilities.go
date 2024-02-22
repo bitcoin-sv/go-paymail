@@ -100,13 +100,13 @@ func (c *Configuration) showCapabilities(context *gin.Context) {
 	}
 
 	if !c.IsAllowedDomain(host) {
-		context.JSON(http.StatusBadRequest, "domain unknown: "+host)
+		ErrorResponse(context, ErrorUnknownDomain, "domain unknown: "+host, http.StatusBadRequest)
 		return
 	}
 
 	capabilities, err := c.EnrichCapabilities(host)
 	if err != nil {
-		context.JSON(http.StatusBadRequest, err.Error())
+		ErrorResponse(context, ErrorEncodingResponse, err.Error(), http.StatusBadRequest)
 		return
 	}
 
