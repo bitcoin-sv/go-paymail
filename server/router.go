@@ -52,16 +52,13 @@ func (c *Configuration) RegisterBasicRoutes(engine *gin.Engine) {
 func (c *Configuration) RegisterRoutes(engine *gin.Engine) {
 	engine.GET("/.well-known/"+c.ServiceName, c.showCapabilities) // service discovery
 
-	for key, cap := range c.callableCapabilities {
+	for _, cap := range c.callableCapabilities {
 		routerPath := c.templateToRouterPath(cap.Path)
 		engine.Handle(
 			cap.Method,
 			routerPath,
 			cap.Handler,
 		)
-
-		c.Logger.Info().Msgf("Registering endpoint for capability: %s", key)
-		c.Logger.Debug().Msgf("Endpoint[%s]: %s %s", key, cap.Method, routerPath)
 	}
 }
 
