@@ -15,10 +15,10 @@ func (c *Configuration) showPKI(context *gin.Context) {
 
 	alias, domain, address := paymail.SanitizePaymail(incomingPaymail)
 	if len(address) == 0 {
-		context.JSON(http.StatusBadRequest, "invalid paymail: "+incomingPaymail)
+		ErrorResponse(context, ErrorInvalidParameter, "domain unknown: "+domain, http.StatusBadRequest)
 		return
 	} else if !c.IsAllowedDomain(domain) {
-		context.JSON(http.StatusBadRequest, "domain unknown: "+domain)
+		ErrorResponse(context, ErrorUnknownDomain, "domain unknown: "+domain, http.StatusBadRequest)
 		return
 	}
 
@@ -26,10 +26,10 @@ func (c *Configuration) showPKI(context *gin.Context) {
 
 	foundPaymail, err := c.actions.GetPaymailByAlias(context.Request.Context(), alias, domain, md)
 	if err != nil {
-		context.JSON(http.StatusExpectationFailed, err.Error())
+		ErrorResponse(context, ErrorFindingPaymail, err.Error(), http.StatusExpectationFailed)
 		return
 	} else if foundPaymail == nil {
-		context.JSON(http.StatusNotFound, "paymail not found: "+incomingPaymail)
+		ErrorResponse(context, ErrorPaymailNotFound, "paymail not found: "+incomingPaymail, http.StatusBadRequest)
 		return
 	}
 

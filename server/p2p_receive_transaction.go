@@ -39,7 +39,7 @@ func (c *Configuration) p2pReceiveTx(context *gin.Context) {
 
 	requestPayload, _, md, vErr := processP2pReceiveTxRequest(c, context.Request, incomingPaymail, p2pFormat)
 	if vErr != nil {
-		context.JSON(vErr.httpResponseCode, vErr.msg)
+		ErrorResponse(context, vErr.code, vErr.msg, vErr.httpResponseCode)
 		return
 	}
 
@@ -52,7 +52,7 @@ func (c *Configuration) p2pReceiveTx(context *gin.Context) {
 	if response, err = c.actions.RecordTransaction(
 		context.Request.Context(), requestPayload.P2PTransaction, md,
 	); err != nil {
-		context.JSON(http.StatusExpectationFailed, err.Error())
+		ErrorResponse(context, ErrorRecordingTx, err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -79,7 +79,7 @@ func (c *Configuration) p2pReceiveBeefTx(context *gin.Context) {
 
 	requestPayload, dBeef, md, vErr := processP2pReceiveTxRequest(c, context.Request, incomingPaymail, p2pFormat)
 	if vErr != nil {
-		context.JSON(vErr.httpResponseCode, vErr.msg)
+		ErrorResponse(context, vErr.code, vErr.msg, vErr.httpResponseCode)
 		return
 	}
 
@@ -93,7 +93,7 @@ func (c *Configuration) p2pReceiveBeefTx(context *gin.Context) {
 
 	err := spv.ExecuteSimplifiedPaymentVerification(context.Request.Context(), dBeef, c.actions)
 	if err != nil {
-		context.JSON(http.StatusExpectationFailed, err.Error())
+		ErrorResponse(context, ErrorSimplifiedPaymentVerification, err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -101,7 +101,7 @@ func (c *Configuration) p2pReceiveBeefTx(context *gin.Context) {
 	if response, err = c.actions.RecordTransaction(
 		context.Request.Context(), requestPayload.P2PTransaction, md,
 	); err != nil {
-		context.JSON(http.StatusExpectationFailed, err.Error())
+		ErrorResponse(context, ErrorRecordingTx, err.Error(), http.StatusExpectationFailed)
 		return
 	}
 

@@ -1,7 +1,11 @@
 package server
 
 import (
+	"encoding/json"
 	"errors"
+	"github.com/bitcoin-sv/go-paymail"
+	"github.com/gin-gonic/gin"
+	"net/http"
 )
 
 // Error codes for server response errors
@@ -50,3 +54,18 @@ var (
 	//GenerateServiceURL is when the service URL cannot be generated
 	ErrPrefixOrDomainMissing = errors.New("prefix or domain is missing")
 )
+
+// ErrorResponse is a standard way to return errors to the client
+//
+// Specs: http://bsvalias.org/99-01-recommendations.html
+func ErrorResponse(c *gin.Context, code, message string, statusCode int) {
+	srvErr := &paymail.ServerError{Code: code, Message: message}
+	jsonData, err := json.Marshal(srvErr)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, ErrorFailedMarshalJSON)
+		return
+	}
+
+	c.JSON(statusCode, jsonData)
+}

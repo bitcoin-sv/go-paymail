@@ -27,16 +27,16 @@ func (c *Configuration) p2pDestination(context *gin.Context) {
 	// Parse, sanitize and basic validation
 	alias, domain, paymailAddress := paymail.SanitizePaymail(incomingPaymail)
 	if len(paymailAddress) == 0 {
-		context.JSON(http.StatusBadRequest, "invalid paymail: "+incomingPaymail)
+		ErrorResponse(context, ErrorInvalidParameter, "invalid paymail: "+incomingPaymail, http.StatusBadRequest)
 		return
 	} else if !c.IsAllowedDomain(domain) {
-		context.JSON(http.StatusBadRequest, "domain unknown: "+domain)
+		ErrorResponse(context, ErrorUnknownDomain, "domain unknown: "+domain, http.StatusBadRequest)
 		return
 	}
 	var b p2pDestinationRequestBody
 	err := context.Bind(&b)
 	if err != nil {
-		context.JSON(http.StatusBadRequest, "error decoding body: "+err.Error())
+		ErrorResponse(context, ErrorInvalidParameter, "error decoding body: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -47,7 +47,7 @@ func (c *Configuration) p2pDestination(context *gin.Context) {
 
 	// Did we get some satoshis?
 	if paymentRequest.Satoshis == 0 {
-		context.JSON(http.StatusBadRequest, "missing parameter: satoshis")
+		ErrorResponse(context, ErrorMissingField, "missing parameter: satoshis", http.StatusBadRequest)
 		return
 	}
 
@@ -58,10 +58,10 @@ func (c *Configuration) p2pDestination(context *gin.Context) {
 	// Get from the data layer
 	foundPaymail, err := c.actions.GetPaymailByAlias(context.Request.Context(), alias, domain, md)
 	if err != nil {
-		context.JSON(http.StatusExpectationFailed, err.Error())
+		ErrorResponse(context, ErrorFindingPaymail, err.Error(), http.StatusExpectationFailed)
 		return
 	} else if foundPaymail == nil {
-		context.JSON(http.StatusNotFound, "paymail not found: "+incomingPaymail)
+		ErrorResponse(context, ErrorPaymailNotFound, "paymail not found", http.StatusNotFound)
 		return
 	}
 
@@ -70,7 +70,7 @@ func (c *Configuration) p2pDestination(context *gin.Context) {
 	if response, err = c.actions.CreateP2PDestinationResponse(
 		context.Request.Context(), alias, domain, paymentRequest.Satoshis, md,
 	); err != nil {
-		context.JSON(http.StatusExpectationFailed, "error creating output script(s): "+err.Error())
+		ErrorResponse(context, ErrorScript, "error creating output script(s): "+err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
