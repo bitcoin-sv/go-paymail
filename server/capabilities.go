@@ -2,17 +2,17 @@ package server
 
 import (
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"net/http"
 	"strings"
 
 	"github.com/bitcoin-sv/go-paymail"
-	"github.com/julienschmidt/httprouter"
 )
 
 type CallableCapability struct {
 	Path    string
 	Method  string
-	Handler httprouter.Handle
+	Handler gin.HandlerFunc
 }
 
 type CallableCapabilitiesMap map[string]CallableCapability
@@ -89,28 +89,28 @@ func _addCapabilities[T any](base map[string]T, newCaps map[string]T) {
 // and list all active capabilities of the Paymail server
 //
 // Specs: http://bsvalias.org/02-02-capability-discovery.html
-func (c *Configuration) showCapabilities(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
+func (c *Configuration) showCapabilities(context *gin.Context) {
 	// Check the host (allowed, and used for capabilities response)
 	// todo: bake this into middleware? This is protecting the "req" host name (like CORs)
 	host := ""
-	if req.URL.IsAbs() || len(req.URL.Host) == 0 {
-		host = req.Host
+	if context.Request.URL.IsAbs() || len(context.Request.URL.Host) == 0 {
+		host = context.Request.Host
 	} else {
-		host = req.URL.Host
+		host = context.Request.URL.Host
 	}
 
 	if !c.IsAllowedDomain(host) {
-		ErrorResponse(w, req, ErrorUnknownDomain, "domain unknown: "+host, http.StatusBadRequest, c.Logger)
+		ErrorResponse(context, ErrorUnknownDomain, "domain unknown: "+host, http.StatusBadRequest)
 		return
 	}
 
 	capabilities, err := c.EnrichCapabilities(host)
 	if err != nil {
-		ErrorResponse(w, req, ErrorEncodingResponse, err.Error(), http.StatusBadRequest, c.Logger)
+		ErrorResponse(context, ErrorEncodingResponse, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	writeJsonResponse(w, req, c.Logger, capabilities)
+	context.JSON(http.StatusOK, capabilities)
 }
 
 // EnrichCapabilities will update the capabilities with the appropriate service url
