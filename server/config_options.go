@@ -28,6 +28,7 @@ func defaultConfigOptions() *Configuration {
 		GenericCapabilitiesEnabled:       true,
 		P2PCapabilitiesEnabled:           false,
 		BeefCapabilitiesEnabled:          false,
+		PikeCapabilitiesEnabled:          false,
 		ServiceName:                      paymail.DefaultServiceName,
 		Timeout:                          DefaultTimeout,
 		Logger:                           logging.GetDefaultLogger(),
@@ -55,6 +56,13 @@ func WithP2PCapabilities() ConfigOps {
 func WithBeefCapabilities() ConfigOps {
 	return func(c *Configuration) {
 		c.BeefCapabilitiesEnabled = true
+	}
+}
+
+// WithPikeCapabilities will load the PIKE capabilities
+func WithPikeCapabilities() ConfigOps {
+	return func(c *Configuration) {
+		c.PikeCapabilitiesEnabled = true
 	}
 }
 

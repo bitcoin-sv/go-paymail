@@ -27,4 +27,5 @@ type ClientInterface interface {
 	VerifyPubKey(verifyURL, alias, domain, pubKey string) (response *VerificationResponse, err error)
 	WithCustomHTTPClient(client *resty.Client) ClientInterface
 	WithCustomResolver(resolver interfaces.DNSResolver) ClientInterface
+	AddContactRequest(url, alias, domain string, request *PikeContactRequestPayload) (response *PikeContactRequestResponse, err error)
 }

@@ -23,6 +23,7 @@ type Configuration struct {
 	GenericCapabilitiesEnabled       bool            `json:"generic_capabilities_enabled"`
 	P2PCapabilitiesEnabled           bool            `json:"p2p_capabilities_enabled"`
 	BeefCapabilitiesEnabled          bool            `json:"beef_capabilities_enabled"`
+	PikeCapabilitiesEnabled          bool            `json:"pike_capabilities_enabled"`
 	ServiceName                      string          `json:"service_name"`
 	Timeout                          time.Duration   `json:"timeout"`
 	Logger                           *zerolog.Logger `json:"logger"`
@@ -135,6 +136,9 @@ func NewConfig(serviceProvider PaymailServiceProvider, opts ...ConfigOps) (*Conf
 	}
 	if config.BeefCapabilitiesEnabled {
 		config.SetBeefCapabilities()
+	}
+	if config.PikeCapabilitiesEnabled {
+		config.SetPikeCapabilities()
 	}
 
 	// Validate the configuration

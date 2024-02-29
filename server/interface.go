@@ -39,4 +39,10 @@ type PaymailServiceProvider interface {
 		ctx context.Context,
 		merkleProofs []*spv.MerkleRootConfirmationRequestItem,
 	) error
+
+	AddContact(
+		ctx context.Context,
+		requesterPaymail string,
+		contact *paymail.PikeContactRequestPayload,
+	) error
 }
