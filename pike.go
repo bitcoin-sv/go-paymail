@@ -13,8 +13,8 @@ type PikeContactRequestResponse struct {
 }
 
 type PikeContactRequestPayload struct {
-	FullName      string
-	PaymailAdress string
+	FullName string `json:"fullName"`
+	Paymail  string `json:"paymail"`
 }
 
 func (c *Client) AddContactRequest(url, alias, domain string, request *PikeContactRequestPayload) (response *PikeContactRequestResponse, err error) {
@@ -79,9 +79,9 @@ func (r *PikeContactRequestPayload) validate() error {
 	if r.FullName == "" {
 		return errors.New("missing full name")
 	}
-	if r.PaymailAdress == "" {
+	if r.Paymail == "" {
 		return errors.New("missing paymail address")
 	}
 
-	return ValidatePaymail(r.PaymailAdress)
+	return ValidatePaymail(r.Paymail)
 }
