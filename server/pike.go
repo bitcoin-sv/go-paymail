@@ -1,7 +1,6 @@
 package server
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 
@@ -19,7 +18,7 @@ func (c *Configuration) pikeNewContact(rc *gin.Context) {
 		return
 	}
 
-	if err = c.pikeActions.AddContact(context.Background(), receiverPaymail, &requesterContact); err != nil {
+	if err = c.pikeActions.AddContact(rc.Request.Context(), receiverPaymail, &requesterContact); err != nil {
 		ErrorResponse(rc, ErrorAddContactRequest, err.Error(), http.StatusExpectationFailed)
 		return
 	}

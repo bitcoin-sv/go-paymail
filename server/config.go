@@ -114,6 +114,7 @@ func (c *Configuration) AddDomain(domain string) (err error) {
 }
 
 // NewConfig will make a new server configuration
+// The serviceProvider must have registered necessary services before calling them (e.g., PikeServiceProvider has to be registered if Pike capabilities are supported)
 func NewConfig(serviceProvider *PaymailServiceLocator, opts ...ConfigOps) (*Configuration, error) {
 
 	// Check that a service provider is set

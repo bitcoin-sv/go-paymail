@@ -17,36 +17,34 @@ type PikeContactRequestPayload struct {
 	Paymail  string `json:"paymail"`
 }
 
-func (c *Client) AddContactRequest(url, alias, domain string, request *PikeContactRequestPayload) (response *PikeContactRequestResponse, err error) {
+func (c *Client) AddContactRequest(url, alias, domain string, request *PikeContactRequestPayload) (*PikeContactRequestResponse, error) {
 
-	if err = c.validateUrlWithPaymail(url, alias, domain); err != nil {
-		return
+	if err := c.validateUrlWithPaymail(url, alias, domain); err != nil {
+		return nil, err
 	}
 
-	if err = request.validate(); err != nil {
-		return
+	if err := request.validate(); err != nil {
+		return nil, err
 	}
 
 	// Set the base url and path, assuming the url is from the prior GetCapabilities() request
 	// https://<host-discovery-target>/{alias}@{domain.tld}/id
 	reqURL := replaceAliasDomain(url, alias, domain)
 
-	response = &PikeContactRequestResponse{}
-	if response.StandardResponse, err = c.postRequest(reqURL, request); err != nil {
-		return
+	response, err := c.postRequest(reqURL, request)
+	if err != nil {
+		return nil, err
 	}
 
 	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusCreated {
 		if response.StatusCode == http.StatusNotFound {
-			err = errors.New("paymail address not found")
+			return nil, errors.New("paymail address not found")
 		} else {
-			err = c.prepareServerErrorResponse(&response.StandardResponse)
+			return nil, c.prepareServerErrorResponse(&response)
 		}
-
-		return nil, err
 	}
 
-	return response, nil
+	return &PikeContactRequestResponse{response}, nil
 }
 
 func (c *Client) validateUrlWithPaymail(url, alias, domain string) error {
