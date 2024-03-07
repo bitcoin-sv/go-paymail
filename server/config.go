@@ -30,6 +30,7 @@ type Configuration struct {
 
 	// private
 	actions              PaymailServiceProvider
+	pikeActions          PikeServiceProvider
 	callableCapabilities CallableCapabilitiesMap
 	staticCapabilities   StaticCapabilitiesMap
 }
@@ -113,7 +114,7 @@ func (c *Configuration) AddDomain(domain string) (err error) {
 }
 
 // NewConfig will make a new server configuration
-func NewConfig(serviceProvider PaymailServiceProvider, opts ...ConfigOps) (*Configuration, error) {
+func NewConfig(serviceProvider *PaymailServiceLocator, opts ...ConfigOps) (*Configuration, error) {
 
 	// Check that a service provider is set
 	if serviceProvider == nil {
@@ -139,6 +140,7 @@ func NewConfig(serviceProvider PaymailServiceProvider, opts ...ConfigOps) (*Conf
 	}
 	if config.PikeCapabilitiesEnabled {
 		config.SetPikeCapabilities()
+		config.pikeActions = serviceProvider.GetPikeService()
 	}
 
 	// Validate the configuration
@@ -147,7 +149,7 @@ func NewConfig(serviceProvider PaymailServiceProvider, opts ...ConfigOps) (*Conf
 	}
 
 	// Set the service provider
-	config.actions = serviceProvider
+	config.actions = serviceProvider.GetPaymailService()
 
 	config.Logger.Debug().Msg("New config loaded")
 	return config, nil
