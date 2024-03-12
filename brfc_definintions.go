@@ -19,7 +19,7 @@ const (
 	BRFCVerifyPublicKeyOwner           = "a9f510c16bde"       // more info: http://bsvalias.org/05-verify-public-key-owner.html
 	BRFCBeefTransaction                = "5c55a7fdb7bb"       // more info: https://bsv.brc.dev/payments/0070
 
-	BRFCPike = "8c4ed5ef8ace" // more info: TODO
+	BRFCPike = "8c4ed5ef8ace" // more info: TODO BUX-665
 )
 
 // BRFCKnownSpecifications is a running list of all known BRFC specifications
