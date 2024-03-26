@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"time"
+
+	"github.com/gin-gonic/gin"
 
 	"github.com/bitcoin-sv/go-paymail/logging"
 
@@ -19,9 +20,13 @@ func main() {
 		logger.Fatal().Msg(err.Error())
 	}
 
+	sl := server.PaymailServiceLocator{}
+	sl.RegisterPaymailService(new(demoServiceProvider))
+	sl.RegisterPikeService(new(demoServiceProvider))
+
 	// Custom server with lots of customizable goodies
 	config, err := server.NewConfig(
-		new(demoServiceProvider),
+		&sl,
 		server.WithBasicRoutes(),
 		server.WithDomain("localhost"),
 		server.WithDomain("another.com"),

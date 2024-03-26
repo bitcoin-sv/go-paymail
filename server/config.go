@@ -23,12 +23,14 @@ type Configuration struct {
 	GenericCapabilitiesEnabled       bool            `json:"generic_capabilities_enabled"`
 	P2PCapabilitiesEnabled           bool            `json:"p2p_capabilities_enabled"`
 	BeefCapabilitiesEnabled          bool            `json:"beef_capabilities_enabled"`
+	PikeCapabilitiesEnabled          bool            `json:"pike_capabilities_enabled"`
 	ServiceName                      string          `json:"service_name"`
 	Timeout                          time.Duration   `json:"timeout"`
 	Logger                           *zerolog.Logger `json:"logger"`
 
 	// private
 	actions              PaymailServiceProvider
+	pikeActions          PikeServiceProvider
 	callableCapabilities CallableCapabilitiesMap
 	staticCapabilities   StaticCapabilitiesMap
 }
@@ -112,7 +114,8 @@ func (c *Configuration) AddDomain(domain string) (err error) {
 }
 
 // NewConfig will make a new server configuration
-func NewConfig(serviceProvider PaymailServiceProvider, opts ...ConfigOps) (*Configuration, error) {
+// The serviceProvider must have registered necessary services before calling them (e.g., PikeServiceProvider has to be registered if Pike capabilities are supported)
+func NewConfig(serviceProvider *PaymailServiceLocator, opts ...ConfigOps) (*Configuration, error) {
 
 	// Check that a service provider is set
 	if serviceProvider == nil {
@@ -136,6 +139,10 @@ func NewConfig(serviceProvider PaymailServiceProvider, opts ...ConfigOps) (*Conf
 	if config.BeefCapabilitiesEnabled {
 		config.SetBeefCapabilities()
 	}
+	if config.PikeCapabilitiesEnabled {
+		config.SetPikeCapabilities()
+		config.pikeActions = serviceProvider.GetPikeService()
+	}
 
 	// Validate the configuration
 	if err := config.Validate(); err != nil {
@@ -143,7 +150,7 @@ func NewConfig(serviceProvider PaymailServiceProvider, opts ...ConfigOps) (*Conf
 	}
 
 	// Set the service provider
-	config.actions = serviceProvider
+	config.actions = serviceProvider.GetPaymailService()
 
 	config.Logger.Debug().Msg("New config loaded")
 	return config, nil

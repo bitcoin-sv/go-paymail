@@ -2,6 +2,7 @@ package server
 
 import (
 	"errors"
+
 	"github.com/bitcoin-sv/go-paymail"
 	"github.com/gin-gonic/gin"
 )
@@ -25,6 +26,7 @@ const (
 	ErrorEncodingResponse              = "error-encoding-response"
 	ErrorNotImplmented                 = "not-implemented"
 	ErrorSimplifiedPaymentVerification = "spv-failed"
+	ErrorAddContactRequest             = "error-pike-contact"
 )
 
 var (
