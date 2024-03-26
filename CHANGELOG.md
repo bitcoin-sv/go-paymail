@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.14.0](https://github.com/bitcoin-sv/go-paymail/compare/v0.13.0...v0.14.0) (2024-03-26)
+
+
+### Features
+
+* **BUX-395:** add pike capabilitiy ([#77](https://github.com/bitcoin-sv/go-paymail/issues/77)) ([3c6789d](https://github.com/bitcoin-sv/go-paymail/commit/3c6789d1352cba6297076b7c11650b5c06334bc6))
+
 ## [0.13.0](https://github.com/bitcoin-sv/go-paymail/compare/v0.12.1...v0.13.0) (2024-02-26)
 
 
