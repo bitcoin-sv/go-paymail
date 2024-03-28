@@ -1,6 +1,7 @@
 # go-paymail
 > Paymail client & server library for Golang
 
+[SPV Wallet GitBook](https://bsvblockchain.gitbook.io/docs)
 ## Table of Contents
 - [go-paymail](#go-paymail)
   - [Table of Contents](#table-of-contents)
