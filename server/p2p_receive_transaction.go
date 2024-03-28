@@ -1,11 +1,11 @@
 package server
 
 import (
+	"github.com/gin-gonic/gin"
 	"net/http"
 
 	"github.com/bitcoin-sv/go-paymail"
 	"github.com/bitcoin-sv/go-paymail/spv"
-	"github.com/julienschmidt/httprouter"
 )
 
 type p2pPayloadFormat uint
@@ -32,12 +32,14 @@ Incoming Data Object Example:
 // p2pReceiveTx will receive a P2P transaction (from previous request: P2P Payment Destination)
 //
 // Specs: https://docs.moneybutton.com/docs/paymail-06-p2p-transactions.html
-func (c *Configuration) p2pReceiveTx(w http.ResponseWriter, req *http.Request, p httprouter.Params) {
+func (c *Configuration) p2pReceiveTx(context *gin.Context) {
 	p2pFormat := basicP2pPayload
 
-	requestPayload, _, md, vErr := processP2pReceiveTxRequest(c, req, p, p2pFormat)
+	incomingPaymail := context.Param(PaymailAddressParamName)
+
+	requestPayload, _, md, vErr := processP2pReceiveTxRequest(c, context.Request, incomingPaymail, p2pFormat)
 	if vErr != nil {
-		ErrorResponse(w, req, vErr.code, vErr.msg, vErr.httpResponseCode, c.Logger)
+		ErrorResponse(context, vErr.code, vErr.msg, vErr.httpResponseCode)
 		return
 	}
 
@@ -48,13 +50,13 @@ func (c *Configuration) p2pReceiveTx(w http.ResponseWriter, req *http.Request, p
 	var response *paymail.P2PTransactionPayload
 	var err error
 	if response, err = c.actions.RecordTransaction(
-		req.Context(), requestPayload.P2PTransaction, md,
+		context.Request.Context(), requestPayload.P2PTransaction, md,
 	); err != nil {
-		ErrorResponse(w, req, ErrorRecordingTx, err.Error(), http.StatusExpectationFailed, c.Logger)
+		ErrorResponse(context, ErrorRecordingTx, err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
-	writeJsonResponse(w, req, c.Logger, response)
+	context.JSON(http.StatusOK, response)
 }
 
 /*
@@ -71,12 +73,13 @@ Incoming Data Object Example:
 }
 */
 // p2pReceiveBeefTx will receive a P2P transaction in BEEF format
-func (c *Configuration) p2pReceiveBeefTx(w http.ResponseWriter, req *http.Request, p httprouter.Params) {
+func (c *Configuration) p2pReceiveBeefTx(context *gin.Context) {
 	p2pFormat := beefP2pPayload
+	incomingPaymail := context.Param(PaymailAddressParamName)
 
-	requestPayload, dBeef, md, vErr := processP2pReceiveTxRequest(c, req, p, p2pFormat)
+	requestPayload, dBeef, md, vErr := processP2pReceiveTxRequest(c, context.Request, incomingPaymail, p2pFormat)
 	if vErr != nil {
-		ErrorResponse(w, req, vErr.code, vErr.msg, vErr.httpResponseCode, c.Logger)
+		ErrorResponse(context, vErr.code, vErr.msg, vErr.httpResponseCode)
 		return
 	}
 
@@ -88,19 +91,19 @@ func (c *Configuration) p2pReceiveBeefTx(w http.ResponseWriter, req *http.Reques
 		panic("empty beef after parsing!")
 	}
 
-	err := spv.ExecuteSimplifiedPaymentVerification(req.Context(), dBeef, c.actions)
+	err := spv.ExecuteSimplifiedPaymentVerification(context.Request.Context(), dBeef, c.actions)
 	if err != nil {
-		ErrorResponse(w, req, ErrorSimplifiedPaymentVerification, err.Error(), http.StatusExpectationFailed, c.Logger)
+		ErrorResponse(context, ErrorSimplifiedPaymentVerification, err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
 	var response *paymail.P2PTransactionPayload
 	if response, err = c.actions.RecordTransaction(
-		req.Context(), requestPayload.P2PTransaction, md,
+		context.Request.Context(), requestPayload.P2PTransaction, md,
 	); err != nil {
-		ErrorResponse(w, req, ErrorRecordingTx, err.Error(), http.StatusExpectationFailed, c.Logger)
+		ErrorResponse(context, ErrorRecordingTx, err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
-	writeJsonResponse(w, req, c.Logger, response)
+	context.JSON(http.StatusOK, response)
 }

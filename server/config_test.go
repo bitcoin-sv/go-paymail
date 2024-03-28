@@ -11,8 +11,12 @@ import (
 
 // testConfig loads a basic test configuration
 func testConfig(t *testing.T, domain string) *Configuration {
+	sl := PaymailServiceLocator{}
+	sl.RegisterPaymailService(new(mockServiceProvider))
+	sl.RegisterPikeService(new(mockServiceProvider))
+
 	c, err := NewConfig(
-		new(mockServiceProvider),
+		&sl,
 		WithDomain(domain),
 	)
 	require.NoError(t, err)
@@ -315,15 +319,17 @@ func TestNewConfig(t *testing.T) {
 	})
 
 	t.Run("missing domain", func(t *testing.T) {
-		c, err := NewConfig(new(mockServiceProvider))
+		c, err := NewConfig(&PaymailServiceLocator{})
 		require.Error(t, err)
 		assert.ErrorIs(t, err, ErrDomainMissing)
 		assert.Nil(t, c)
 	})
 
 	t.Run("valid client - minimum options", func(t *testing.T) {
+		sl := &PaymailServiceLocator{}
+		sl.RegisterPaymailService(new(mockServiceProvider))
 		c, err := NewConfig(
-			new(mockServiceProvider),
+			sl,
 			WithDomain("test.com"),
 		)
 		require.NoError(t, err)
@@ -333,8 +339,10 @@ func TestNewConfig(t *testing.T) {
 	})
 
 	t.Run("custom port", func(t *testing.T) {
+		sl := &PaymailServiceLocator{}
+		sl.RegisterPaymailService(new(mockServiceProvider))
 		c, err := NewConfig(
-			new(mockServiceProvider),
+			sl,
 			WithDomain("test.com"),
 			WithPort(12345),
 		)
@@ -344,8 +352,10 @@ func TestNewConfig(t *testing.T) {
 	})
 
 	t.Run("custom timeout", func(t *testing.T) {
+		sl := &PaymailServiceLocator{}
+		sl.RegisterPaymailService(new(mockServiceProvider))
 		c, err := NewConfig(
-			new(mockServiceProvider),
+			sl,
 			WithDomain("test.com"),
 			WithTimeout(10*time.Second),
 		)
@@ -355,8 +365,10 @@ func TestNewConfig(t *testing.T) {
 	})
 
 	t.Run("custom service name", func(t *testing.T) {
+		sl := &PaymailServiceLocator{}
+		sl.RegisterPaymailService(new(mockServiceProvider))
 		c, err := NewConfig(
-			new(mockServiceProvider),
+			sl,
 			WithDomain("test.com"),
 			WithServiceName("custom"),
 		)
@@ -366,8 +378,10 @@ func TestNewConfig(t *testing.T) {
 	})
 
 	t.Run("sender validation enabled", func(t *testing.T) {
+		sl := &PaymailServiceLocator{}
+		sl.RegisterPaymailService(new(mockServiceProvider))
 		c, err := NewConfig(
-			new(mockServiceProvider),
+			sl,
 			WithDomain("test.com"),
 			WithSenderValidation(),
 		)
@@ -377,8 +391,10 @@ func TestNewConfig(t *testing.T) {
 	})
 
 	t.Run("with p2p capabilities", func(t *testing.T) {
+		sl := &PaymailServiceLocator{}
+		sl.RegisterPaymailService(new(mockServiceProvider))
 		c, err := NewConfig(
-			new(mockServiceProvider),
+			sl,
 			WithDomain("test.com"),
 			WithP2PCapabilities(),
 		)
@@ -388,8 +404,11 @@ func TestNewConfig(t *testing.T) {
 	})
 
 	t.Run("with custom capabilities", func(t *testing.T) {
+		sl := &PaymailServiceLocator{}
+		sl.RegisterPaymailService(new(mockServiceProvider))
+
 		c, err := NewConfig(
-			new(mockServiceProvider),
+			sl,
 			WithDomain("test.com"),
 			WithCapabilities(map[string]any{
 				"test": true,
@@ -409,8 +428,11 @@ func TestNewConfig(t *testing.T) {
 	})
 
 	t.Run("with beef capabilities", func(t *testing.T) {
+		sl := &PaymailServiceLocator{}
+		sl.RegisterPaymailService(new(mockServiceProvider))
+
 		c, err := NewConfig(
-			new(mockServiceProvider),
+			sl,
 			WithDomain("test.com"),
 			WithP2PCapabilities(),
 			WithBeefCapabilities(),
@@ -421,8 +443,11 @@ func TestNewConfig(t *testing.T) {
 	})
 
 	t.Run("with basic routes", func(t *testing.T) {
+		sl := &PaymailServiceLocator{}
+		sl.RegisterPaymailService(new(mockServiceProvider))
+
 		c, err := NewConfig(
-			new(mockServiceProvider),
+			sl,
 			WithDomain("test.com"),
 			WithBasicRoutes(),
 		)
@@ -436,8 +461,11 @@ func TestNewConfig(t *testing.T) {
 	})
 
 	t.Run("domain validation disabled", func(t *testing.T) {
+		sl := &PaymailServiceLocator{}
+		sl.RegisterPaymailService(new(mockServiceProvider))
+
 		c, err := NewConfig(
-			new(mockServiceProvider),
+			sl,
 			WithDomain("test.com"),
 			WithPort(12345),
 			WithDomainValidationDisabled(),
@@ -446,5 +474,42 @@ func TestNewConfig(t *testing.T) {
 		require.NotNil(t, c)
 		assert.Equal(t, 12345, c.Port)
 		assert.Equal(t, true, c.PaymailDomainsValidationDisabled)
+	})
+
+	t.Run("with pike capabilities", func(t *testing.T) {
+		sl := &PaymailServiceLocator{}
+		sl.RegisterPaymailService(new(mockServiceProvider))
+		sl.RegisterPikeService(new(mockServiceProvider))
+
+		c, err := NewConfig(
+			sl,
+			WithDomain("test.com"),
+			WithP2PCapabilities(),
+			WithPikeCapabilities(),
+		)
+		require.NoError(t, err)
+		require.NotNil(t, c)
+		assert.Equal(t, 7, len(c.callableCapabilities))
+	})
+
+	t.Run("with pike capabilities - pike service is not registered -> should panic", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("The code did not panic")
+			}
+		}()
+
+		sl := &PaymailServiceLocator{}
+		sl.RegisterPaymailService(new(mockServiceProvider))
+
+		c, err := NewConfig(
+			sl,
+			WithDomain("test.com"),
+			WithP2PCapabilities(),
+			WithPikeCapabilities(),
+		)
+		require.NoError(t, err)
+		require.NotNil(t, c)
+		assert.Equal(t, 7, len(c.callableCapabilities))
 	})
 }
