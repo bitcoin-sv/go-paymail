@@ -32,7 +32,10 @@ func TestCreateServer(t *testing.T) {
 // TestWithServer will test if the server is running and responding to capabilities discovery & each capability is accessible
 func TestWithServer(t *testing.T) {
 	t.Run("run server and check capabilities", func(t *testing.T) {
-		config, _ := NewConfig(new(mockServiceProvider), WithDomain("domain.com"))
+		sl := &PaymailServiceLocator{}
+		sl.RegisterPaymailService(new(mockServiceProvider))
+
+		config, _ := NewConfig(sl, WithDomain("domain.com"))
 		config.Prefix = "http://"
 
 		server := httptest.NewServer(Handlers(config))

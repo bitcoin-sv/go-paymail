@@ -50,3 +50,11 @@ func (d *demoServiceProvider) VerifyMerkleRoots(ctx context.Context, merkleProof
 	// Verify the Merkle roots
 	return nil
 }
+
+func (d *demoServiceProvider) AddContact(
+	ctx context.Context,
+	requesterPaymail string,
+	contact *paymail.PikeContactRequestPayload,
+) error {
+	return nil
+}

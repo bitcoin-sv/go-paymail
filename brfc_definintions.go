@@ -18,6 +18,8 @@ const (
 	BRFCSFPBuildAction                 = "189e32d93d28"       // more info: https://docs.moneybutton.com/docs/sfp/paymail-09-sfp-build.html
 	BRFCVerifyPublicKeyOwner           = "a9f510c16bde"       // more info: http://bsvalias.org/05-verify-public-key-owner.html
 	BRFCBeefTransaction                = "5c55a7fdb7bb"       // more info: https://bsv.brc.dev/payments/0070
+
+	BRFCPike = "8c4ed5ef8ace" // more info: TODO BUX-665
 )
 
 // BRFCKnownSpecifications is a running list of all known BRFC specifications
@@ -196,6 +198,13 @@ const BRFCKnownSpecifications = `
    "title": "Background Evaluation Extended Format Transaction",
    "url": "https://bsv.brc.dev/payments/0070",
    "version": "1.0.0"
-  }
+  },
+  {
+    "author": "Damian Orzepowski",
+    "id": "8c4ed5ef8ace",
+    "title": "PIKE",
+    "url": "TODO",
+    "version": "1.0.0"
+   }
 ]
 `

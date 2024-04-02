@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.14.0](https://github.com/bitcoin-sv/go-paymail/compare/v0.13.0...v0.14.0) (2024-03-26)
+
+
+### Features
+
+* **BUX-395:** add pike capabilitiy ([#77](https://github.com/bitcoin-sv/go-paymail/issues/77)) ([3c6789d](https://github.com/bitcoin-sv/go-paymail/commit/3c6789d1352cba6297076b7c11650b5c06334bc6))
+
+## [0.13.0](https://github.com/bitcoin-sv/go-paymail/compare/v0.12.1...v0.13.0) (2024-02-26)
+
+
+### Features
+
+* **223:** replace router with gin ([#74](https://github.com/bitcoin-sv/go-paymail/issues/74)) ([9d9f3e7](https://github.com/bitcoin-sv/go-paymail/commit/9d9f3e7dc2706c0fceba7399f6afaadc504cf947))
+
 ## [0.12.1](https://github.com/bitcoin-sv/go-paymail/compare/v0.12.0...v0.12.1) (2024-01-22)
 
 
