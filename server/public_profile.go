@@ -1,41 +1,38 @@
 package server
 
 import (
+	"github.com/gin-gonic/gin"
 	"net/http"
 
 	"github.com/bitcoin-sv/go-paymail"
-	"github.com/julienschmidt/httprouter"
 )
 
 // publicProfile will return the public profile for the corresponding paymail address
 //
 // Specs: https://github.com/bitcoin-sv-specs/brfc-paymail/pull/7/files
-func (c *Configuration) publicProfile(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
-
-	// Get the params & paymail address submitted via URL request
-	params := req.URL.Query()
-	incomingPaymail := params.Get("paymailAddress")
+func (c *Configuration) publicProfile(context *gin.Context) {
+	incomingPaymail := context.Param(PaymailAddressParamName)
 
 	// Parse, sanitize and basic validation
 	alias, domain, address := paymail.SanitizePaymail(incomingPaymail)
 	if len(address) == 0 {
-		ErrorResponse(w, ErrorInvalidParameter, "invalid paymail: "+incomingPaymail, http.StatusBadRequest)
+		ErrorResponse(context, ErrorInvalidParameter, "invalid paymail: "+incomingPaymail, http.StatusBadRequest)
 		return
 	} else if !c.IsAllowedDomain(domain) {
-		ErrorResponse(w, ErrorUnknownDomain, "domain unknown: "+domain, http.StatusBadRequest)
+		ErrorResponse(context, ErrorUnknownDomain, "domain unknown: "+domain, http.StatusBadRequest)
 		return
 	}
 
 	// Create the metadata struct
-	md := CreateMetadata(req, alias, domain, "")
+	md := CreateMetadata(context.Request, alias, domain, "")
 
 	// Get from the data layer
-	foundPaymail, err := c.actions.GetPaymailByAlias(req.Context(), alias, domain, md)
+	foundPaymail, err := c.actions.GetPaymailByAlias(context.Request.Context(), alias, domain, md)
 	if err != nil {
-		ErrorResponse(w, ErrorFindingPaymail, err.Error(), http.StatusExpectationFailed)
+		ErrorResponse(context, ErrorFindingPaymail, err.Error(), http.StatusExpectationFailed)
 		return
 	} else if foundPaymail == nil {
-		ErrorResponse(w, ErrorPaymailNotFound, "paymail not found", http.StatusNotFound)
+		ErrorResponse(context, ErrorPaymailNotFound, "paymail not found", http.StatusNotFound)
 		return
 	}
 
@@ -45,5 +42,5 @@ func (c *Configuration) publicProfile(w http.ResponseWriter, req *http.Request, 
 	}
 
 	// Set the response
-	writeJsonResponse(w, http.StatusOK, payload)
+	context.JSON(http.StatusOK, payload)
 }

@@ -1,49 +1,45 @@
 package server
 
 import (
-	"encoding/json"
+	"github.com/gin-gonic/gin"
 	"net/http"
 
 	"github.com/bitcoin-sv/go-paymail"
-	"github.com/julienschmidt/httprouter"
 )
 
 // verifyPubKey will return a response if the pubkey matches the paymail given
 //
 // Specs: https://bsvalias.org/05-verify-public-key-owner.html
-func (c *Configuration) verifyPubKey(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
-
-	// Get the params submitted via URL request
-	params := req.URL.Query()
-	incomingPaymail := params.Get("paymailAddress")
-	incomingPubKey := params.Get("pubKey")
+func (c *Configuration) verifyPubKey(context *gin.Context) {
+	incomingPaymail := context.Param(PaymailAddressParamName)
+	incomingPubKey := context.Param(PubKeyParamName)
 
 	// Parse, sanitize and basic validation
 	alias, domain, address := paymail.SanitizePaymail(incomingPaymail)
 	if len(address) == 0 {
-		ErrorResponse(w, ErrorInvalidParameter, "invalid paymail: "+incomingPaymail, http.StatusBadRequest)
+		ErrorResponse(context, ErrorInvalidParameter, "invalid paymail: "+incomingPaymail, http.StatusBadRequest)
 		return
 	} else if !c.IsAllowedDomain(domain) {
-		ErrorResponse(w, ErrorUnknownDomain, "domain unknown: "+domain, http.StatusBadRequest)
+		ErrorResponse(context, ErrorUnknownDomain, "domain unknown: "+domain, http.StatusBadRequest)
 		return
 	}
 
 	// Basic validation on pubkey
 	if len(incomingPubKey) != paymail.PubKeyLength {
-		ErrorResponse(w, ErrorInvalidPubKey, "invalid pubkey: "+incomingPubKey, http.StatusBadRequest)
+		ErrorResponse(context, ErrorInvalidPubKey, "invalid pubkey: "+incomingPubKey, http.StatusBadRequest)
 		return
 	}
 
 	// Create the metadata struct
-	md := CreateMetadata(req, alias, domain, "")
+	md := CreateMetadata(context.Request, alias, domain, "")
 
 	// Get from the data layer
-	foundPaymail, err := c.actions.GetPaymailByAlias(req.Context(), alias, domain, md)
+	foundPaymail, err := c.actions.GetPaymailByAlias(context.Request.Context(), alias, domain, md)
 	if err != nil {
-		ErrorResponse(w, ErrorFindingPaymail, err.Error(), http.StatusExpectationFailed)
+		ErrorResponse(context, ErrorFindingPaymail, err.Error(), http.StatusExpectationFailed)
 		return
 	} else if foundPaymail == nil {
-		ErrorResponse(w, ErrorPaymailNotFound, "paymail not found", http.StatusNotFound)
+		ErrorResponse(context, ErrorPaymailNotFound, "paymail not found: "+incomingPaymail, http.StatusBadRequest)
 		return
 	}
 
@@ -54,13 +50,5 @@ func (c *Configuration) verifyPubKey(w http.ResponseWriter, req *http.Request, _
 		Match:    foundPaymail.PubKey == incomingPubKey,
 	}
 
-	// Set the response
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	err = json.NewEncoder(w).Encode(verPayload)
-
-	if err != nil {
-		ErrorResponse(w, ErrorEncodingResponse, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	context.JSON(http.StatusOK, verPayload)
 }

@@ -1,13 +1,11 @@
 package main
 
 import (
-	"log"
-
 	"github.com/bitcoin-sv/go-paymail"
+	"log"
 )
 
 func main() {
-
 	// Load the client
 	client, err := paymail.NewClient()
 	if err != nil {
@@ -18,11 +16,11 @@ func main() {
 	var capabilities *paymail.CapabilitiesResponse
 	capabilities, err = client.GetCapabilities("moneybutton.com", paymail.DefaultPort)
 	if err != nil {
-		log.Fatal("error getting capabilities: " + err.Error())
+		log.Fatalf("error getting capabilities: %s", err.Error())
 	}
-	log.Println("found capabilities: ", len(capabilities.Capabilities))
+	log.Printf("found capabilities: %d", len(capabilities.Capabilities))
 
 	// Get the URL for a capability
 	endpoint := capabilities.GetString(paymail.BRFCPki, paymail.BRFCPkiAlternate)
-	log.Println("capability endpoint found: ", endpoint)
+	log.Printf("capability endpoint found: %v", endpoint)
 }

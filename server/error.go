@@ -1,33 +1,32 @@
 package server
 
 import (
-	"encoding/json"
 	"errors"
-	"net/http"
 
 	"github.com/bitcoin-sv/go-paymail"
+	"github.com/gin-gonic/gin"
 )
 
 // Error codes for server response errors
 const (
-	ErrorFindingPaymail      = "error-finding-paymail"
-	ErrorInvalidDt           = "invalid-dt"
-	ErrorInvalidParameter    = "invalid-parameter"
-	ErrorInvalidPubKey       = "invalid-pubkey"
-	ErrorInvalidSenderHandle = "invalid-sender-handle"
-	ErrorInvalidSignature    = "invalid-signature"
-	ErrorMethodNotFound      = "method-405"
-	ErrorMissingHex          = "missing-hex"
-	ErrorMissingReference    = "missing-reference"
-	ErrorMissingSatoshis     = "missing-satoshis"
-	ErrorPaymailNotFound     = "not-found"
-	ErrorRecordingTx         = "error-recording-tx"
-	ErrorRequestNotFound     = "request-404"
-	ErrorScript              = "script-error"
-	ErrorUnknownDomain       = "unknown-domain"
-	ErrorFailedMarshalJSON   = "failed-marshal-json"
-	ErrorEncodingResponse    = "error-encoding-response"
-	ErrorNotImplmented       = "not-implemented"
+	ErrorFindingPaymail                = "error-finding-paymail"
+	ErrorInvalidDt                     = "invalid-dt"
+	ErrorInvalidParameter              = "invalid-parameter"
+	ErrorInvalidPubKey                 = "invalid-pubkey"
+	ErrorInvalidSenderHandle           = "invalid-sender-handle"
+	ErrorInvalidSignature              = "invalid-signature"
+	ErrorMethodNotFound                = "method-405"
+	ErrorMissingField                  = "missing-field"
+	ErrorPaymailNotFound               = "not-found"
+	ErrorRecordingTx                   = "error-recording-tx"
+	ErrorRequestNotFound               = "request-404"
+	ErrorScript                        = "script-error"
+	ErrorUnknownDomain                 = "unknown-domain"
+	ErrorFailedMarshalJSON             = "failed-marshal-json"
+	ErrorEncodingResponse              = "error-encoding-response"
+	ErrorNotImplmented                 = "not-implemented"
+	ErrorSimplifiedPaymentVerification = "spv-failed"
+	ErrorAddContactRequest             = "error-pike-contact"
 )
 
 var (
@@ -51,19 +50,15 @@ var (
 
 	// ErrFailedMarshalJSON is when the JSON marshal fails
 	ErrFailedMarshalJSON = errors.New("failed to marshal JSON response")
+
+	//GenerateServiceURL is when the service URL cannot be generated
+	ErrPrefixOrDomainMissing = errors.New("prefix or domain is missing")
 )
 
 // ErrorResponse is a standard way to return errors to the client
 //
 // Specs: http://bsvalias.org/99-01-recommendations.html
-func ErrorResponse(w http.ResponseWriter, code, message string, statusCode int) {
+func ErrorResponse(c *gin.Context, code, message string, statusCode int) {
 	srvErr := &paymail.ServerError{Code: code, Message: message}
-	jsonData, err := json.Marshal(srvErr)
-
-	if err != nil {
-		http.Error(w, ErrorFailedMarshalJSON, http.StatusInternalServerError)
-		return
-	}
-
-	writeRespone(w, statusCode, "application/json", jsonData)
+	c.JSON(statusCode, srvErr)
 }

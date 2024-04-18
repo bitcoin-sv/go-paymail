@@ -1,38 +1,24 @@
 package server
 
 import (
-	"net/http"
-
-	"github.com/newrelic/go-agent/v3/integrations/nrhttprouter"
+	"fmt"
+	"github.com/gin-gonic/gin"
+	"strings"
 )
 
 // Handlers are used to isolate loading the routes (used for testing)
-func Handlers(configuration *Configuration) *nrhttprouter.Router {
+func Handlers(configuration *Configuration) *gin.Engine {
+	engine := gin.New()
+	engine.Use(gin.LoggerWithWriter(configuration.Logger), gin.Recovery())
 
-	// Create a new router
-	r := nrhttprouter.New(nil)
+	configuration.RegisterBasicRoutes(engine)
+	configuration.RegisterRoutes(engine)
 
-	// Register the routes
-	configuration.RegisterBasicRoutes(r)
-	configuration.RegisterRoutes(r)
-
-	// Return the router
-	return r
+	return engine
 }
 
 // RegisterBasicRoutes register the basic routes to the http router
-func (c *Configuration) RegisterBasicRoutes(r *nrhttprouter.Router) {
-	c.registerBasicRoutes(r)
-}
-
-// RegisterRoutes register all the available paymail routes to the http router
-func (c *Configuration) RegisterRoutes(r *nrhttprouter.Router) {
-	c.registerPaymailRoutes(r)
-}
-
-// registerBasicRoutes will register basic server related routes
-func (c *Configuration) registerBasicRoutes(router *nrhttprouter.Router) {
-
+func (c *Configuration) RegisterBasicRoutes(engine *gin.Engine) {
 	// Skip if not set
 	if c.BasicRoutes == nil {
 		return
@@ -40,76 +26,38 @@ func (c *Configuration) registerBasicRoutes(router *nrhttprouter.Router) {
 
 	// Set the main index page (navigating to slash)
 	if c.BasicRoutes.AddIndexRoute {
-		router.GET("/", index)
+		engine.GET("/", index)
 		// router.OPTIONS("/", router.SetCrossOriginHeaders) // Disabled for security
 	}
 
 	// Set the health request (used for load balancers)
 	if c.BasicRoutes.AddHealthRoute {
-		router.GET("/health", health)
-		router.OPTIONS("/health", health)
-		router.HEAD("/health", health)
-	}
-
-	// Set the 404 handler (any request not detected)
-	if c.BasicRoutes.Add404Route {
-		router.NotFound = http.HandlerFunc(notFound)
-	}
-
-	// Set the method not allowed
-	if c.BasicRoutes.AddNotAllowed {
-		router.MethodNotAllowed = http.HandlerFunc(methodNotAllowed)
+		engine.GET("/health", health)
+		engine.OPTIONS("/health", health)
+		engine.HEAD("/health", health)
 	}
 }
 
-// registerPaymailRoutes will register all paymail related routes
-func (c *Configuration) registerPaymailRoutes(router *nrhttprouter.Router) {
+// RegisterRoutes register all the available paymail routes to the http router
+func (c *Configuration) RegisterRoutes(engine *gin.Engine) {
+	engine.GET("/.well-known/"+c.ServiceName, c.showCapabilities) // service discovery
 
-	// Capabilities (service discovery)
-	router.GET(
-		"/.well-known/"+c.ServiceName,
-		c.showCapabilities,
-	)
+	for _, cap := range c.callableCapabilities {
+		routerPath := c.templateToRouterPath(cap.Path)
+		engine.Handle(
+			cap.Method,
+			routerPath,
+			cap.Handler,
+		)
+	}
+}
 
-	// PKI request (public key information)
-	router.GET(
-		"/"+c.APIVersion+"/"+c.ServiceName+"/id/:paymailAddress",
-		c.showPKI,
-	)
+func (c *Configuration) templateToRouterPath(template string) string {
+	template = strings.ReplaceAll(template, PaymailAddressTemplate, _routerParam(PaymailAddressParamName))
+	template = strings.ReplaceAll(template, PubKeyTemplate, _routerParam(PubKeyParamName))
+	return fmt.Sprintf("/%s/%s/%s", c.APIVersion, c.ServiceName, strings.TrimPrefix(template, "/"))
+}
 
-	// Verify PubKey request (public key verification to paymail address)
-	router.GET(
-		"/"+c.APIVersion+"/"+c.ServiceName+"/verify-pubkey/:paymailAddress/:pubKey",
-		c.verifyPubKey,
-	)
-
-	// Payment Destination request (address resolution)
-	router.POST(
-		"/"+c.APIVersion+"/"+c.ServiceName+"/address/:paymailAddress",
-		c.resolveAddress,
-	)
-
-	// Public Profile request (returns Name & Avatar)
-	router.GET(
-		"/"+c.APIVersion+"/"+c.ServiceName+"/public-profile/:paymailAddress",
-		c.publicProfile,
-	)
-
-	// P2P Destination request (returns output & reference)
-	router.POST(
-		"/"+c.APIVersion+"/"+c.ServiceName+"/p2p-payment-destination/:paymailAddress",
-		c.p2pDestination,
-	)
-
-	// P2P Receive Tx request (receives the P2P transaction, broadcasts, returns tx_id)
-	router.POST(
-		"/"+c.APIVersion+"/"+c.ServiceName+"/receive-transaction/:paymailAddress",
-		c.p2pReceiveTx,
-	)
-
-	// P2P BEEF capability Receive Tx request
-	router.POST(
-		"/"+c.APIVersion+"/"+c.ServiceName+"/beef/:paymailAddress",
-		c.p2pReceiveBeefTx,
-	)
+func _routerParam(name string) string {
+	return ":" + name
 }
