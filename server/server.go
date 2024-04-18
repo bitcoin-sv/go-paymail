@@ -3,9 +3,9 @@ package server
 
 import (
 	"fmt"
-	"log"
 	"net/http"
-	"strings"
+
+	"github.com/rs/zerolog"
 )
 
 // CreateServer will create a basic Paymail Server
@@ -20,27 +20,7 @@ func CreateServer(c *Configuration) *http.Server {
 }
 
 // StartServer will run the Paymail server
-func StartServer(srv *http.Server) {
-	log.Println("starting go paymail server...", "address", srv.Addr)
-	log.Fatal(srv.ListenAndServe())
-}
-
-// getHost tries its best to return the request host
-func getHost(r *http.Request) string {
-	if r.URL.IsAbs() {
-		return removePort(r.Host)
-	}
-	if len(r.URL.Host) == 0 {
-		return removePort(r.Host)
-	}
-	return r.URL.Host
-}
-
-// removePort will attempt to remove the port if found
-func removePort(host string) string {
-	// Slice off any port information.
-	if i := strings.Index(host, ":"); i != -1 {
-		host = host[:i]
-	}
-	return host
+func StartServer(srv *http.Server, logger *zerolog.Logger) {
+	logger.Info().Str("address", srv.Addr).Msg("starting go paymail server...")
+	logger.Fatal().Msg(srv.ListenAndServe().Error())
 }

@@ -1,13 +1,11 @@
 package main
 
 import (
-	"log"
-
 	"github.com/bitcoin-sv/go-paymail"
+	"log"
 )
 
 func main() {
-
 	// Load the client
 	client, err := paymail.NewClient()
 	if err != nil {
@@ -18,9 +16,9 @@ func main() {
 	// This is required first to get the corresponding PublicProfile endpoint url
 	var capabilities *paymail.CapabilitiesResponse
 	if capabilities, err = client.GetCapabilities("moneybutton.com", paymail.DefaultPort); err != nil {
-		log.Fatal("error getting capabilities: " + err.Error())
+		log.Fatalf("error getting capabilities: %s", err.Error())
 	}
-	log.Println("found capabilities: ", len(capabilities.Capabilities))
+	log.Printf("found capabilities: %d", len(capabilities.Capabilities))
 
 	// Extract the PublicProfile URL from the capabilities response
 	publicProfileURL := capabilities.GetString(paymail.BRFCPublicProfile, "")
@@ -28,7 +26,7 @@ func main() {
 	// Get the public profile
 	var profile *paymail.PublicProfileResponse
 	if profile, err = client.GetPublicProfile(publicProfileURL, "mrz", "moneybutton.com"); err != nil {
-		log.Fatal("error getting profile: " + err.Error())
+		log.Fatalf("error getting profile: %s", err.Error())
 	}
 	log.Printf("found profile: %s : %s", profile.Name, profile.Avatar)
 }

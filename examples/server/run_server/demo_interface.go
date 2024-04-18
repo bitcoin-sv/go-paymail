@@ -5,6 +5,7 @@ import (
 
 	"github.com/bitcoin-sv/go-paymail"
 	"github.com/bitcoin-sv/go-paymail/server"
+	"github.com/bitcoin-sv/go-paymail/spv"
 )
 
 // Example demo implementation of a service provider
@@ -45,7 +46,15 @@ func (d *demoServiceProvider) RecordTransaction(ctx context.Context,
 }
 
 // VerifyMerkleRoots is a demo implementation of this interface
-func (d *demoServiceProvider) VerifyMerkleRoots(ctx context.Context, merkleProofs []paymail.MerkleRootConfirmationRequestItem) error {
+func (d *demoServiceProvider) VerifyMerkleRoots(ctx context.Context, merkleProofs []*spv.MerkleRootConfirmationRequestItem) error {
 	// Verify the Merkle roots
+	return nil
+}
+
+func (d *demoServiceProvider) AddContact(
+	ctx context.Context,
+	requesterPaymail string,
+	contact *paymail.PikeContactRequestPayload,
+) error {
 	return nil
 }

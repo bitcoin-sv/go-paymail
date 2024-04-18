@@ -18,7 +18,7 @@ const (
 	defaultSSLTimeout        = 10 * time.Second         // Default timeout in seconds
 	defaultUserAgent         = "go-paymail: " + version // Default user agent
 	defaultNetwork           = byte(Mainnet)            // Default network
-	version                  = "v0.7.2"                 // Go-Paymail version
+	version                  = "v0.9.3"                 // Go-Paymail version
 )
 
 // Public defaults for paymail specs
@@ -78,11 +78,4 @@ type AddressInformation struct {
 	Name        string `json:"name"`         // This is the name of the user (public profile)
 	PrivateKey  string `json:"-"`            // PrivateKey hex encoded
 	PubKey      string `json:"pubkey"`       // PublicKey hex encoded
-}
-
-// MerkleRootConfirmationRequestItem is a request type for verification
-// of Merkle Roots inclusion in the longest chain.
-type MerkleRootConfirmationRequestItem struct {
-	MerkleRoot  string `json:"merkleRoot"`
-	BlockHeight int32  `json:"blockHeight"`
 }
