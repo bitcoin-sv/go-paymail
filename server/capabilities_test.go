@@ -3,62 +3,48 @@ package server
 import (
 	"testing"
 
-	"github.com/bitcoin-sv/go-paymail"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
-// TestGenericCapabilities will test the method GenericCapabilities()
-func TestGenericCapabilities(t *testing.T) {
+func TestGenerateServiceURL(t *testing.T) {
 	t.Parallel()
 
 	t.Run("valid values", func(t *testing.T) {
-		c := GenericCapabilities("test", true)
-		require.NotNil(t, c)
-		assert.Equal(t, "test", c.BsvAlias)
-		assert.Equal(t, 5, len(c.Capabilities))
+		u, err := generateServiceURL("https://", "test.com", "v1", "bsvalias")
+		assert.NoError(t, err)
+		assert.Equal(t, "https://test.com/v1/bsvalias", u)
 	})
 
-	t.Run("no alias version", func(t *testing.T) {
-		c := GenericCapabilities("", true)
-		require.NotNil(t, c)
-		assert.Equal(t, "", c.BsvAlias)
+	t.Run("all invalid values", func(t *testing.T) {
+		_, err := generateServiceURL("", "", "", "")
+		assert.Error(t, err)
 	})
 
-	t.Run("sender validation", func(t *testing.T) {
-		c := GenericCapabilities("", true)
-		require.NotNil(t, c)
-		assert.Equal(t, true, c.Capabilities[paymail.BRFCSenderValidation])
-	})
-}
-
-// TestP2PCapabilities will test the method P2PCapabilities()
-func TestP2PCapabilities(t *testing.T) {
-	t.Parallel()
-
-	t.Run("valid values", func(t *testing.T) {
-		c := P2PCapabilities("test", true)
-		require.NotNil(t, c)
-		assert.Equal(t, "test", c.BsvAlias)
-		assert.Equal(t, 7, len(c.Capabilities))
+	t.Run("missing prefix", func(t *testing.T) {
+		_, err := generateServiceURL("", "test.com", "v1", "")
+		assert.Error(t, err)
 	})
 
-	t.Run("no alias version", func(t *testing.T) {
-		c := P2PCapabilities("", true)
-		require.NotNil(t, c)
-		assert.Equal(t, "", c.BsvAlias)
+	t.Run("missing domain", func(t *testing.T) {
+		_, err := generateServiceURL("https://", "", "v1", "")
+		assert.Error(t, err)
 	})
 
-	t.Run("sender validation", func(t *testing.T) {
-		c := P2PCapabilities("", true)
-		require.NotNil(t, c)
-		assert.Equal(t, true, c.Capabilities[paymail.BRFCSenderValidation])
+	t.Run("no api version", func(t *testing.T) {
+		u, err := generateServiceURL("https://", "test", "", "bsvalias")
+		assert.NoError(t, err)
+		assert.Equal(t, "https://test/bsvalias", u)
 	})
 
-	t.Run("has p2p routes", func(t *testing.T) {
-		c := P2PCapabilities("", true)
-		require.NotNil(t, c)
-		assert.NotEmpty(t, c.Capabilities[paymail.BRFCP2PTransactions])
-		assert.NotEmpty(t, c.Capabilities[paymail.BRFCP2PPaymentDestination])
+	t.Run("no service name", func(t *testing.T) {
+		u, err := generateServiceURL("https://", "test", "v1", "")
+		assert.NoError(t, err)
+		assert.Equal(t, "https://test/v1", u)
+	})
+
+	t.Run("service with explicit port", func(t *testing.T) {
+		u, err := generateServiceURL("https://", "test:1234", "v1", "bsvalias")
+		assert.NoError(t, err)
+		assert.Equal(t, "https://test:1234/v1/bsvalias", u)
 	})
 }

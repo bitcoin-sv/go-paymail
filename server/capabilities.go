@@ -1,54 +1,165 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
+	"strings"
+
+	"github.com/gin-gonic/gin"
 
 	"github.com/bitcoin-sv/go-paymail"
-	"github.com/julienschmidt/httprouter"
 )
 
-// GenericCapabilities will make generic capabilities
-func GenericCapabilities(bsvAliasVersion string, senderValidation bool) *paymail.CapabilitiesPayload {
-	return &paymail.CapabilitiesPayload{
-		BsvAlias: bsvAliasVersion,
-		Capabilities: map[string]interface{}{
-			paymail.BRFCPaymentDestination:   "/address/{alias}@{domain.tld}",
-			paymail.BRFCPki:                  "/id/{alias}@{domain.tld}",
-			paymail.BRFCPublicProfile:        "/public-profile/{alias}@{domain.tld}",
-			paymail.BRFCSenderValidation:     senderValidation,
-			paymail.BRFCVerifyPublicKeyOwner: "/verify-pubkey/{alias}@{domain.tld}/{pubkey}",
+type CallableCapability struct {
+	Path    string
+	Method  string
+	Handler gin.HandlerFunc
+}
+
+type CallableCapabilitiesMap map[string]CallableCapability
+type StaticCapabilitiesMap map[string]any
+
+func (c *Configuration) SetGenericCapabilities() {
+	_addCapabilities(c.callableCapabilities,
+		CallableCapabilitiesMap{
+			paymail.BRFCPaymentDestination: CallableCapability{
+				Path:    fmt.Sprintf("/address/%s", PaymailAddressTemplate),
+				Method:  http.MethodPost,
+				Handler: c.resolveAddress,
+			},
+			paymail.BRFCPki: CallableCapability{
+				Path:    fmt.Sprintf("/id/%s", PaymailAddressTemplate),
+				Method:  http.MethodGet,
+				Handler: c.showPKI,
+			},
+			paymail.BRFCPublicProfile: CallableCapability{
+				Path:    fmt.Sprintf("/public-profile/%s", PaymailAddressTemplate),
+				Method:  http.MethodGet,
+				Handler: c.publicProfile,
+			},
+			paymail.BRFCVerifyPublicKeyOwner: CallableCapability{
+				Path:    fmt.Sprintf("/verify-pubkey/%s/%s", PaymailAddressTemplate, PubKeyTemplate),
+				Method:  http.MethodGet,
+				Handler: c.verifyPubKey,
+			},
 		},
+	)
+	_addCapabilities(c.staticCapabilities,
+		StaticCapabilitiesMap{
+			paymail.BRFCSenderValidation: c.SenderValidationEnabled,
+		},
+	)
+}
+
+func (c *Configuration) SetP2PCapabilities() {
+	_addCapabilities(c.callableCapabilities,
+		CallableCapabilitiesMap{
+			paymail.BRFCP2PTransactions: CallableCapability{
+				Path:    fmt.Sprintf("/receive-transaction/%s", PaymailAddressTemplate),
+				Method:  http.MethodPost,
+				Handler: c.p2pReceiveTx,
+			},
+			paymail.BRFCP2PPaymentDestination: CallableCapability{
+				Path:    fmt.Sprintf("/p2p-payment-destination/%s", PaymailAddressTemplate),
+				Method:  http.MethodPost,
+				Handler: c.p2pDestination,
+			},
+		},
+	)
+}
+
+func (c *Configuration) SetBeefCapabilities() {
+	_addCapabilities(c.callableCapabilities,
+		CallableCapabilitiesMap{
+			paymail.BRFCBeefTransaction: CallableCapability{
+				Path:    fmt.Sprintf("/beef/%s", PaymailAddressTemplate),
+				Method:  http.MethodPost,
+				Handler: c.p2pReceiveBeefTx,
+			},
+		},
+	)
+}
+
+func (c *Configuration) SetPikeCapabilities() {
+	_addCapabilities(c.callableCapabilities,
+		CallableCapabilitiesMap{
+			paymail.BRFCPike: CallableCapability{
+				Path:    fmt.Sprintf("/pike/%s", PaymailAddressTemplate),
+				Method:  http.MethodPost,
+				Handler: c.pikeNewContact,
+			},
+		},
+	)
+}
+
+func _addCapabilities[T any](base map[string]T, newCaps map[string]T) {
+	for key, val := range newCaps {
+		base[key] = val
 	}
-}
-
-// P2PCapabilities will make generic capabilities & add additional p2p capabilities
-func P2PCapabilities(bsvAliasVersion string, senderValidation bool) *paymail.CapabilitiesPayload {
-	c := GenericCapabilities(bsvAliasVersion, senderValidation)
-	c.Capabilities[paymail.BRFCP2PTransactions] = "/receive-transaction/{alias}@{domain.tld}"
-	c.Capabilities[paymail.BRFCP2PPaymentDestination] = "/p2p-payment-destination/{alias}@{domain.tld}"
-	return c
-}
-
-// BeefCapabilities will add beef capabilities to given ones
-func BeefCapabilities(c *paymail.CapabilitiesPayload) *paymail.CapabilitiesPayload {
-	c.Capabilities[paymail.BRFCBeefTransaction] = "/beef/{alias}@{domain.tld}"
-	return c
 }
 
 // showCapabilities will return the service discovery results for the server
 // and list all active capabilities of the Paymail server
 //
 // Specs: http://bsvalias.org/02-02-capability-discovery.html
-func (c *Configuration) showCapabilities(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
-	// Check the domain (allowed, and used for capabilities response)
-	// todo: bake this into middleware? This is protecting the "req" domain name (like CORs)
-	domain := getHost(req)
-	if !c.IsAllowedDomain(domain) {
-		ErrorResponse(w, req, ErrorUnknownDomain, "domain unknown: "+domain, http.StatusBadRequest, c.Logger)
+func (c *Configuration) showCapabilities(context *gin.Context) {
+	// Check the host (allowed, and used for capabilities response)
+	// todo: bake this into middleware? This is protecting the "req" host name (like CORs)
+	host := ""
+	if context.Request.URL.IsAbs() || len(context.Request.URL.Host) == 0 {
+		host = context.Request.Host
+	} else {
+		host = context.Request.URL.Host
+	}
+
+	if !c.IsAllowedDomain(host) {
+		ErrorResponse(context, ErrorUnknownDomain, "domain unknown: "+host, http.StatusBadRequest)
 		return
 	}
 
-	// Set the service URL
-	capabilities := c.EnrichCapabilities(domain)
-	writeJsonResponse(w, req, c.Logger, capabilities)
+	capabilities, err := c.EnrichCapabilities(host)
+	if err != nil {
+		ErrorResponse(context, ErrorEncodingResponse, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	context.JSON(http.StatusOK, capabilities)
+}
+
+// EnrichCapabilities will update the capabilities with the appropriate service url
+func (c *Configuration) EnrichCapabilities(host string) (*paymail.CapabilitiesPayload, error) {
+	serviceUrl, err := generateServiceURL(c.Prefix, host, c.APIVersion, c.ServiceName)
+	if err != nil {
+		return nil, err
+	}
+	payload := &paymail.CapabilitiesPayload{
+		BsvAlias:     c.BSVAliasVersion,
+		Capabilities: make(map[string]interface{}),
+	}
+	for key, cap := range c.staticCapabilities {
+		payload.Capabilities[key] = cap
+	}
+	for key, cap := range c.callableCapabilities {
+		payload.Capabilities[key] = serviceUrl + string(cap.Path)
+	}
+	return payload, nil
+}
+
+func generateServiceURL(prefix, domain, apiVersion, serviceName string) (string, error) {
+	if len(prefix) == 0 || len(domain) == 0 {
+		return "", ErrPrefixOrDomainMissing
+	}
+	strBuilder := new(strings.Builder)
+	strBuilder.WriteString(prefix)
+	strBuilder.WriteString(domain)
+	if len(apiVersion) > 0 {
+		strBuilder.WriteString("/")
+		strBuilder.WriteString(apiVersion)
+	}
+	if len(serviceName) > 0 {
+		strBuilder.WriteString("/")
+		strBuilder.WriteString(serviceName)
+	}
+
+	return strBuilder.String(), nil
 }

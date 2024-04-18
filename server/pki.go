@@ -1,39 +1,35 @@
 package server
 
 import (
+	"github.com/gin-gonic/gin"
 	"net/http"
 
 	"github.com/bitcoin-sv/go-paymail"
-	"github.com/julienschmidt/httprouter"
 )
 
 // showPKI will return the public key information for the corresponding paymail address
 //
 // Specs: http://bsvalias.org/03-public-key-infrastructure.html
-func (c *Configuration) showPKI(w http.ResponseWriter, req *http.Request, p httprouter.Params) {
+func (c *Configuration) showPKI(context *gin.Context) {
+	incomingPaymail := context.Param(PaymailAddressParamName)
 
-	incomingPaymail := p.ByName("paymailAddress")
-
-	// Parse, sanitize and basic validation
 	alias, domain, address := paymail.SanitizePaymail(incomingPaymail)
 	if len(address) == 0 {
-		ErrorResponse(w, req, ErrorInvalidParameter, "domain unknown: "+domain, http.StatusBadRequest, c.Logger)
+		ErrorResponse(context, ErrorInvalidParameter, "domain unknown: "+domain, http.StatusBadRequest)
 		return
 	} else if !c.IsAllowedDomain(domain) {
-		ErrorResponse(w, req, ErrorUnknownDomain, "domain unknown: "+domain, http.StatusBadRequest, c.Logger)
+		ErrorResponse(context, ErrorUnknownDomain, "domain unknown: "+domain, http.StatusBadRequest)
 		return
 	}
 
-	// Create the metadata struct
-	md := CreateMetadata(req, alias, domain, "")
+	md := CreateMetadata(context.Request, alias, domain, "")
 
-	// Get from the data layer
-	foundPaymail, err := c.actions.GetPaymailByAlias(req.Context(), alias, domain, md)
+	foundPaymail, err := c.actions.GetPaymailByAlias(context.Request.Context(), alias, domain, md)
 	if err != nil {
-		ErrorResponse(w, req, ErrorFindingPaymail, err.Error(), http.StatusExpectationFailed, c.Logger)
+		ErrorResponse(context, ErrorFindingPaymail, err.Error(), http.StatusExpectationFailed)
 		return
 	} else if foundPaymail == nil {
-		ErrorResponse(w, req, ErrorPaymailNotFound, "paymail not found: "+incomingPaymail, http.StatusBadRequest, c.Logger)
+		ErrorResponse(context, ErrorPaymailNotFound, "paymail not found: "+incomingPaymail, http.StatusBadRequest)
 		return
 	}
 
@@ -43,6 +39,5 @@ func (c *Configuration) showPKI(w http.ResponseWriter, req *http.Request, p http
 		PubKey:   foundPaymail.PubKey,
 	}
 
-	// Set the response
-	writeJsonResponse(w, req, c.Logger, pkiPayload)
+	context.JSON(http.StatusOK, pkiPayload)
 }
