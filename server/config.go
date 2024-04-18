@@ -1,28 +1,38 @@
 package server
 
 import (
+	"slices"
 	"strings"
 	"time"
+
+	"github.com/rs/zerolog"
 
 	"github.com/bitcoin-sv/go-paymail"
 )
 
 // Configuration paymail server configuration object
 type Configuration struct {
-	APIVersion                       string                       `json:"api_version"`
-	BasicRoutes                      *basicRoutes                 `json:"basic_routes"`
-	BSVAliasVersion                  string                       `json:"bsv_alias_version"`
-	Capabilities                     *paymail.CapabilitiesPayload `json:"capabilities"`
-	PaymailDomains                   []*Domain                    `json:"paymail_domains"`
-	PaymailDomainsValidationDisabled bool                         `json:"paymail_domains_validation_disabled"`
-	Port                             int                          `json:"port"`
-	Prefix                           string                       `json:"prefix"`
-	SenderValidationEnabled          bool                         `json:"sender_validation_enabled"`
-	ServiceName                      string                       `json:"service_name"`
-	Timeout                          time.Duration                `json:"timeout"`
+	APIVersion                       string          `json:"api_version"`
+	BasicRoutes                      *basicRoutes    `json:"basic_routes"`
+	BSVAliasVersion                  string          `json:"bsv_alias_version"`
+	PaymailDomains                   []*Domain       `json:"paymail_domains"`
+	PaymailDomainsValidationDisabled bool            `json:"paymail_domains_validation_disabled"`
+	Port                             int             `json:"port"`
+	Prefix                           string          `json:"prefix"`
+	SenderValidationEnabled          bool            `json:"sender_validation_enabled"`
+	GenericCapabilitiesEnabled       bool            `json:"generic_capabilities_enabled"`
+	P2PCapabilitiesEnabled           bool            `json:"p2p_capabilities_enabled"`
+	BeefCapabilitiesEnabled          bool            `json:"beef_capabilities_enabled"`
+	PikeCapabilitiesEnabled          bool            `json:"pike_capabilities_enabled"`
+	ServiceName                      string          `json:"service_name"`
+	Timeout                          time.Duration   `json:"timeout"`
+	Logger                           *zerolog.Logger `json:"logger"`
 
 	// private
-	actions PaymailServiceProvider
+	actions              PaymailServiceProvider
+	pikeActions          PikeServiceProvider
+	callableCapabilities CallableCapabilitiesMap
+	staticCapabilities   StaticCapabilitiesMap
 }
 
 // Domain is the Paymail Domain information
@@ -51,12 +61,11 @@ func (c *Configuration) Validate() error {
 		return ErrServiceNameMissing
 	}
 
-	// Validate (basic checks for existence of capabilities)
-	if c.Capabilities == nil {
-		return ErrCapabilitiesMissing
-	} else if len(c.Capabilities.BsvAlias) == 0 {
+	if c.BSVAliasVersion == "" {
 		return ErrBsvAliasMissing
-	} else if len(c.Capabilities.Capabilities) == 0 {
+	}
+
+	if c.callableCapabilities == nil || len(c.callableCapabilities) == 0 {
 		return ErrCapabilitiesMissing
 	}
 
@@ -64,29 +73,20 @@ func (c *Configuration) Validate() error {
 }
 
 // IsAllowedDomain will return true if it's an allowed paymail domain
-func (c *Configuration) IsAllowedDomain(domain string) (success bool) {
-
+func (c *Configuration) IsAllowedDomain(domain string) bool {
 	if c.PaymailDomainsValidationDisabled {
-		success = true
-		return
+		return true
 	}
 
-	// Sanitize the domain (standard)
 	var err error
 	if domain, err = paymail.SanitizeDomain(domain); err != nil {
-		// todo: log the error? This should rarely occur
-		return
+		c.Logger.Warn().Err(err).Msg("failed to sanitize domain")
+		return false
 	}
 
-	// Loop all domains check
-	for _, d := range c.PaymailDomains {
-		if strings.EqualFold(d.Name, domain) {
-			success = true
-			break
-		}
-	}
-
-	return
+	return slices.ContainsFunc(c.PaymailDomains, func(d *Domain) bool {
+		return strings.EqualFold(d.Name, domain)
+	})
 }
 
 // AddDomain will add the domain if it does not exist
@@ -113,46 +113,9 @@ func (c *Configuration) AddDomain(domain string) (err error) {
 	return
 }
 
-// EnrichCapabilities will update the capabilities with the appropriate service url
-func (c *Configuration) EnrichCapabilities(domain string) *paymail.CapabilitiesPayload {
-	capabilities := &paymail.CapabilitiesPayload{
-		BsvAlias:     c.Capabilities.BsvAlias,
-		Capabilities: make(map[string]interface{}),
-	}
-	for key, val := range c.Capabilities.Capabilities {
-		if w, ok := val.(string); ok {
-			capabilities.Capabilities[key] = GenerateServiceURL(c.Prefix, domain, c.APIVersion, c.ServiceName) + w
-		} else {
-			capabilities.Capabilities[key] = val
-		}
-	}
-	return capabilities
-}
-
-// GenerateServiceURL will create the service URL
-func GenerateServiceURL(prefix, domain, apiVersion, serviceName string) string {
-
-	// Require prefix or domain
-	if len(prefix) == 0 || len(domain) == 0 {
-		return ""
-	}
-	u := prefix + domain
-
-	// Set the api version
-	if len(apiVersion) > 0 {
-		u = u + "/" + apiVersion
-	}
-
-	// Set the service name
-	if len(serviceName) > 0 {
-		u = u + "/" + serviceName
-	}
-
-	return u
-}
-
 // NewConfig will make a new server configuration
-func NewConfig(serviceProvider PaymailServiceProvider, opts ...ConfigOps) (*Configuration, error) {
+// The serviceProvider must have registered necessary services before calling them (e.g., PikeServiceProvider has to be registered if Pike capabilities are supported)
+func NewConfig(serviceProvider *PaymailServiceLocator, opts ...ConfigOps) (*Configuration, error) {
 
 	// Check that a service provider is set
 	if serviceProvider == nil {
@@ -167,13 +130,28 @@ func NewConfig(serviceProvider PaymailServiceProvider, opts ...ConfigOps) (*Conf
 		opt(config)
 	}
 
+	if config.GenericCapabilitiesEnabled {
+		config.SetGenericCapabilities()
+	}
+	if config.P2PCapabilitiesEnabled {
+		config.SetP2PCapabilities()
+	}
+	if config.BeefCapabilitiesEnabled {
+		config.SetBeefCapabilities()
+	}
+	if config.PikeCapabilitiesEnabled {
+		config.SetPikeCapabilities()
+		config.pikeActions = serviceProvider.GetPikeService()
+	}
+
 	// Validate the configuration
 	if err := config.Validate(); err != nil {
 		return nil, err
 	}
 
 	// Set the service provider
-	config.actions = serviceProvider
+	config.actions = serviceProvider.GetPaymailService()
 
+	config.Logger.Debug().Msg("New config loaded")
 	return config, nil
 }

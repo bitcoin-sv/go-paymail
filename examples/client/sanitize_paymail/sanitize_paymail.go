@@ -1,13 +1,11 @@
 package main
 
 import (
-	"log"
-
 	"github.com/bitcoin-sv/go-paymail"
+	"log"
 )
 
 func main() {
-
 	// Start with a paymail address
 	paymailAddress := "MrZ@MoneyButton.com"
 

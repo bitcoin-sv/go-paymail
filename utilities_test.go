@@ -6,6 +6,8 @@ import (
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // TestSanitizePaymail will test the method SanitizePaymail()
@@ -23,6 +25,8 @@ func TestSanitizePaymail(t *testing.T) {
 		{"TEST@domain.com", "test", "domain.com", "test@domain.com"},
 		{"TEST@Domain.com", "test", "domain.com", "test@domain.com"},
 		{"TEST@DomaiN.COM", "test", "domain.com", "test@domain.com"},
+		{"mailto:TEST@DomaiN.COM", "test", "domain.com", "test@domain.com"},
+		{"MailTO:TEST@DomaiN.COM", "test", "domain.com", "test@domain.com"},
 		{"@DomaiN.COM", "", "domain.com", ""},
 		{"test@", "test", "", ""},
 		{"test@domain", "test", "domain", "test@domain"},
@@ -325,6 +329,32 @@ func TestValidateAndSanitisePaymail(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_removePort(t *testing.T) {
+	testDomain := "domain.com"
+
+	t.Run("valid removal", func(t *testing.T) {
+		host := testDomain + ":1234"
+		rp := removePort(host)
+		assert.Equal(t, rp, testDomain)
+	})
+
+	t.Run("valid removal (no port)", func(t *testing.T) {
+		host := testDomain + ":"
+		rp := removePort(host)
+		assert.Equal(t, rp, testDomain)
+	})
+
+	t.Run("no port", func(t *testing.T) {
+		rp := removePort(testDomain)
+		assert.Equal(t, rp, testDomain)
+	})
+
+	t.Run("remove port from full url", func(t *testing.T) {
+		rp := removePort("http://" + testDomain + ":1234")
+		assert.Equal(t, rp, "http://"+testDomain)
+	})
 }
 
 // BenchmarkTestValidateAndSanitisePaymail benchmarks the method ValidateTimestamp()

@@ -15,6 +15,14 @@ const (
 	DefaultTimeout          = 15 * time.Second // Default timeouts
 )
 
+// Url params
+const (
+	PaymailAddressParamName = "paymailAddress"       // Used to get actual paymail address from the request url
+	PubKeyParamName         = "pubKey"               // Used to get actual pubkey from the request url
+	PaymailAddressTemplate  = "{alias}@{domain.tld}" // Used as a placeholder in capabilities list
+	PubKeyTemplate          = "{pubkey}"             // Used as a placeholder in capabilities list
+)
+
 // basicRoutes is the configuration for basic server routes
 type basicRoutes struct {
 	Add404Route    bool `json:"add_404_route,omitempty"`

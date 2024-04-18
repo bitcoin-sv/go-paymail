@@ -2,13 +2,16 @@ package server
 
 import (
 	"context"
+	"fmt"
+	"github.com/rs/zerolog"
 	"net/http"
 
-	"github.com/bitcoin-sv/go-paymail"
 	"github.com/bitcoinschema/go-bitcoin/v2"
-	"github.com/julienschmidt/httprouter"
 	"github.com/libsv/go-bt/v2"
 	"github.com/libsv/go-bt/v2/bscript"
+
+	"github.com/bitcoin-sv/go-paymail"
+	"github.com/bitcoin-sv/go-paymail/beef"
 )
 
 type p2pReceiveTxReqPayload struct {
@@ -21,10 +24,10 @@ type processingError struct {
 	httpResponseCode int
 }
 
-func processP2pReceiveTxRequest(c *Configuration, req *http.Request, p httprouter.Params, format p2pPayloadFormat) (
-	*p2pReceiveTxReqPayload, *paymail.DecodedBEEF, *RequestMetadata, *processingError,
+func processP2pReceiveTxRequest(c *Configuration, req *http.Request, incomingPaymail string, format p2pPayloadFormat) (
+	*p2pReceiveTxReqPayload, *beef.DecodedBEEF, *RequestMetadata, *processingError,
 ) {
-	payload, vErr := parseP2pReceiveTxRequest(c, req, p, format)
+	payload, vErr := parseP2pReceiveTxRequest(c, req, incomingPaymail, format)
 	if vErr != nil {
 		return returnError(&processingError{vErr, http.StatusBadRequest})
 	}
@@ -40,7 +43,7 @@ func processP2pReceiveTxRequest(c *Configuration, req *http.Request, p httproute
 		return returnError(&processingError{vErr, http.StatusExpectationFailed})
 	}
 
-	tx, beefData, pErr := getProcessedTxData(payload, format)
+	tx, beefData, pErr := getProcessedTxData(payload, format, c.Logger)
 	if pErr != nil {
 		return returnError(pErr)
 	}
@@ -53,30 +56,35 @@ func processP2pReceiveTxRequest(c *Configuration, req *http.Request, p httproute
 
 	if format == beefP2pPayload {
 		payload.Hex = tx.String()
+		payload.DecodedBeef = beefData
 	}
 
 	return payload, beefData, md, nil
 }
 
-func getProcessedTxData(payload *p2pReceiveTxReqPayload, format p2pPayloadFormat) (*bt.Tx, *paymail.DecodedBEEF, *processingError) {
+func getProcessedTxData(payload *p2pReceiveTxReqPayload, format p2pPayloadFormat, log *zerolog.Logger) (*bt.Tx, *beef.DecodedBEEF, *processingError) {
 	var processedTx *bt.Tx
-	var beefData *paymail.DecodedBEEF
+	var beefData *beef.DecodedBEEF
 	var err error
 
 	switch format {
 	case basicP2pPayload:
 		processedTx, err = bitcoin.TxFromHex(payload.Hex)
 		if err != nil {
-			return nil, nil, &processingError{&parseError{ErrorInvalidParameter, "invalid parameter: hex"}, http.StatusBadRequest}
+			errorMsg := fmt.Sprintf("error while parsing hex: %s", err.Error())
+			log.Error().Msg(errorMsg)
+			return nil, nil, &processingError{&parseError{ErrorInvalidParameter, errorMsg}, http.StatusBadRequest}
 		}
 
 	case beefP2pPayload:
-		beefData, err = paymail.DecodeBEEF(payload.Beef)
+		beefData, err = beef.DecodeBEEF(payload.Beef)
 		if err != nil {
-			return nil, nil, &processingError{&parseError{ErrorInvalidParameter, "invalid parameter: beef"}, http.StatusBadRequest}
+			errorMsg := fmt.Sprintf("error while parsing beef: %s", err.Error())
+			log.Error().Msg(errorMsg)
+			return nil, nil, &processingError{&parseError{ErrorInvalidParameter, errorMsg}, http.StatusBadRequest}
 		}
 
-		processedTx = beefData.ProcessedTxData.Transaction
+		processedTx = beefData.GetLatestTx()
 
 	default:
 		panic("Unexpected transaction format!")
@@ -117,7 +125,7 @@ func verifySignature(metadata *paymail.P2PMetaData, txID string) *parseError {
 }
 
 func returnError(err *processingError) (
-	*p2pReceiveTxReqPayload, *paymail.DecodedBEEF, *RequestMetadata, *processingError,
+	*p2pReceiveTxReqPayload, *beef.DecodedBEEF, *RequestMetadata, *processingError,
 ) {
 	return nil, nil, nil, err
 }
