@@ -1,9 +1,10 @@
 package server
 
 import (
+	"time"
+
 	"github.com/bitcoin-sv/go-paymail/logging"
 	"github.com/rs/zerolog"
-	"time"
 
 	"github.com/bitcoin-sv/go-paymail"
 )
@@ -20,44 +21,61 @@ func defaultConfigOptions() *Configuration {
 		APIVersion:                       DefaultAPIVersion,
 		BasicRoutes:                      &basicRoutes{},
 		BSVAliasVersion:                  paymail.DefaultBsvAliasVersion,
-		Capabilities:                     GenericCapabilities(paymail.DefaultBsvAliasVersion, DefaultSenderValidation),
 		PaymailDomainsValidationDisabled: false,
 		Port:                             DefaultServerPort,
 		Prefix:                           DefaultPrefix,
 		SenderValidationEnabled:          DefaultSenderValidation,
+		GenericCapabilitiesEnabled:       true,
+		P2PCapabilitiesEnabled:           false,
+		BeefCapabilitiesEnabled:          false,
+		PikeCapabilitiesEnabled:          false,
 		ServiceName:                      paymail.DefaultServiceName,
 		Timeout:                          DefaultTimeout,
 		Logger:                           logging.GetDefaultLogger(),
+		callableCapabilities:             make(CallableCapabilitiesMap),
+		staticCapabilities:               make(StaticCapabilitiesMap),
 	}
 }
 
 // WithGenericCapabilities will load the generic Paymail capabilities
 func WithGenericCapabilities() ConfigOps {
 	return func(c *Configuration) {
-		c.Capabilities = GenericCapabilities(c.BSVAliasVersion, c.SenderValidationEnabled)
+		c.GenericCapabilitiesEnabled = true
 	}
 }
 
 // WithP2PCapabilities will load the generic & p2p capabilities
 func WithP2PCapabilities() ConfigOps {
 	return func(c *Configuration) {
-		c.Capabilities = P2PCapabilities(c.BSVAliasVersion, c.SenderValidationEnabled)
+		c.GenericCapabilitiesEnabled = true
+		c.P2PCapabilitiesEnabled = true
 	}
 }
 
 // WithBeefCapabilities will load the beef capabilities
 func WithBeefCapabilities() ConfigOps {
 	return func(c *Configuration) {
-		c.Capabilities = BeefCapabilities(c.Capabilities)
+		c.BeefCapabilitiesEnabled = true
+	}
+}
+
+// WithPikeCapabilities will load the PIKE capabilities
+func WithPikeCapabilities() ConfigOps {
+	return func(c *Configuration) {
+		c.PikeCapabilitiesEnabled = true
 	}
 }
 
 // WithCapabilities will modify the capabilities
-func WithCapabilities(capabilities *paymail.CapabilitiesPayload) ConfigOps {
+func WithCapabilities(customCapabilities map[string]any) ConfigOps {
 	return func(c *Configuration) {
-		if capabilities != nil {
-			// todo: validate that these are valid capabilities (string->url path)
-			c.Capabilities = capabilities
+		for key, cap := range customCapabilities {
+			switch typedCap := cap.(type) {
+			case CallableCapability:
+				c.callableCapabilities[key] = typedCap
+			default:
+				c.staticCapabilities[key] = typedCap
+			}
 		}
 	}
 }

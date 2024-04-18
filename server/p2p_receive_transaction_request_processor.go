@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"github.com/bitcoinschema/go-bitcoin/v2"
-	"github.com/julienschmidt/httprouter"
 	"github.com/libsv/go-bt/v2"
 	"github.com/libsv/go-bt/v2/bscript"
 
@@ -25,10 +24,10 @@ type processingError struct {
 	httpResponseCode int
 }
 
-func processP2pReceiveTxRequest(c *Configuration, req *http.Request, p httprouter.Params, format p2pPayloadFormat) (
+func processP2pReceiveTxRequest(c *Configuration, req *http.Request, incomingPaymail string, format p2pPayloadFormat) (
 	*p2pReceiveTxReqPayload, *beef.DecodedBEEF, *RequestMetadata, *processingError,
 ) {
-	payload, vErr := parseP2pReceiveTxRequest(c, req, p, format)
+	payload, vErr := parseP2pReceiveTxRequest(c, req, incomingPaymail, format)
 	if vErr != nil {
 		return returnError(&processingError{vErr, http.StatusBadRequest})
 	}

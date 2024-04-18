@@ -5,16 +5,13 @@ import (
 	"net/http"
 
 	"github.com/bitcoin-sv/go-paymail"
-	"github.com/julienschmidt/httprouter"
 )
 
 type parseError struct {
 	code, msg string
 }
 
-func parseP2pReceiveTxRequest(c *Configuration, req *http.Request, params httprouter.Params, format p2pPayloadFormat) (*p2pReceiveTxReqPayload, *parseError) {
-	incomingPaymail := params.ByName("paymailAddress")
-
+func parseP2pReceiveTxRequest(c *Configuration, req *http.Request, incomingPaymail string, format p2pPayloadFormat) (*p2pReceiveTxReqPayload, *parseError) {
 	alias, domain, paymailAddress := paymail.SanitizePaymail(incomingPaymail)
 	if len(paymailAddress) == 0 {
 		return nil, &parseError{ErrorInvalidParameter, "invalid paymail: " + incomingPaymail}

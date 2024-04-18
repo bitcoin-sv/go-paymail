@@ -1,13 +1,10 @@
 package server
 
 import (
-	"encoding/json"
 	"errors"
-	"github.com/bitcoin-sv/go-paymail/logging"
-	"github.com/rs/zerolog"
-	"net/http"
 
 	"github.com/bitcoin-sv/go-paymail"
+	"github.com/gin-gonic/gin"
 )
 
 // Error codes for server response errors
@@ -29,6 +26,7 @@ const (
 	ErrorEncodingResponse              = "error-encoding-response"
 	ErrorNotImplmented                 = "not-implemented"
 	ErrorSimplifiedPaymentVerification = "spv-failed"
+	ErrorAddContactRequest             = "error-pike-contact"
 )
 
 var (
@@ -52,32 +50,15 @@ var (
 
 	// ErrFailedMarshalJSON is when the JSON marshal fails
 	ErrFailedMarshalJSON = errors.New("failed to marshal JSON response")
+
+	//GenerateServiceURL is when the service URL cannot be generated
+	ErrPrefixOrDomainMissing = errors.New("prefix or domain is missing")
 )
 
 // ErrorResponse is a standard way to return errors to the client
 //
 // Specs: http://bsvalias.org/99-01-recommendations.html
-func ErrorResponse(w http.ResponseWriter, req *http.Request, code, message string, statusCode int, log *zerolog.Logger) {
-	if log == nil {
-		log = logging.GetDefaultLogger()
-	}
-
+func ErrorResponse(c *gin.Context, code, message string, statusCode int) {
 	srvErr := &paymail.ServerError{Code: code, Message: message}
-	jsonData, err := json.Marshal(srvErr)
-
-	if err != nil {
-		log.Debug().
-			Str("logger", "http-error").
-			Msgf("%d | %s | %s | %s | %s", http.StatusInternalServerError, req.RemoteAddr, req.Method, req.URL, message)
-		http.Error(w, ErrorFailedMarshalJSON, http.StatusInternalServerError)
-		return
-	}
-
-	errorLogger := log.With().
-		Str("logger", "http-error").
-		Str("code", code).
-		Str("msg", message).
-		Logger()
-
-	writeResponse(w, req, &errorLogger, statusCode, "application/json", jsonData)
+	c.JSON(statusCode, srvErr)
 }

@@ -48,3 +48,7 @@ func (m *mockServiceProvider) VerifyMerkleRoots(_ context.Context, _ []*spv.Merk
 	// Verify the merkle roots
 	return nil
 }
+
+func (m *mockServiceProvider) AddContact(ctx context.Context, requesterPaymail string, contact *paymail.PikeContactRequestPayload) error {
+	return nil
+}
