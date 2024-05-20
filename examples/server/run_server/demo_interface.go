@@ -64,6 +64,6 @@ func (d *demoServiceProvider) CreatePikeDestinationResponse(
 	alias, domain string,
 	satoshis uint64,
 	metaData *server.RequestMetadata,
-) (*paymail.PikePaymentDestinationsResponse, error) {
+) (*paymail.PikePaymentOutputsResponse, error) {
 	return nil, nil
 }

@@ -27,8 +27,11 @@ func (c *Configuration) pikeNewContact(rc *gin.Context) {
 }
 
 func (c *Configuration) pikeGetPaymentDestinations(rc *gin.Context) {
-	var paymentDestinationRequest paymail.PikePaymentDestinationsRequest
+	var paymentDestinationRequest paymail.PikePaymentOutputsPayload
 	err := json.NewDecoder(rc.Request.Body).Decode(&paymentDestinationRequest)
+	defer func() {
+		_ = rc.Request.Body.Close()
+	}()
 	if err != nil {
 		ErrorResponse(rc, ErrorInvalidParameter, err.Error(), http.StatusBadRequest)
 		return
@@ -39,7 +42,7 @@ func (c *Configuration) pikeGetPaymentDestinations(rc *gin.Context) {
 		return
 	}
 
-	var response *paymail.PikePaymentDestinationsResponse
+	var response *paymail.PikePaymentOutputsResponse
 	if response, err = c.pikePaymentActions.CreatePikeDestinationResponse(
 		rc.Request.Context(), alias, domain, paymentDestinationRequest.Amount, md,
 	); err != nil {

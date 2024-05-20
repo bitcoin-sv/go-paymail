@@ -6,6 +6,7 @@ import (
 	"net/http"
 )
 
+// GetPaymailAndCreateMetadata is a helper function to get the paymail from the request, check it in database and create the metadata based on that.
 func (c *Configuration) GetPaymailAndCreateMetadata(context *gin.Context, satoshis uint64) (alias, domain string, md *RequestMetadata, ok bool) {
 	incomingPaymail := context.Param(PaymailAddressParamName)
 
@@ -14,7 +15,8 @@ func (c *Configuration) GetPaymailAndCreateMetadata(context *gin.Context, satosh
 	if len(paymailAddress) == 0 {
 		ErrorResponse(context, ErrorInvalidParameter, "invalid paymail: "+incomingPaymail, http.StatusBadRequest)
 		return
-	} else if !c.IsAllowedDomain(domain) {
+	}
+	if !c.IsAllowedDomain(domain) {
 		ErrorResponse(context, ErrorUnknownDomain, "domain unknown: "+domain, http.StatusBadRequest)
 		return
 	}
@@ -39,7 +41,8 @@ func (c *Configuration) GetPaymailAndCreateMetadata(context *gin.Context, satosh
 	if err != nil {
 		ErrorResponse(context, ErrorFindingPaymail, err.Error(), http.StatusExpectationFailed)
 		return
-	} else if foundPaymail == nil {
+	}
+	if foundPaymail == nil {
 		ErrorResponse(context, ErrorPaymailNotFound, "paymail not found", http.StatusNotFound)
 		return
 	}

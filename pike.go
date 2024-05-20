@@ -9,17 +9,20 @@ import (
 	"time"
 )
 
+// PikeContactRequestResponse is PIKE wrapper for StandardResponse
 type PikeContactRequestResponse struct {
 	StandardResponse
 }
 
+// PikeContactRequestPayload is a payload used to request a contact
 type PikeContactRequestPayload struct {
 	FullName string `json:"fullName"`
 	Paymail  string `json:"paymail"`
 }
 
+// PikePaymentOutputsPayload is a payload needed to get payment outputs
 // TODO: check if everything is needed after whole PIKE implementation
-type PikePaymentDestinationsRequest struct {
+type PikePaymentOutputsPayload struct {
 	SenderName    string    `json:"senderName"`
 	SenderPaymail string    `json:"senderPaymail"`
 	Amount        uint64    `json:"amount"`
@@ -28,12 +31,14 @@ type PikePaymentDestinationsRequest struct {
 	Signature     string    `json:"signature"`
 }
 
-type PikePaymentDestinationsResponse struct {
-	Outputs   []PikePaymentDestination `json:"outputs"`
-	Reference string                   `json:"reference"`
+// PikePaymentOutputsResponse is a response which contain output templates
+type PikePaymentOutputsResponse struct {
+	Outputs   []PikePaymentOutput `json:"outputs"`
+	Reference string              `json:"reference"`
 }
 
-type PikePaymentDestination struct {
+// PikePaymentOutput is a single output template with satoshis
+type PikePaymentOutput struct {
 	Script   string `json:"script"`
 	Satoshis int    `json:"satoshis"`
 }

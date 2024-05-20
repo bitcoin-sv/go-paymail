@@ -97,5 +97,5 @@ type PikePaymentServiceProvider interface {
 		alias, domain string,
 		satoshis uint64,
 		metaData *RequestMetadata,
-	) (*paymail.PikePaymentDestinationsResponse, error)
+	) (*paymail.PikePaymentOutputsResponse, error)
 }

@@ -53,6 +53,6 @@ func (m *mockServiceProvider) AddContact(ctx context.Context, requesterPaymail s
 	return nil
 }
 
-func (m *mockServiceProvider) CreatePikeDestinationResponse(ctx context.Context, alias, domain string, satoshis uint64, metaData *RequestMetadata) (*paymail.PikePaymentDestinationsResponse, error) {
+func (m *mockServiceProvider) CreatePikeDestinationResponse(ctx context.Context, alias, domain string, satoshis uint64, metaData *RequestMetadata) (*paymail.PikePaymentOutputsResponse, error) {
 	return nil, nil
 }
