@@ -90,7 +90,7 @@ func (c *Configuration) SetPikeContactCapabilities() {
 			},
 		},
 	)
-	_addCapabilities(c.nestedCapabilities,
+	_addNestedCapabilities(c.nestedCapabilities,
 		NestedCapabilitiesMap{
 			paymail.BRFCPike: CallableCapabilitiesMap{
 				paymail.BRFCPikeInvite: CallableCapability{
@@ -125,6 +125,9 @@ func _addCapabilities[T any](base map[string]T, newCaps map[string]T) {
 
 func _addNestedCapabilities(base NestedCapabilitiesMap, newCaps NestedCapabilitiesMap) {
 	for key, val := range newCaps {
+		if _, ok := base[key]; !ok {
+			base[key] = make(CallableCapabilitiesMap)
+		}
 		_addCapabilities(base[key], val)
 	}
 }

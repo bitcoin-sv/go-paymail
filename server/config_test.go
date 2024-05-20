@@ -13,7 +13,8 @@ import (
 func testConfig(t *testing.T, domain string) *Configuration {
 	sl := PaymailServiceLocator{}
 	sl.RegisterPaymailService(new(mockServiceProvider))
-	sl.RegisterPikeService(new(mockServiceProvider))
+	sl.RegisterPikeContactService(new(mockServiceProvider))
+	sl.RegisterPikePaymentService(new(mockServiceProvider))
 
 	c, err := NewConfig(
 		&sl,
@@ -476,23 +477,60 @@ func TestNewConfig(t *testing.T) {
 		assert.Equal(t, true, c.PaymailDomainsValidationDisabled)
 	})
 
-	t.Run("with pike capabilities", func(t *testing.T) {
+	t.Run("with pike contact capabilities", func(t *testing.T) {
 		sl := &PaymailServiceLocator{}
 		sl.RegisterPaymailService(new(mockServiceProvider))
-		sl.RegisterPikeService(new(mockServiceProvider))
+		sl.RegisterPikeContactService(new(mockServiceProvider))
 
 		c, err := NewConfig(
 			sl,
 			WithDomain("test.com"),
 			WithP2PCapabilities(),
-			WithPikeCapabilities(),
+			WithPikeContactCapabilities(),
 		)
 		require.NoError(t, err)
 		require.NotNil(t, c)
 		assert.Equal(t, 7, len(c.callableCapabilities))
+		assert.Equal(t, 1, len(c.nestedCapabilities))
 	})
 
-	t.Run("with pike capabilities - pike service is not registered -> should panic", func(t *testing.T) {
+	t.Run("with pike payment capabilities", func(t *testing.T) {
+		sl := &PaymailServiceLocator{}
+		sl.RegisterPaymailService(new(mockServiceProvider))
+		sl.RegisterPikePaymentService(new(mockServiceProvider))
+
+		c, err := NewConfig(
+			sl,
+			WithDomain("test.com"),
+			WithP2PCapabilities(),
+			WithPikePaymentCapabilities(),
+		)
+		require.NoError(t, err)
+		require.NotNil(t, c)
+		assert.Equal(t, 6, len(c.callableCapabilities))
+		assert.Equal(t, 1, len(c.nestedCapabilities))
+	})
+
+	t.Run("with both pike capabilities", func(t *testing.T) {
+		sl := &PaymailServiceLocator{}
+		sl.RegisterPaymailService(new(mockServiceProvider))
+		sl.RegisterPikeContactService(new(mockServiceProvider))
+		sl.RegisterPikePaymentService(new(mockServiceProvider))
+
+		c, err := NewConfig(
+			sl,
+			WithDomain("test.com"),
+			WithP2PCapabilities(),
+			WithPikeContactCapabilities(),
+			WithPikePaymentCapabilities(),
+		)
+		require.NoError(t, err)
+		require.NotNil(t, c)
+		assert.Equal(t, 7, len(c.callableCapabilities))
+		assert.Equal(t, 1, len(c.nestedCapabilities))
+	})
+
+	t.Run("with pike contact capabilities - pike contact service is not registered -> should panic", func(t *testing.T) {
 		defer func() {
 			if r := recover(); r == nil {
 				t.Errorf("The code did not panic")
@@ -506,10 +544,31 @@ func TestNewConfig(t *testing.T) {
 			sl,
 			WithDomain("test.com"),
 			WithP2PCapabilities(),
-			WithPikeCapabilities(),
+			WithPikeContactCapabilities(),
 		)
 		require.NoError(t, err)
 		require.NotNil(t, c)
 		assert.Equal(t, 7, len(c.callableCapabilities))
+	})
+
+	t.Run("with pike payment capabilities - pike payment service is not registered -> should panic", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("The code did not panic")
+			}
+		}()
+
+		sl := &PaymailServiceLocator{}
+		sl.RegisterPaymailService(new(mockServiceProvider))
+
+		c, err := NewConfig(
+			sl,
+			WithDomain("test.com"),
+			WithP2PCapabilities(),
+			WithPikePaymentCapabilities(),
+		)
+		require.NoError(t, err)
+		require.NotNil(t, c)
+		assert.Equal(t, 6, len(c.callableCapabilities))
 	})
 }

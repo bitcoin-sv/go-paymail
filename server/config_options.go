@@ -28,7 +28,7 @@ func defaultConfigOptions() *Configuration {
 		GenericCapabilitiesEnabled:       true,
 		P2PCapabilitiesEnabled:           false,
 		BeefCapabilitiesEnabled:          false,
-		PikeContactCapabilitiesEnabled:   true,
+		PikeContactCapabilitiesEnabled:   false,
 		PikePaymentCapabilitiesEnabled:   false,
 		ServiceName:                      paymail.DefaultServiceName,
 		Timeout:                          DefaultTimeout,

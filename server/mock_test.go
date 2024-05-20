@@ -52,3 +52,7 @@ func (m *mockServiceProvider) VerifyMerkleRoots(_ context.Context, _ []*spv.Merk
 func (m *mockServiceProvider) AddContact(ctx context.Context, requesterPaymail string, contact *paymail.PikeContactRequestPayload) error {
 	return nil
 }
+
+func (m *mockServiceProvider) CreatePikeDestinationResponse(ctx context.Context, alias, domain string, satoshis uint64, metaData *RequestMetadata) (*paymail.PikePaymentDestinationsResponse, error) {
+	return nil, nil
+}
