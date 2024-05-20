@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 )
 
 type PikeContactRequestResponse struct {
@@ -15,6 +16,26 @@ type PikeContactRequestResponse struct {
 type PikeContactRequestPayload struct {
 	FullName string `json:"fullName"`
 	Paymail  string `json:"paymail"`
+}
+
+// TODO: check if everything is needed after whole PIKE implementation
+type PikePaymentDestinationsRequest struct {
+	SenderName    string    `json:"senderName"`
+	SenderPaymail string    `json:"senderPaymail"`
+	Amount        uint64    `json:"amount"`
+	Dt            time.Time `json:"dt"`
+	Reference     string    `json:"reference"`
+	Signature     string    `json:"signature"`
+}
+
+type PikePaymentDestinationsResponse struct {
+	Outputs   []PikePaymentDestination `json:"outputs"`
+	Reference string                   `json:"reference"`
+}
+
+type PikePaymentDestination struct {
+	Script   string `json:"script"`
+	Satoshis int    `json:"satoshis"`
 }
 
 func (c *Client) AddContactRequest(url, alias, domain string, request *PikeContactRequestPayload) (*PikeContactRequestResponse, error) {

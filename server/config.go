@@ -1,11 +1,10 @@
 package server
 
 import (
+	"github.com/rs/zerolog"
 	"slices"
 	"strings"
 	"time"
-
-	"github.com/rs/zerolog"
 
 	"github.com/bitcoin-sv/go-paymail"
 )
@@ -23,14 +22,17 @@ type Configuration struct {
 	GenericCapabilitiesEnabled       bool            `json:"generic_capabilities_enabled"`
 	P2PCapabilitiesEnabled           bool            `json:"p2p_capabilities_enabled"`
 	BeefCapabilitiesEnabled          bool            `json:"beef_capabilities_enabled"`
-	PikeCapabilitiesEnabled          bool            `json:"pike_capabilities_enabled"`
+	PikeContactCapabilitiesEnabled   bool            `json:"pike_contact_capabilities_enabled"`
+	PikePaymentCapabilitiesEnabled   bool            `json:"pike_payment_capabilities_enabled"`
 	ServiceName                      string          `json:"service_name"`
 	Timeout                          time.Duration   `json:"timeout"`
 	Logger                           *zerolog.Logger `json:"logger"`
 
 	// private
 	actions              PaymailServiceProvider
-	pikeActions          PikeServiceProvider
+	pikeContactActions   PikeContactServiceProvider
+	pikePaymentActions   PikePaymentServiceProvider
+	nestedCapabilities   NestedCapabilitiesMap
 	callableCapabilities CallableCapabilitiesMap
 	staticCapabilities   StaticCapabilitiesMap
 }
@@ -139,9 +141,15 @@ func NewConfig(serviceProvider *PaymailServiceLocator, opts ...ConfigOps) (*Conf
 	if config.BeefCapabilitiesEnabled {
 		config.SetBeefCapabilities()
 	}
-	if config.PikeCapabilitiesEnabled {
-		config.SetPikeCapabilities()
-		config.pikeActions = serviceProvider.GetPikeService()
+
+	if config.PikeContactCapabilitiesEnabled {
+		config.SetPikeContactCapabilities()
+		config.pikeContactActions = serviceProvider.GetPikeContactService()
+	}
+
+	if config.PikePaymentCapabilitiesEnabled {
+		config.SetPikePaymentCapabilities()
+		config.pikePaymentActions = serviceProvider.GetPikePaymentService()
 	}
 
 	// Validate the configuration

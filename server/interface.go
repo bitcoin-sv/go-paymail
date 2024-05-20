@@ -8,8 +8,9 @@ import (
 )
 
 type PaymailServiceLocator struct {
-	paymailService PaymailServiceProvider
-	pikeService    PikeServiceProvider
+	paymailService     PaymailServiceProvider
+	pikeContactService PikeContactServiceProvider
+	pikePaymentService PikePaymentServiceProvider
 }
 
 func (l *PaymailServiceLocator) RegisterPaymailService(s PaymailServiceProvider) {
@@ -24,16 +25,28 @@ func (l *PaymailServiceLocator) GetPaymailService() PaymailServiceProvider {
 	return l.paymailService
 }
 
-func (l *PaymailServiceLocator) RegisterPikeService(s PikeServiceProvider) {
-	l.pikeService = s
+func (l *PaymailServiceLocator) RegisterPikeContactService(s PikeContactServiceProvider) {
+	l.pikeContactService = s
 }
 
-func (l *PaymailServiceLocator) GetPikeService() PikeServiceProvider {
-	if l.pikeService == nil {
-		panic("PikeServiceProvider was not registered")
+func (l *PaymailServiceLocator) GetPikeContactService() PikeContactServiceProvider {
+	if l.pikeContactService == nil {
+		panic("PikeContactServiceProvider was not registered")
 	}
 
-	return l.pikeService
+	return l.pikeContactService
+}
+
+func (l *PaymailServiceLocator) RegisterPikePaymentService(s PikePaymentServiceProvider) {
+	l.pikePaymentService = s
+}
+
+func (l *PaymailServiceLocator) GetPikePaymentService() PikePaymentServiceProvider {
+	if l.pikePaymentService == nil {
+		panic("PikePaymentServiceProvider was not registered")
+	}
+
+	return l.pikePaymentService
 }
 
 // PaymailServiceProvider the paymail server interface that needs to be implemented
@@ -70,10 +83,19 @@ type PaymailServiceProvider interface {
 	) error
 }
 
-type PikeServiceProvider interface {
+type PikeContactServiceProvider interface {
 	AddContact(
 		ctx context.Context,
 		requesterPaymail string,
 		contact *paymail.PikeContactRequestPayload,
 	) error
+}
+
+type PikePaymentServiceProvider interface {
+	CreatePikeDestinationResponse(
+		ctx context.Context,
+		alias, domain string,
+		satoshis uint64,
+		metaData *RequestMetadata,
+	) (*paymail.PikePaymentDestinationsResponse, error)
 }

@@ -2,10 +2,9 @@ package server
 
 import (
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"net/http"
 	"strings"
-
-	"github.com/gin-gonic/gin"
 
 	"github.com/bitcoin-sv/go-paymail"
 )
@@ -16,6 +15,7 @@ type CallableCapability struct {
 	Handler gin.HandlerFunc
 }
 
+type NestedCapabilitiesMap map[string]CallableCapabilitiesMap
 type CallableCapabilitiesMap map[string]CallableCapability
 type StaticCapabilitiesMap map[string]any
 
@@ -80,13 +80,38 @@ func (c *Configuration) SetBeefCapabilities() {
 	)
 }
 
-func (c *Configuration) SetPikeCapabilities() {
+func (c *Configuration) SetPikeContactCapabilities() {
 	_addCapabilities(c.callableCapabilities,
 		CallableCapabilitiesMap{
-			paymail.BRFCPike: CallableCapability{
+			paymail.BRFCTemporaryPike: CallableCapability{
 				Path:    fmt.Sprintf("/pike/%s", PaymailAddressTemplate),
 				Method:  http.MethodPost,
 				Handler: c.pikeNewContact,
+			},
+		},
+	)
+	_addCapabilities(c.nestedCapabilities,
+		NestedCapabilitiesMap{
+			paymail.BRFCPike: CallableCapabilitiesMap{
+				paymail.BRFCPikeInvite: CallableCapability{
+					Path:    fmt.Sprintf("/contact/invite/%s", PaymailAddressTemplate),
+					Method:  http.MethodPost,
+					Handler: c.pikeNewContact,
+				},
+			},
+		},
+	)
+}
+
+func (c *Configuration) SetPikePaymentCapabilities() {
+	_addNestedCapabilities(c.nestedCapabilities,
+		NestedCapabilitiesMap{
+			paymail.BRFCPike: CallableCapabilitiesMap{
+				paymail.BRFCPikeOutputs: CallableCapability{
+					Path:    fmt.Sprintf("/pike/outputs/%s", PaymailAddressTemplate),
+					Method:  http.MethodPost,
+					Handler: c.pikeGetPaymentDestinations,
+				},
 			},
 		},
 	)
@@ -95,6 +120,12 @@ func (c *Configuration) SetPikeCapabilities() {
 func _addCapabilities[T any](base map[string]T, newCaps map[string]T) {
 	for key, val := range newCaps {
 		base[key] = val
+	}
+}
+
+func _addNestedCapabilities(base NestedCapabilitiesMap, newCaps NestedCapabilitiesMap) {
+	for key, val := range newCaps {
+		_addCapabilities(base[key], val)
 	}
 }
 
@@ -141,6 +172,13 @@ func (c *Configuration) EnrichCapabilities(host string) (*paymail.CapabilitiesPa
 	}
 	for key, cap := range c.callableCapabilities {
 		payload.Capabilities[key] = serviceUrl + string(cap.Path)
+	}
+	for key, cap := range c.nestedCapabilities {
+		payload.Capabilities[key] = make(map[string]interface{})
+		for nestedKey, nestedCap := range cap {
+			payload.Capabilities[key].(map[string]interface{})[nestedKey] = serviceUrl + string(nestedCap.Path)
+			//payload.Capabilities[key][nestedKey] = serviceUrl + string(nestedCap.Path)
+		}
 	}
 	return payload, nil
 }

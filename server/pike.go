@@ -18,10 +18,34 @@ func (c *Configuration) pikeNewContact(rc *gin.Context) {
 		return
 	}
 
-	if err = c.pikeActions.AddContact(rc.Request.Context(), receiverPaymail, &requesterContact); err != nil {
+	if err = c.pikeContactActions.AddContact(rc.Request.Context(), receiverPaymail, &requesterContact); err != nil {
 		ErrorResponse(rc, ErrorAddContactRequest, err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
 	rc.Status(http.StatusCreated)
+}
+
+func (c *Configuration) pikeGetPaymentDestinations(rc *gin.Context) {
+	var paymentDestinationRequest paymail.PikePaymentDestinationsRequest
+	err := json.NewDecoder(rc.Request.Body).Decode(&paymentDestinationRequest)
+	if err != nil {
+		ErrorResponse(rc, ErrorInvalidParameter, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	alias, domain, md, ok := c.GetPaymailAndCreateMetadata(rc, paymentDestinationRequest.Amount)
+	if !ok {
+		return
+	}
+
+	var response *paymail.PikePaymentDestinationsResponse
+	if response, err = c.pikePaymentActions.CreatePikeDestinationResponse(
+		rc.Request.Context(), alias, domain, paymentDestinationRequest.Amount, md,
+	); err != nil {
+		ErrorResponse(rc, ErrorScript, "error creating output script(s): "+err.Error(), http.StatusExpectationFailed)
+		return
+	}
+
+	rc.JSON(http.StatusOK, response)
 }
