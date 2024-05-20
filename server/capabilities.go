@@ -179,8 +179,7 @@ func (c *Configuration) EnrichCapabilities(host string) (*paymail.CapabilitiesPa
 	for key, cap := range c.nestedCapabilities {
 		payload.Capabilities[key] = make(map[string]interface{})
 		for nestedKey, nestedCap := range cap {
-			payload.Capabilities[key].(map[string]interface{})[nestedKey] = serviceUrl + string(nestedCap.Path)
-			//payload.Capabilities[key][nestedKey] = serviceUrl + string(nestedCap.Path)
+			payload.Capabilities[key].(map[string]interface{})[nestedKey] = serviceUrl + nestedCap.Path
 		}
 	}
 	return payload, nil
