@@ -58,3 +58,12 @@ func (d *demoServiceProvider) AddContact(
 ) error {
 	return nil
 }
+
+func (d *demoServiceProvider) CreatePikeDestinationResponse(
+	ctx context.Context,
+	alias, domain string,
+	satoshis uint64,
+	metaData *server.RequestMetadata,
+) (*paymail.PikePaymentDestinationsResponse, error) {
+	return nil, nil
+}
