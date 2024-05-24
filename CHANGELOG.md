@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.15.0](https://github.com/bitcoin-sv/go-paymail/compare/v0.14.0...v0.15.0) (2024-05-24)
+
+
+### Features
+
+* **SPV-789:** extend PIKE capability ([#91](https://github.com/bitcoin-sv/go-paymail/issues/91)) ([6b1a07c](https://github.com/bitcoin-sv/go-paymail/commit/6b1a07c7cd68b492d7fa7e590a9faeb7b269ba2e))
+
 ## [0.14.0](https://github.com/bitcoin-sv/go-paymail/compare/v0.13.0...v0.14.0) (2024-03-26)
 
 
