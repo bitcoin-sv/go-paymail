@@ -6,15 +6,41 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 )
 
+// PikeContactRequestResponse is PIKE wrapper for StandardResponse
 type PikeContactRequestResponse struct {
 	StandardResponse
 }
 
+// PikeContactRequestPayload is a payload used to request a contact
 type PikeContactRequestPayload struct {
 	FullName string `json:"fullName"`
 	Paymail  string `json:"paymail"`
+}
+
+// PikePaymentOutputsPayload is a payload needed to get payment outputs
+// TODO: check if everything is needed after whole PIKE implementation
+type PikePaymentOutputsPayload struct {
+	SenderName    string    `json:"senderName"`
+	SenderPaymail string    `json:"senderPaymail"`
+	Amount        uint64    `json:"amount"`
+	Dt            time.Time `json:"dt"`
+	Reference     string    `json:"reference"`
+	Signature     string    `json:"signature"`
+}
+
+// PikePaymentOutputsResponse is a response which contain output templates
+type PikePaymentOutputsResponse struct {
+	Outputs   []PikePaymentOutput `json:"outputs"`
+	Reference string              `json:"reference"`
+}
+
+// PikePaymentOutput is a single output template with satoshis
+type PikePaymentOutput struct {
+	Script   string `json:"script"`
+	Satoshis int    `json:"satoshis"`
 }
 
 func (c *Client) AddContactRequest(url, alias, domain string, request *PikeContactRequestPayload) (*PikeContactRequestResponse, error) {

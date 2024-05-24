@@ -22,7 +22,8 @@ func main() {
 
 	sl := server.PaymailServiceLocator{}
 	sl.RegisterPaymailService(new(demoServiceProvider))
-	sl.RegisterPikeService(new(demoServiceProvider))
+	sl.RegisterPikeContactService(new(demoServiceProvider))
+	sl.RegisterPikePaymentService(new(demoServiceProvider))
 
 	// Custom server with lots of customizable goodies
 	config, err := server.NewConfig(

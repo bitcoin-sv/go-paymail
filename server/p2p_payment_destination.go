@@ -22,17 +22,6 @@ type p2pDestinationRequestBody struct {
 //
 // Specs: https://docs.moneybutton.com/docs/paymail-07-p2p-payment-destination.html
 func (c *Configuration) p2pDestination(context *gin.Context) {
-	incomingPaymail := context.Param(PaymailAddressParamName)
-
-	// Parse, sanitize and basic validation
-	alias, domain, paymailAddress := paymail.SanitizePaymail(incomingPaymail)
-	if len(paymailAddress) == 0 {
-		ErrorResponse(context, ErrorInvalidParameter, "invalid paymail: "+incomingPaymail, http.StatusBadRequest)
-		return
-	} else if !c.IsAllowedDomain(domain) {
-		ErrorResponse(context, ErrorUnknownDomain, "domain unknown: "+domain, http.StatusBadRequest)
-		return
-	}
 	var b p2pDestinationRequestBody
 	err := context.Bind(&b)
 	if err != nil {
@@ -40,35 +29,15 @@ func (c *Configuration) p2pDestination(context *gin.Context) {
 		return
 	}
 
-	// Start the PaymentRequest
-	paymentRequest := &paymail.PaymentRequest{
-		Satoshis: b.Satoshis,
-	}
-
-	// Did we get some satoshis?
-	if paymentRequest.Satoshis == 0 {
-		ErrorResponse(context, ErrorMissingField, "missing parameter: satoshis", http.StatusBadRequest)
+	alias, domain, md, ok := c.GetPaymailAndCreateMetadata(context, b.Satoshis)
+	if !ok {
+		// ErrorResponse already set up in GetPaymailAndCreateMetadata
 		return
 	}
 
-	// Create the metadata struct
-	md := CreateMetadata(context.Request, alias, domain, "")
-	md.PaymentDestination = paymentRequest
-
-	// Get from the data layer
-	foundPaymail, err := c.actions.GetPaymailByAlias(context.Request.Context(), alias, domain, md)
-	if err != nil {
-		ErrorResponse(context, ErrorFindingPaymail, err.Error(), http.StatusExpectationFailed)
-		return
-	} else if foundPaymail == nil {
-		ErrorResponse(context, ErrorPaymailNotFound, "paymail not found", http.StatusNotFound)
-		return
-	}
-
-	// Create the response
 	var response *paymail.PaymentDestinationPayload
 	if response, err = c.actions.CreateP2PDestinationResponse(
-		context.Request.Context(), alias, domain, paymentRequest.Satoshis, md,
+		context.Request.Context(), alias, domain, b.Satoshis, md,
 	); err != nil {
 		ErrorResponse(context, ErrorScript, "error creating output script(s): "+err.Error(), http.StatusExpectationFailed)
 		return

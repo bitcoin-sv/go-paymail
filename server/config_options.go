@@ -28,10 +28,12 @@ func defaultConfigOptions() *Configuration {
 		GenericCapabilitiesEnabled:       true,
 		P2PCapabilitiesEnabled:           false,
 		BeefCapabilitiesEnabled:          false,
-		PikeCapabilitiesEnabled:          false,
+		PikeContactCapabilitiesEnabled:   false,
+		PikePaymentCapabilitiesEnabled:   false,
 		ServiceName:                      paymail.DefaultServiceName,
 		Timeout:                          DefaultTimeout,
 		Logger:                           logging.GetDefaultLogger(),
+		nestedCapabilities:               make(NestedCapabilitiesMap),
 		callableCapabilities:             make(CallableCapabilitiesMap),
 		staticCapabilities:               make(StaticCapabilitiesMap),
 	}
@@ -59,10 +61,17 @@ func WithBeefCapabilities() ConfigOps {
 	}
 }
 
-// WithPikeCapabilities will load the PIKE capabilities
-func WithPikeCapabilities() ConfigOps {
+// WithPikeContactCapabilities will load the PIKE capabilities
+func WithPikeContactCapabilities() ConfigOps {
 	return func(c *Configuration) {
-		c.PikeCapabilitiesEnabled = true
+		c.PikeContactCapabilitiesEnabled = true
+	}
+}
+
+// WithPikePaymentCapabilities will load the PIKE capabilities
+func WithPikePaymentCapabilities() ConfigOps {
+	return func(c *Configuration) {
+		c.PikePaymentCapabilitiesEnabled = true
 	}
 }
 
