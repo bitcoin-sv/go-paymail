@@ -31,6 +31,7 @@ func (c *Configuration) p2pDestination(context *gin.Context) {
 
 	alias, domain, md, ok := c.GetPaymailAndCreateMetadata(context, b.Satoshis)
 	if !ok {
+		// ErrorResponse already set up in GetPaymailAndCreateMetadata
 		return
 	}
 

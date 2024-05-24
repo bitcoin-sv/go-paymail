@@ -39,6 +39,7 @@ func (c *Configuration) pikeGetPaymentDestinations(rc *gin.Context) {
 
 	alias, domain, md, ok := c.GetPaymailAndCreateMetadata(rc, paymentDestinationRequest.Amount)
 	if !ok {
+		// ErrorResponse already set up in GetPaymailAndCreateMetadata
 		return
 	}
 
