@@ -7,7 +7,7 @@ require (
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-resty/resty/v2 v2.13.1
 	github.com/jarcoal/httpmock v1.3.1
-	github.com/libsv/go-bc v0.1.28
+	github.com/libsv/go-bc v0.1.29
 	github.com/libsv/go-bk v0.1.6
 	github.com/libsv/go-bt/v2 v2.2.5
 	github.com/miekg/dns v1.1.59
