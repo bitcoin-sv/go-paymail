@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/bitcoin-sv/go-paymail"
@@ -26,7 +27,7 @@ func (c *Configuration) pikeNewContact(rc *gin.Context) {
 	rc.Status(http.StatusCreated)
 }
 
-func (c *Configuration) pikeGetPaymentDestinations(rc *gin.Context) {
+func (c *Configuration) pikeGetOutputTemplates(rc *gin.Context) {
 	var paymentDestinationRequest paymail.PikePaymentOutputsPayload
 	err := json.NewDecoder(rc.Request.Body).Decode(&paymentDestinationRequest)
 	defer func() {
@@ -43,13 +44,44 @@ func (c *Configuration) pikeGetPaymentDestinations(rc *gin.Context) {
 		return
 	}
 
+	pki, err := getPKI(paymentDestinationRequest.SenderPaymail)
+	if err != nil {
+		ErrorResponse(rc, ErrorScript, "error getting pki: "+err.Error(), http.StatusExpectationFailed)
+		return
+	}
+
 	var response *paymail.PikePaymentOutputsResponse
-	if response, err = c.pikePaymentActions.CreatePikeDestinationResponse(
-		rc.Request.Context(), alias, domain, paymentDestinationRequest.Amount, md,
+	if response, err = c.pikePaymentActions.CreatePikeOutputResponse(
+		rc.Request.Context(), alias, domain, pki.PubKey, paymentDestinationRequest.Amount, md,
 	); err != nil {
 		ErrorResponse(rc, ErrorScript, "error creating output script(s): "+err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
 	rc.JSON(http.StatusOK, response)
+}
+
+func getPKI(paymailAddress string) (*paymail.PKIResponse, error) {
+	alias, domain, paymailAddress := paymail.SanitizePaymail(paymailAddress)
+	if len(paymailAddress) == 0 {
+		return nil, fmt.Errorf("invalid paymail: %s", paymailAddress)
+	}
+
+	client, err := paymail.NewClient()
+	if err != nil {
+		return nil, err
+	}
+
+	var capabilities *paymail.CapabilitiesResponse
+	if capabilities, err = client.GetCapabilities(domain, paymail.DefaultPort); err != nil {
+		return nil, err
+	}
+
+	pkiURL := capabilities.GetString(paymail.BRFCPki, paymail.BRFCPkiAlternate)
+
+	var pki *paymail.PKIResponse
+	if pki, err = client.GetPKI(pkiURL, alias, domain); err != nil {
+		return nil, err
+	}
+	return pki, nil
 }

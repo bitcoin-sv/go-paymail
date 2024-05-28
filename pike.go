@@ -33,14 +33,14 @@ type PikePaymentOutputsPayload struct {
 
 // PikePaymentOutputsResponse is a response which contain output templates
 type PikePaymentOutputsResponse struct {
-	Outputs   []PikePaymentOutput `json:"outputs"`
-	Reference string              `json:"reference"`
+	Outputs   []*OutputTemplate `json:"outputs"`
+	Reference string            `json:"reference"`
 }
 
-// PikePaymentOutput is a single output template with satoshis
-type PikePaymentOutput struct {
+// OutputTemplate is a single output template with satoshis
+type OutputTemplate struct {
 	Script   string `json:"script"`
-	Satoshis int    `json:"satoshis"`
+	Satoshis uint64 `json:"satoshis"`
 }
 
 func (c *Client) AddContactRequest(url, alias, domain string, request *PikeContactRequestPayload) (*PikeContactRequestResponse, error) {
