@@ -27,9 +27,17 @@ func main() {
 	}
 	log.Printf("found PIKE Outputs URL: %s", pikeOutputsURL)
 
+	// Prepare the payload
+	alias := "examplealias"
+	domain := "example.com"
+	payload := &paymail.PikePaymentOutputsPayload{
+		SenderPaymail: "joedoe@example.com",
+		Amount:        1000, // Example amount in satoshis
+	}
+
 	// Get the outputs template from PIKE
 	var outputs *paymail.PikeOutputs
-	if outputs, err = client.GetOutputsTemplate(pikeOutputsURL); err != nil {
+	if outputs, err = client.GetOutputsTemplate(pikeOutputsURL, alias, domain, payload); err != nil {
 		log.Fatalf("error getting outputs template: %s", err.Error())
 	}
 	log.Printf("found outputs template: %v", outputs)

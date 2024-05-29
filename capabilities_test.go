@@ -635,55 +635,6 @@ func BenchmarkCapabilities_GetString(b *testing.B) {
 	}
 }
 
-func TestClient_GetOutputsTemplate(t *testing.T) {
-	client := newTestClient(t)
-
-	t.Run("successful PIKE outputs response", func(t *testing.T) {
-		mockPIKEOutputs(http.StatusOK)
-
-		outputsURL := "https://" + testDomain + "/v1/bsvalias/pike/outputs/{alias}@{domain.tld}"
-		response, err := client.GetOutputsTemplate(outputsURL)
-		require.NoError(t, err)
-		require.NotNil(t, response)
-		require.Equal(t, "https://example.com/outputs", response.URL)
-	})
-
-	t.Run("PIKE outputs response error", func(t *testing.T) {
-		httpmock.Reset()
-		httpmock.RegisterResponder(http.MethodGet, "https://exmaple.com/v1/bsvalias/pike/outputs/{alias}@{domain.tld}",
-			httpmock.NewStringResponder(http.StatusBadRequest, `{"message": "bad request"}`),
-		)
-
-		outputsURL := "https://domain.com/v1/bsvalias/pike/outputs/{alias}@{domain.tld}"
-		response, err := client.GetOutputsTemplate(outputsURL)
-		require.Error(t, err)
-		require.Nil(t, response)
-	})
-}
-
-// mockPIKEOutputs is used for mocking the PIKE outputs response
-func mockPIKEOutputs(statusCode int) {
-	httpmock.Reset()
-	httpmock.RegisterResponder(http.MethodGet, "https://"+testDomain+"/v1/bsvalias/pike/outputs/%7Balias%7D@%7Bdomain.tld%7D",
-		httpmock.NewStringResponder(
-			statusCode,
-			`{
-                "url": "https://example.com/outputs"
-            }`,
-		),
-	)
-}
-
-// BenchmarkClient_GetOutputsTemplate benchmarks the method GetOutputsTemplate()
-func BenchmarkClient_GetOutputsTemplate(b *testing.B) {
-	client := newTestClient(nil)
-	mockPIKEOutputs(http.StatusOK)
-	outputsURL := "https://domain.com/v1/bsvalias/pike/outputs/{alias}@{domain.tld}"
-	for i := 0; i < b.N; i++ {
-		_, _ = client.GetOutputsTemplate(outputsURL)
-	}
-}
-
 // ExampleCapabilitiesPayload_ExtractPikeOutputsURL example using ExtractPikeOutputsURL()
 //
 // See more examples in /examples/
@@ -707,27 +658,6 @@ func ExampleCapabilitiesPayload_ExtractPikeOutputsURL() {
 	outputsURL := capabilities.ExtractPikeOutputsURL()
 	fmt.Printf("found PIKE Outputs URL: %v", outputsURL)
 	// Output:found PIKE Outputs URL: https://domain.com/bsvalias/pike/outputs/{alias}@{domain.tld}
-}
-
-// ExampleClient_GetOutputsTemplate example using GetOutputsTemplate()
-//
-// See more examples in /examples/
-func ExampleClient_GetOutputsTemplate() {
-	// Setup a mock HTTP client
-	client := newTestClient(nil)
-	mockPIKEOutputs(http.StatusOK)
-
-	// Assume we have a PIKE Outputs URL
-	pikeOutputsURL := "https://" + testDomain + "/v1/bsvalias/pike/outputs/{alias}@{domain.tld}"
-
-	// Get the outputs template from PIKE
-	outputs, err := client.GetOutputsTemplate(pikeOutputsURL)
-	if err != nil {
-		fmt.Printf("error getting outputs template: %s", err.Error())
-		return
-	}
-	fmt.Printf("found outputs template: %+v", outputs)
-	// Output:found outputs template: &{URL:https://example.com/outputs}
 }
 
 // TestClient_AddInviteRequest will test the method AddInviteRequest()

@@ -101,3 +101,54 @@ func (r *PikeContactRequestPayload) validate() error {
 
 	return ValidatePaymail(r.Paymail)
 }
+
+// GetOutputsTemplate calls the PIKE capability outputs subcapability
+func (c *Client) GetOutputsTemplate(pikeURL, alias, domain string, payload *PikePaymentOutputsPayload) (response *PikeOutputs, err error) {
+	// Require a valid URL
+	if len(pikeURL) == 0 || !strings.Contains(pikeURL, "https://") {
+		err = fmt.Errorf("invalid url: %s", pikeURL)
+		return
+	}
+
+	// Basic requirements for request
+	if payload == nil {
+		err = errors.New("payload cannot be nil")
+		return
+	} else if payload.Amount == 0 {
+		err = errors.New("amount is required")
+		return
+	} else if len(alias) == 0 {
+		err = errors.New("missing alias")
+		return
+	} else if len(domain) == 0 {
+		err = errors.New("missing domain")
+		return
+	}
+
+	// Set the base URL and path, assuming the URL is from the prior GetCapabilities() request
+	reqURL := replaceAliasDomain(pikeURL, alias, domain)
+
+	// Fire the POST request
+	var resp StandardResponse
+	if resp, err = c.postRequest(reqURL, payload); err != nil {
+		return
+	}
+
+	// Test the status code
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("bad response from PIKE outputs: code %d", resp.StatusCode)
+	}
+
+	// Decode the body of the response
+	outputs := &PikeOutputs{}
+	if err = json.Unmarshal(resp.Body, outputs); err != nil {
+		return nil, err
+	}
+
+	return outputs, nil
+}
+
+// AddInviteRequest sends a contact request using the invite URL from capabilities
+func (c *Client) AddInviteRequest(inviteURL, alias, domain string, request *PikeContactRequestPayload) (*PikeContactRequestResponse, error) {
+	return c.AddContactRequest(inviteURL, alias, domain, request)
+}

@@ -168,36 +168,12 @@ func (c *CapabilitiesPayload) ExtractPikeOutputsURL() string {
 	return ""
 }
 
-// GetOutputsTemplate calls the PIKE capability outputs subcapability
-func (c *Client) GetOutputsTemplate(pikeURL string) (response *PikeOutputs, err error) {
-	var resp StandardResponse
-	if resp, err = c.getRequest(pikeURL); err != nil {
-		return nil, err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("bad response from PIKE outputs: code %d", resp.StatusCode)
-	}
-
-	outputs := &PikeOutputs{}
-	if err = json.Unmarshal(resp.Body, outputs); err != nil {
-		return nil, err
-	}
-
-	return outputs, nil
-}
-
 // ExtractPikeInviteURL extracts the invite URL from the PIKE capability
 func (c *CapabilitiesPayload) ExtractPikeInviteURL() string {
 	if c.Pike != nil {
 		return c.Pike.Invite
 	}
 	return ""
-}
-
-// AddInviteRequest sends a contact request using the invite URL from capabilities
-func (c *Client) AddInviteRequest(inviteURL, alias, domain string, request *PikeContactRequestPayload) (*PikeContactRequestResponse, error) {
-	return c.AddContactRequest(inviteURL, alias, domain, request)
 }
 
 // parsePikeCapability parses the PIKE capability from the capabilities response
