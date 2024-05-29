@@ -15,7 +15,7 @@ func main() {
 
 	// Get the capabilities
 	var capabilities *paymail.CapabilitiesResponse
-	if capabilities, err = client.GetCapabilities("auggie.4chain.space", paymail.DefaultPort); err != nil {
+	if capabilities, err = client.GetCapabilities("example.com", paymail.DefaultPort); err != nil {
 		log.Fatalf("error getting capabilities: %s", err.Error())
 	}
 	log.Printf("found capabilities: %d", len(capabilities.Capabilities))
