@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
 )
 
 // PikeContactRequestResponse is PIKE wrapper for StandardResponse
@@ -21,14 +20,9 @@ type PikeContactRequestPayload struct {
 }
 
 // PikePaymentOutputsPayload is a payload needed to get payment outputs
-// TODO: check if everything is needed after whole PIKE implementation
 type PikePaymentOutputsPayload struct {
-	SenderName    string    `json:"senderName"`
-	SenderPaymail string    `json:"senderPaymail"`
-	Amount        uint64    `json:"amount"`
-	Dt            time.Time `json:"dt"`
-	Reference     string    `json:"reference"`
-	Signature     string    `json:"signature"`
+	SenderPaymail string `json:"senderPaymail"`
+	Amount        uint64 `json:"amount"`
 }
 
 // PikePaymentOutputsResponse is a response which contain output templates
