@@ -149,15 +149,12 @@ func (c *Client) GetCapabilities(target string, port int) (response *Capabilitie
 	// Invalid version detected
 	if len(response.BsvAlias) == 0 {
 		err = fmt.Errorf("missing %s version", DefaultServiceName)
+		return
 	}
 
 	// Parse PIKE capability
-	if pike, ok := response.Capabilities["935478af7bf2"].(map[string]interface{}); ok {
-		pikeCap := &PikeCapability{
-			Invite:  pike["invite"].(string),
-			Outputs: pike["outputs"].(string),
-		}
-		response.Pike = pikeCap
+	if err = parsePikeCapability(response); err != nil {
+		return
 	}
 
 	return
@@ -201,4 +198,36 @@ func (c *CapabilitiesPayload) ExtractPikeInviteURL() string {
 // AddInviteRequest sends a contact request using the invite URL from capabilities
 func (c *Client) AddInviteRequest(inviteURL, alias, domain string, request *PikeContactRequestPayload) (*PikeContactRequestResponse, error) {
 	return c.AddContactRequest(inviteURL, alias, domain, request)
+}
+
+// parsePikeCapability parses the PIKE capability from the capabilities response
+func parsePikeCapability(response *CapabilitiesResponse) error {
+	if pike, ok := response.Capabilities[BRFCPike].(map[string]interface{}); ok {
+		var (
+			invite, outputs string
+			errMsgs         []string
+		)
+
+		if inviteStr, ok := pike["invite"].(string); ok {
+			invite = inviteStr
+		} else {
+			errMsgs = append(errMsgs, "missing invite URL in PIKE capability")
+		}
+
+		if outputsStr, ok := pike["outputs"].(string); ok {
+			outputs = outputsStr
+		} else {
+			errMsgs = append(errMsgs, "missing outputs URL in PIKE capability")
+		}
+
+		if len(errMsgs) > 0 {
+			return fmt.Errorf(strings.Join(errMsgs, "; "))
+		}
+
+		response.Pike = &PikeCapability{
+			Invite:  invite,
+			Outputs: outputs,
+		}
+	}
+	return nil
 }
