@@ -30,6 +30,18 @@ type CapabilitiesResponse struct {
 type CapabilitiesPayload struct {
 	BsvAlias     string                 `json:"bsvalias"`     // Version of the bsvalias
 	Capabilities map[string]interface{} `json:"capabilities"` // Raw list of the capabilities
+	Pike         *PikeCapability        `json:"pike,omitempty"`
+}
+
+// PikeCapability represents the structure of the PIKE capability
+type PikeCapability struct {
+	Invite  string `json:"invite,omitempty"`
+	Outputs string `json:"outputs,omitempty"`
+}
+
+// PikeOutputs represents the structure of the PIKE outputs
+type PikeOutputs struct {
+	URL string `json:"url"`
 }
 
 // Has will check if a BRFC ID (or alternate) is found in the list of capabilities
@@ -139,5 +151,54 @@ func (c *Client) GetCapabilities(target string, port int) (response *Capabilitie
 		err = fmt.Errorf("missing %s version", DefaultServiceName)
 	}
 
+	// Parse PIKE capability
+	if pike, ok := response.Capabilities["935478af7bf2"].(map[string]interface{}); ok {
+		pikeCap := &PikeCapability{
+			Invite:  pike["invite"].(string),
+			Outputs: pike["outputs"].(string),
+		}
+		response.Pike = pikeCap
+	}
+
 	return
+}
+
+// ExtractPikeOutputsURL extracts the outputs URL from the PIKE capability
+func (c *CapabilitiesPayload) ExtractPikeOutputsURL() string {
+	if c.Pike != nil {
+		return c.Pike.Outputs
+	}
+	return ""
+}
+
+// GetOutputsTemplate calls the PIKE capability outputs subcapability
+func (c *Client) GetOutputsTemplate(pikeURL string) (response *PikeOutputs, err error) {
+	var resp StandardResponse
+	if resp, err = c.getRequest(pikeURL); err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("bad response from PIKE outputs: code %d", resp.StatusCode)
+	}
+
+	outputs := &PikeOutputs{}
+	if err = json.Unmarshal(resp.Body, outputs); err != nil {
+		return nil, err
+	}
+
+	return outputs, nil
+}
+
+// ExtractPikeInviteURL extracts the invite URL from the PIKE capability
+func (c *CapabilitiesPayload) ExtractPikeInviteURL() string {
+	if c.Pike != nil {
+		return c.Pike.Invite
+	}
+	return ""
+}
+
+// AddInviteRequest sends a contact request using the invite URL from capabilities
+func (c *Client) AddInviteRequest(inviteURL, alias, domain string, request *PikeContactRequestPayload) (*PikeContactRequestResponse, error) {
+	return c.AddContactRequest(inviteURL, alias, domain, request)
 }

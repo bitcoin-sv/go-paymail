@@ -4,8 +4,9 @@ import (
 	"context"
 	"net"
 
-	"github.com/bitcoin-sv/go-paymail/interfaces"
 	"github.com/go-resty/resty/v2"
+
+	"github.com/bitcoin-sv/go-paymail/interfaces"
 )
 
 // ClientInterface is the Paymail client interface
@@ -28,4 +29,6 @@ type ClientInterface interface {
 	WithCustomHTTPClient(client *resty.Client) ClientInterface
 	WithCustomResolver(resolver interfaces.DNSResolver) ClientInterface
 	AddContactRequest(url, alias, domain string, request *PikeContactRequestPayload) (response *PikeContactRequestResponse, err error)
+	AddInviteRequest(inviteURL, alias, domain string, request *PikeContactRequestPayload) (*PikeContactRequestResponse, error)
+	GetOutputsTemplate(pikeURL string) (response *PikeOutputs, err error)
 }
