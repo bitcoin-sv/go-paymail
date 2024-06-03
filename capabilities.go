@@ -186,8 +186,6 @@ func parsePikeCapability(response *CapabilitiesResponse) error {
 
 		if inviteStr, ok := pike["invite"].(string); ok {
 			invite = inviteStr
-		} else {
-			errMsgs = append(errMsgs, "missing invite URL in PIKE capability")
 		}
 
 		if outputsStr, ok := pike["outputs"].(string); ok {
