@@ -103,7 +103,7 @@ func (r *PikeContactRequestPayload) validate() error {
 }
 
 // GetOutputsTemplate calls the PIKE capability outputs subcapability
-func (c *Client) GetOutputsTemplate(pikeURL, alias, domain string, payload *PikePaymentOutputsPayload) (response *PikeOutputs, err error) {
+func (c *Client) GetOutputsTemplate(pikeURL, alias, domain string, payload *PikePaymentOutputsPayload) (response *PikePaymentOutputsResponse, err error) {
 	// Require a valid URL
 	if len(pikeURL) == 0 || !strings.Contains(pikeURL, "https://") {
 		err = fmt.Errorf("invalid url: %s", pikeURL)
@@ -140,7 +140,7 @@ func (c *Client) GetOutputsTemplate(pikeURL, alias, domain string, payload *Pike
 	}
 
 	// Decode the body of the response
-	outputs := &PikeOutputs{}
+	outputs := &PikePaymentOutputsResponse{}
 	if err = json.Unmarshal(resp.Body, outputs); err != nil {
 		return nil, err
 	}

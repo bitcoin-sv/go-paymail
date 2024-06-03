@@ -30,5 +30,5 @@ type ClientInterface interface {
 	WithCustomResolver(resolver interfaces.DNSResolver) ClientInterface
 	AddContactRequest(url, alias, domain string, request *PikeContactRequestPayload) (response *PikeContactRequestResponse, err error)
 	AddInviteRequest(inviteURL, alias, domain string, request *PikeContactRequestPayload) (*PikeContactRequestResponse, error)
-	GetOutputsTemplate(pikeURL, alias, domain string, payload *PikePaymentOutputsPayload) (response *PikeOutputs, err error)
+	GetOutputsTemplate(pikeURL, alias, domain string, payload *PikePaymentOutputsPayload) (response *PikePaymentOutputsResponse, err error)
 }

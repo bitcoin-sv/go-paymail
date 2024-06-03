@@ -36,7 +36,7 @@ func main() {
 	}
 
 	// Get the outputs template from PIKE
-	var outputs *paymail.PikeOutputs
+	var outputs *paymail.PikePaymentOutputsResponse
 	if outputs, err = client.GetOutputsTemplate(pikeOutputsURL, alias, domain, payload); err != nil {
 		log.Fatalf("error getting outputs template: %s", err.Error())
 	}
