@@ -270,7 +270,7 @@ func mockCapabilitiesWithPIKE(statusCode int) {
 					"6745385c3fc0": false,
 					"pki": "https://examples.com/{alias}@{domain.tld}/id",
 					"paymentDestination": "https://examples.com/{alias}@{domain.tld}/payment-destination",
-					"935478af7bf2": {
+					"8c4ed5ef8ace": {
 						"invite": "https://examples.com/v1/bsvalias/contact/invite/{alias}@{domain.tld}",
 						"outputs": "https://examples.com/v1/bsvalias/pike/outputs/{alias}@{domain.tld}"
 					}
