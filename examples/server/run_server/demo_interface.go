@@ -59,9 +59,9 @@ func (d *demoServiceProvider) AddContact(
 	return nil
 }
 
-func (d *demoServiceProvider) CreatePikeDestinationResponse(
+func (d *demoServiceProvider) CreatePikeOutputResponse(
 	ctx context.Context,
-	alias, domain string,
+	alias, domain, senderPubKey string,
 	satoshis uint64,
 	metaData *server.RequestMetadata,
 ) (*paymail.PikePaymentOutputsResponse, error) {

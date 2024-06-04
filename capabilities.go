@@ -30,6 +30,18 @@ type CapabilitiesResponse struct {
 type CapabilitiesPayload struct {
 	BsvAlias     string                 `json:"bsvalias"`     // Version of the bsvalias
 	Capabilities map[string]interface{} `json:"capabilities"` // Raw list of the capabilities
+	Pike         *PikeCapability        `json:"pike,omitempty"`
+}
+
+// PikeCapability represents the structure of the PIKE capability
+type PikeCapability struct {
+	Invite  string `json:"invite,omitempty"`
+	Outputs string `json:"outputs,omitempty"`
+}
+
+// PikeOutputs represents the structure of the PIKE outputs
+type PikeOutputs struct {
+	URL string `json:"url"`
 }
 
 // Has will check if a BRFC ID (or alternate) is found in the list of capabilities
@@ -137,7 +149,59 @@ func (c *Client) GetCapabilities(target string, port int) (response *Capabilitie
 	// Invalid version detected
 	if len(response.BsvAlias) == 0 {
 		err = fmt.Errorf("missing %s version", DefaultServiceName)
+		return
+	}
+
+	// Parse PIKE capability
+	if err = parsePikeCapability(response); err != nil {
+		return
 	}
 
 	return
+}
+
+// ExtractPikeOutputsURL extracts the outputs URL from the PIKE capability
+func (c *CapabilitiesPayload) ExtractPikeOutputsURL() string {
+	if c.Pike != nil {
+		return c.Pike.Outputs
+	}
+	return ""
+}
+
+// ExtractPikeInviteURL extracts the invite URL from the PIKE capability
+func (c *CapabilitiesPayload) ExtractPikeInviteURL() string {
+	if c.Pike != nil {
+		return c.Pike.Invite
+	}
+	return ""
+}
+
+// parsePikeCapability parses the PIKE capability from the capabilities response
+func parsePikeCapability(response *CapabilitiesResponse) error {
+	if pike, ok := response.Capabilities[BRFCPike].(map[string]interface{}); ok {
+		var (
+			invite, outputs string
+			errMsgs         []string
+		)
+
+		if inviteStr, ok := pike["invite"].(string); ok {
+			invite = inviteStr
+		}
+
+		if outputsStr, ok := pike["outputs"].(string); ok {
+			outputs = outputsStr
+		} else {
+			errMsgs = append(errMsgs, "missing outputs URL in PIKE capability")
+		}
+
+		if len(errMsgs) > 0 {
+			return fmt.Errorf(strings.Join(errMsgs, "; "))
+		}
+
+		response.Pike = &PikeCapability{
+			Invite:  invite,
+			Outputs: outputs,
+		}
+	}
+	return nil
 }
