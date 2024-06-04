@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.16.0](https://github.com/bitcoin-sv/go-paymail/compare/v0.15.0...v0.16.0) (2024-06-04)
+
+
+### Features
+
+* **SPV-802:** refactor pike output method and extend client ([#95](https://github.com/bitcoin-sv/go-paymail/issues/95)) ([ea71f59](https://github.com/bitcoin-sv/go-paymail/commit/ea71f597dc2a8248a27e32e2ed452344e710247c))
+
 ## [0.15.0](https://github.com/bitcoin-sv/go-paymail/compare/v0.14.0...v0.15.0) (2024-05-24)
 
 
