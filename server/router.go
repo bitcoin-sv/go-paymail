@@ -43,13 +43,23 @@ func (c *Configuration) RegisterRoutes(engine *gin.Engine) {
 	engine.GET("/.well-known/"+c.ServiceName, c.showCapabilities) // service discovery
 
 	for _, cap := range c.callableCapabilities {
-		routerPath := c.templateToRouterPath(cap.Path)
-		engine.Handle(
-			cap.Method,
-			routerPath,
-			cap.Handler,
-		)
+		c.registerRoute(engine, cap)
 	}
+
+	for _, nestedCap := range c.nestedCapabilities {
+		for _, cap := range nestedCap {
+			c.registerRoute(engine, cap)
+		}
+	}
+}
+
+func (c *Configuration) registerRoute(engine *gin.Engine, cap CallableCapability) {
+	routerPath := c.templateToRouterPath(cap.Path)
+	engine.Handle(
+		cap.Method,
+		routerPath,
+		cap.Handler,
+	)
 }
 
 func (c *Configuration) templateToRouterPath(template string) string {

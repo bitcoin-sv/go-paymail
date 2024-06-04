@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/jarcoal/httpmock"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -22,9 +21,9 @@ func TestClient_GetCapabilities(t *testing.T) {
 		response, err := client.GetCapabilities(testDomain, DefaultPort)
 		require.NoError(t, err)
 		require.NotNil(t, response)
-		assert.Equal(t, DefaultBsvAliasVersion, response.BsvAlias)
-		assert.Equal(t, http.StatusOK, response.StatusCode)
-		assert.Equal(t, true, response.Has(BRFCPki, ""))
+		require.Equal(t, DefaultBsvAliasVersion, response.BsvAlias)
+		require.Equal(t, http.StatusOK, response.StatusCode)
+		require.Equal(t, true, response.Has(BRFCPki, ""))
 	})
 
 	t.Run("successful testnet response", func(t *testing.T) {
@@ -35,9 +34,9 @@ func TestClient_GetCapabilities(t *testing.T) {
 		response, err := client.GetCapabilities(testDomain, DefaultPort)
 		require.NoError(t, err)
 		require.NotNil(t, response)
-		assert.Equal(t, DefaultBsvAliasVersion, response.BsvAlias)
-		assert.Equal(t, http.StatusOK, response.StatusCode)
-		assert.Equal(t, true, response.Has(BRFCPki, ""))
+		require.Equal(t, DefaultBsvAliasVersion, response.BsvAlias)
+		require.Equal(t, http.StatusOK, response.StatusCode)
+		require.Equal(t, true, response.Has(BRFCPki, ""))
 	})
 
 	t.Run("successful stn response", func(t *testing.T) {
@@ -48,9 +47,9 @@ func TestClient_GetCapabilities(t *testing.T) {
 		response, err := client.GetCapabilities(testDomain, DefaultPort)
 		require.NoError(t, err)
 		require.NotNil(t, response)
-		assert.Equal(t, DefaultBsvAliasVersion, response.BsvAlias)
-		assert.Equal(t, http.StatusOK, response.StatusCode)
-		assert.Equal(t, true, response.Has(BRFCPki, ""))
+		require.Equal(t, DefaultBsvAliasVersion, response.BsvAlias)
+		require.Equal(t, http.StatusOK, response.StatusCode)
+		require.Equal(t, true, response.Has(BRFCPki, ""))
 	})
 
 	t.Run("status not modified", func(t *testing.T) {
@@ -60,10 +59,10 @@ func TestClient_GetCapabilities(t *testing.T) {
 
 		response, err := client.GetCapabilities(testDomain, DefaultPort)
 		require.NoError(t, err)
-		assert.NotNil(t, response)
-		assert.Equal(t, DefaultBsvAliasVersion, response.BsvAlias)
-		assert.Equal(t, http.StatusNotModified, response.StatusCode)
-		assert.Equal(t, true, response.Has(BRFCPki, ""))
+		require.NotNil(t, response)
+		require.Equal(t, DefaultBsvAliasVersion, response.BsvAlias)
+		require.Equal(t, http.StatusNotModified, response.StatusCode)
+		require.Equal(t, true, response.Has(BRFCPki, ""))
 	})
 
 	t.Run("bad request", func(t *testing.T) {
@@ -79,9 +78,9 @@ func TestClient_GetCapabilities(t *testing.T) {
 
 		response, err := client.GetCapabilities(testDomain, DefaultPort)
 		require.Error(t, err)
-		assert.NotNil(t, response)
-		assert.Equal(t, http.StatusBadRequest, response.StatusCode)
-		assert.Equal(t, 0, len(response.Capabilities))
+		require.NotNil(t, response)
+		require.Equal(t, http.StatusBadRequest, response.StatusCode)
+		require.Equal(t, 0, len(response.Capabilities))
 	})
 
 	t.Run("missing target", func(t *testing.T) {
@@ -97,7 +96,7 @@ func TestClient_GetCapabilities(t *testing.T) {
 
 		response, err := client.GetCapabilities("", DefaultPort)
 		require.Error(t, err)
-		assert.Nil(t, response)
+		require.Nil(t, response)
 	})
 
 	t.Run("missing port", func(t *testing.T) {
@@ -113,7 +112,7 @@ func TestClient_GetCapabilities(t *testing.T) {
 
 		response, err := client.GetCapabilities(testDomain, 0)
 		require.Error(t, err)
-		assert.Nil(t, response)
+		require.Nil(t, response)
 	})
 
 	t.Run("http error", func(t *testing.T) {
@@ -126,7 +125,7 @@ func TestClient_GetCapabilities(t *testing.T) {
 
 		response, err := client.GetCapabilities(testDomain, DefaultPort)
 		require.Error(t, err)
-		assert.Nil(t, response)
+		require.Nil(t, response)
 	})
 
 	t.Run("bad error in request", func(t *testing.T) {
@@ -143,8 +142,8 @@ func TestClient_GetCapabilities(t *testing.T) {
 		response, err := client.GetCapabilities(testDomain, DefaultPort)
 		require.Error(t, err)
 		require.NotNil(t, response)
-		assert.Equal(t, http.StatusBadRequest, response.StatusCode)
-		assert.Equal(t, 0, len(response.Capabilities))
+		require.Equal(t, http.StatusBadRequest, response.StatusCode)
+		require.Equal(t, 0, len(response.Capabilities))
 	})
 
 	t.Run("invalid quotes - good response", func(t *testing.T) {
@@ -162,9 +161,9 @@ func TestClient_GetCapabilities(t *testing.T) {
 		response, err := client.GetCapabilities(testDomain, DefaultPort)
 		require.NoError(t, err)
 		require.NotNil(t, response)
-		assert.Equal(t, DefaultBsvAliasVersion, response.BsvAlias)
-		assert.Equal(t, http.StatusOK, response.StatusCode)
-		assert.Equal(t, true, response.Has(BRFCPki, ""))
+		require.Equal(t, DefaultBsvAliasVersion, response.BsvAlias)
+		require.Equal(t, http.StatusOK, response.StatusCode)
+		require.Equal(t, true, response.Has(BRFCPki, ""))
 	})
 
 	t.Run("invalid alias", func(t *testing.T) {
@@ -182,8 +181,8 @@ func TestClient_GetCapabilities(t *testing.T) {
 		response, err := client.GetCapabilities(testDomain, DefaultPort)
 		require.Error(t, err)
 		require.NotNil(t, response)
-		assert.NotEqual(t, DefaultBsvAliasVersion, response.BsvAlias)
-		assert.Equal(t, http.StatusNotModified, response.StatusCode)
+		require.NotEqual(t, DefaultBsvAliasVersion, response.BsvAlias)
+		require.Equal(t, http.StatusNotModified, response.StatusCode)
 	})
 
 	t.Run("invalid json", func(t *testing.T) {
@@ -201,8 +200,43 @@ func TestClient_GetCapabilities(t *testing.T) {
 		response, err := client.GetCapabilities(testDomain, DefaultPort)
 		require.Error(t, err)
 		require.NotNil(t, response)
-		assert.Equal(t, http.StatusNotModified, response.StatusCode)
-		assert.Equal(t, 0, len(response.Capabilities))
+		require.Equal(t, http.StatusNotModified, response.StatusCode)
+		require.Equal(t, 0, len(response.Capabilities))
+	})
+
+	t.Run("successful response with PIKE capability", func(t *testing.T) {
+		client := newTestClient(t)
+
+		mockCapabilitiesWithPIKE(http.StatusOK)
+
+		response, err := client.GetCapabilities(testDomain, DefaultPort)
+		require.NoError(t, err)
+		require.NotNil(t, response)
+		require.Equal(t, DefaultBsvAliasVersion, response.BsvAlias)
+		require.Equal(t, http.StatusOK, response.StatusCode)
+		require.Equal(t, true, response.Has(BRFCPki, ""))
+
+		// Check PIKE capability
+		require.NotNil(t, response.Pike)
+		require.Equal(t, "https://examples.com/v1/bsvalias/pike/outputs/{alias}@{domain.tld}", response.Pike.Outputs)
+	})
+
+	t.Run("successful response with PIKE invite capability", func(t *testing.T) {
+		client := newTestClient(t)
+
+		mockCapabilitiesWithPIKE(http.StatusOK)
+
+		response, err := client.GetCapabilities(testDomain, DefaultPort)
+		require.NoError(t, err)
+		require.NotNil(t, response)
+		require.Equal(t, DefaultBsvAliasVersion, response.BsvAlias)
+		require.Equal(t, http.StatusOK, response.StatusCode)
+		require.Equal(t, true, response.Has(BRFCPki, ""))
+
+		// Check PIKE invite capability
+		require.NotNil(t, response.Pike)
+		require.Equal(t, "https://examples.com/v1/bsvalias/pike/outputs/{alias}@{domain.tld}", response.Pike.Outputs)
+		require.Equal(t, "https://examples.com/v1/bsvalias/contact/invite/{alias}@{domain.tld}", response.Pike.Invite)
 	})
 }
 
@@ -220,6 +254,28 @@ func mockCapabilitiesNetwork(statusCode int, n Network) {
 			`{"`+DefaultServiceName+`": "`+DefaultBsvAliasVersion+`","capabilities": 
 {"6745385c3fc0": false,"pki": "`+testServerURL+`id/{alias}@{domain.tld}",
 "paymentDestination": "`+testServerURL+`address/{alias}@{domain.tld}"}}`,
+		),
+	)
+}
+
+// mockCapabilitiesWithPIKE is used for mocking the response including the PIKE capability
+func mockCapabilitiesWithPIKE(statusCode int) {
+	httpmock.Reset()
+	httpmock.RegisterResponder(http.MethodGet, "https://"+testDomain+":443/.well-known/bsvalias",
+		httpmock.NewStringResponder(
+			statusCode,
+			`{
+				"bsvalias": "1.0",
+				"capabilities": {
+					"6745385c3fc0": false,
+					"pki": "https://examples.com/{alias}@{domain.tld}/id",
+					"paymentDestination": "https://examples.com/{alias}@{domain.tld}/payment-destination",
+					"935478af7bf2": {
+						"invite": "https://examples.com/v1/bsvalias/contact/invite/{alias}@{domain.tld}",
+						"outputs": "https://examples.com/v1/bsvalias/pike/outputs/{alias}@{domain.tld}"
+					}
+				}
+			}`,
 		),
 	)
 }
@@ -577,4 +633,117 @@ func BenchmarkCapabilities_GetString(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		_ = capabilities.GetString("pki", "0c4339ef99c2")
 	}
+}
+
+// ExampleCapabilitiesPayload_ExtractPikeOutputsURL example using ExtractPikeOutputsURL()
+//
+// See more examples in /examples/
+func ExampleCapabilitiesPayload_ExtractPikeOutputsURL() {
+	capabilities := &CapabilitiesPayload{
+		BsvAlias: DefaultServiceName,
+		Capabilities: map[string]interface{}{
+			"6745385c3fc0": false,
+			"pki":          "https://domain.com/" + DefaultServiceName + "/id/{alias}@{domain.tld}",
+			"935478af7bf2": map[string]interface{}{
+				"invite":  "https://domain.com/" + DefaultServiceName + "/contact/invite/{alias}@{domain.tld}",
+				"outputs": "https://domain.com/" + DefaultServiceName + "/pike/outputs/{alias}@{domain.tld}",
+			},
+		},
+		Pike: &PikeCapability{
+			Invite:  "https://domain.com/" + DefaultServiceName + "/contact/invite/{alias}@{domain.tld}",
+			Outputs: "https://domain.com/" + DefaultServiceName + "/pike/outputs/{alias}@{domain.tld}",
+		},
+	}
+
+	outputsURL := capabilities.ExtractPikeOutputsURL()
+	fmt.Printf("found PIKE Outputs URL: %v", outputsURL)
+	// Output:found PIKE Outputs URL: https://domain.com/bsvalias/pike/outputs/{alias}@{domain.tld}
+}
+
+// TestClient_AddInviteRequest will test the method AddInviteRequest()
+func TestClient_AddInviteRequest(t *testing.T) {
+	client := newTestClient(t)
+
+	t.Run("successful invite request", func(t *testing.T) {
+		mockInviteRequest(http.StatusOK)
+
+		inviteURL := "https://" + testDomain + "/v1/bsvalias/contact/invite/{alias}@{domain.tld}"
+		request := &PikeContactRequestPayload{
+			FullName: "John Doe",
+			Paymail:  "johndoe@example.com",
+		}
+		response, err := client.AddInviteRequest(inviteURL, "alias", "domain.tld", request)
+		require.NoError(t, err)
+		require.NotNil(t, response)
+		require.Equal(t, http.StatusOK, response.StatusCode)
+	})
+
+	t.Run("invite request error", func(t *testing.T) {
+		httpmock.Reset()
+		httpmock.RegisterResponder(http.MethodPost, "https://example.com/v1/bsvalias/contact/invite/%7Balias%7D@%7Bdomain.tld%7D",
+			httpmock.NewStringResponder(http.StatusBadRequest, `{"message": "bad request"}`),
+		)
+
+		inviteURL := "https://example.com/v1/bsvalias/contact/invite/{alias}@{domain.tld}"
+		request := &PikeContactRequestPayload{
+			FullName: "John Doe",
+			Paymail:  "johndoe@example.com",
+		}
+		response, err := client.AddInviteRequest(inviteURL, "alias", "domain.tld", request)
+		require.Error(t, err)
+		require.Nil(t, response)
+	})
+}
+
+// mockInviteRequest is used for mocking the invite request response
+func mockInviteRequest(statusCode int) {
+	httpmock.Reset()
+	httpmock.RegisterResponder(http.MethodPost, "https://"+testDomain+"/v1/bsvalias/contact/invite/alias@domain.tld",
+		httpmock.NewStringResponder(
+			statusCode,
+			`{
+				"statusCode": 200,
+				"message": "Invite request sent successfully"
+			}`,
+		),
+	)
+}
+
+// BenchmarkClient_AddInviteRequest benchmarks the method AddInviteRequest()
+func BenchmarkClient_AddInviteRequest(b *testing.B) {
+	client := newTestClient(nil)
+	mockInviteRequest(http.StatusOK)
+	inviteURL := "https://" + testDomain + "/v1/bsvalias/contact/invite/{alias}@{domain.tld}"
+	request := &PikeContactRequestPayload{
+		FullName: "John Doe",
+		Paymail:  "johndoe@example.com",
+	}
+	for i := 0; i < b.N; i++ {
+		_, _ = client.AddInviteRequest(inviteURL, "alias", "domain.tld", request)
+	}
+}
+
+// ExampleCapabilitiesPayload_ExtractPikeInviteURL example using ExtractPikeInviteURL()
+//
+// See more examples in /examples/
+func ExampleCapabilitiesPayload_ExtractPikeInviteURL() {
+	capabilities := &CapabilitiesPayload{
+		BsvAlias: DefaultServiceName,
+		Capabilities: map[string]interface{}{
+			"6745385c3fc0": false,
+			"pki":          "https://" + testDomain + "/" + DefaultServiceName + "/id/{alias}@{domain.tld}",
+			"935478af7bf2": map[string]interface{}{
+				"invite":  "https://" + testDomain + "/" + DefaultServiceName + "/contact/invite/{alias}@{domain.tld}",
+				"outputs": "https://" + testDomain + "m/" + DefaultServiceName + "/pike/outputs/{alias}@{domain.tld}",
+			},
+		},
+		Pike: &PikeCapability{
+			Invite:  "https://" + testDomain + "/" + DefaultServiceName + "/contact/invite/{alias}@{domain.tld}",
+			Outputs: "https://" + testDomain + "/" + DefaultServiceName + "/pike/outputs/{alias}@{domain.tld}",
+		},
+	}
+
+	inviteURL := capabilities.ExtractPikeInviteURL()
+	fmt.Printf("found PIKE Invite URL: %v", inviteURL)
+	// Output: found PIKE Invite URL: https://test.com/bsvalias/contact/invite/{alias}@{domain.tld}
 }

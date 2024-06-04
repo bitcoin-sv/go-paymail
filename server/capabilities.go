@@ -102,7 +102,7 @@ func (c *Configuration) SetPikePaymentCapabilities() {
 				paymail.BRFCPikeOutputs: CallableCapability{
 					Path:    fmt.Sprintf("/pike/outputs/%s", PaymailAddressTemplate),
 					Method:  http.MethodPost,
-					Handler: c.pikeGetPaymentDestinations,
+					Handler: c.pikeGetOutputTemplates,
 				},
 			},
 		},

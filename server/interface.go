@@ -92,9 +92,9 @@ type PikeContactServiceProvider interface {
 }
 
 type PikePaymentServiceProvider interface {
-	CreatePikeDestinationResponse(
+	CreatePikeOutputResponse(
 		ctx context.Context,
-		alias, domain string,
+		alias, domain, senderPubKey string,
 		satoshis uint64,
 		metaData *RequestMetadata,
 	) (*paymail.PikePaymentOutputsResponse, error)
