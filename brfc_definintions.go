@@ -19,9 +19,9 @@ const (
 	BRFCVerifyPublicKeyOwner           = "a9f510c16bde"       // more info: http://bsvalias.org/05-verify-public-key-owner.html
 	BRFCBeefTransaction                = "5c55a7fdb7bb"       // more info: https://bsv.brc.dev/payments/0070
 
-	BRFCTemporaryPike = "8c4ed5ef8ace" // Temporary BRFC ID for PIKE
+	//BRFCTemporaryPike = "8c4ed5ef8ace" // Temporary BRFC ID for PIKE
 
-	BRFCPike        = "935478af7bf2"
+	BRFCPike        = "8c4ed5ef8ace" // swiched to "8c4ed5ef8ace" from "935478af7bf2"
 	BRFCPikeInvite  = "invite"
 	BRFCPikeOutputs = "outputs"
 )

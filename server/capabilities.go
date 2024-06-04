@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"net/http"
 
 	"github.com/bitcoin-sv/go-paymail"
 )
