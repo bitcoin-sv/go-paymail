@@ -2,9 +2,10 @@ package server
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"strings"
+
+	"github.com/gin-gonic/gin"
 
 	"github.com/bitcoin-sv/go-paymail"
 )
@@ -81,15 +82,6 @@ func (c *Configuration) SetBeefCapabilities() {
 }
 
 func (c *Configuration) SetPikeContactCapabilities() {
-	_addCapabilities(c.callableCapabilities,
-		CallableCapabilitiesMap{
-			paymail.BRFCTemporaryPike: CallableCapability{
-				Path:    fmt.Sprintf("/pike/%s", PaymailAddressTemplate),
-				Method:  http.MethodPost,
-				Handler: c.pikeNewContact,
-			},
-		},
-	)
 	_addNestedCapabilities(c.nestedCapabilities,
 		NestedCapabilitiesMap{
 			paymail.BRFCPike: CallableCapabilitiesMap{

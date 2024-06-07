@@ -4,9 +4,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bitcoin-sv/go-paymail"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/bitcoin-sv/go-paymail"
 )
 
 // testConfig loads a basic test configuration
@@ -490,7 +491,7 @@ func TestNewConfig(t *testing.T) {
 		)
 		require.NoError(t, err)
 		require.NotNil(t, c)
-		assert.Equal(t, 7, len(c.callableCapabilities))
+		assert.Equal(t, 6, len(c.callableCapabilities))
 		assert.Equal(t, 1, len(c.nestedCapabilities))
 	})
 
@@ -526,7 +527,7 @@ func TestNewConfig(t *testing.T) {
 		)
 		require.NoError(t, err)
 		require.NotNil(t, c)
-		assert.Equal(t, 7, len(c.callableCapabilities))
+		assert.Equal(t, 6, len(c.callableCapabilities))
 		assert.Equal(t, 1, len(c.nestedCapabilities))
 	})
 

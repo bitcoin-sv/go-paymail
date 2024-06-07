@@ -18,12 +18,9 @@ const (
 	BRFCSFPBuildAction                 = "189e32d93d28"       // more info: https://docs.moneybutton.com/docs/sfp/paymail-09-sfp-build.html
 	BRFCVerifyPublicKeyOwner           = "a9f510c16bde"       // more info: http://bsvalias.org/05-verify-public-key-owner.html
 	BRFCBeefTransaction                = "5c55a7fdb7bb"       // more info: https://bsv.brc.dev/payments/0070
-
-	BRFCTemporaryPike = "8c4ed5ef8ace" // Temporary BRFC ID for PIKE
-
-	BRFCPike        = "935478af7bf2"
-	BRFCPikeInvite  = "invite"
-	BRFCPikeOutputs = "outputs"
+	BRFCPike                           = "8c4ed5ef8ace"
+	BRFCPikeInvite                     = "invite"
+	BRFCPikeOutputs                    = "outputs"
 )
 
 // BRFCKnownSpecifications is a running list of all known BRFC specifications
