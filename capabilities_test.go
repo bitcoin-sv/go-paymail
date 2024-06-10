@@ -9,6 +9,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// Variables used for testing, not const because we need pointers to them
+var (
+	// TestPikeInviteCapability is the test PIKE invite capability
+	TestPikeInviteCapability = "https://" + testDomain + "/" + DefaultServiceName + "/contact/invite/{alias}@{domain.tld}"
+	// TestPikeOutputsCapability is the test PIKE outputs capability
+	TestPikeOutputsCapability = "https://" + testDomain + "/" + DefaultServiceName + "/pike/outputs/{alias}@{domain.tld}"
+)
+
 // TestClient_GetCapabilities will test the method GetCapabilities()
 func TestClient_GetCapabilities(t *testing.T) {
 	// t.Parallel() (Cannot run in parallel - issues with overriding the mock client)
@@ -218,7 +226,7 @@ func TestClient_GetCapabilities(t *testing.T) {
 
 		// Check PIKE capability
 		require.NotNil(t, response.Pike)
-		require.Equal(t, "https://examples.com/v1/bsvalias/pike/outputs/{alias}@{domain.tld}", response.Pike.Outputs)
+		require.Equal(t, "https://examples.com/v1/bsvalias/pike/outputs/{alias}@{domain.tld}", *response.Pike.Outputs)
 	})
 
 	t.Run("successful response with PIKE invite capability", func(t *testing.T) {
@@ -645,13 +653,13 @@ func ExampleCapabilitiesPayload_ExtractPikeOutputsURL() {
 			"6745385c3fc0": false,
 			"pki":          "https://domain.com/" + DefaultServiceName + "/id/{alias}@{domain.tld}",
 			"935478af7bf2": map[string]interface{}{
-				"invite":  "https://domain.com/" + DefaultServiceName + "/contact/invite/{alias}@{domain.tld}",
-				"outputs": "https://domain.com/" + DefaultServiceName + "/pike/outputs/{alias}@{domain.tld}",
+				"invite":  TestPikeInviteCapability,
+				"outputs": TestPikeOutputsCapability,
 			},
 		},
 		Pike: &PikeCapability{
-			Invite:  "https://domain.com/" + DefaultServiceName + "/contact/invite/{alias}@{domain.tld}",
-			Outputs: "https://domain.com/" + DefaultServiceName + "/pike/outputs/{alias}@{domain.tld}",
+			Invite:  &TestPikeInviteCapability,
+			Outputs: &TestPikeOutputsCapability,
 		},
 	}
 
@@ -733,13 +741,13 @@ func ExampleCapabilitiesPayload_ExtractPikeInviteURL() {
 			"6745385c3fc0": false,
 			"pki":          "https://" + testDomain + "/" + DefaultServiceName + "/id/{alias}@{domain.tld}",
 			"935478af7bf2": map[string]interface{}{
-				"invite":  "https://" + testDomain + "/" + DefaultServiceName + "/contact/invite/{alias}@{domain.tld}",
-				"outputs": "https://" + testDomain + "m/" + DefaultServiceName + "/pike/outputs/{alias}@{domain.tld}",
+				"invite":  TestPikeInviteCapability,
+				"outputs": TestPikeOutputsCapability,
 			},
 		},
 		Pike: &PikeCapability{
-			Invite:  "https://" + testDomain + "/" + DefaultServiceName + "/contact/invite/{alias}@{domain.tld}",
-			Outputs: "https://" + testDomain + "/" + DefaultServiceName + "/pike/outputs/{alias}@{domain.tld}",
+			Invite:  &TestPikeInviteCapability,
+			Outputs: &TestPikeOutputsCapability,
 		},
 	}
 
