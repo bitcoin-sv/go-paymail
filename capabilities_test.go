@@ -243,8 +243,8 @@ func TestClient_GetCapabilities(t *testing.T) {
 
 		// Check PIKE invite capability
 		require.NotNil(t, response.Pike)
-		require.Equal(t, "https://examples.com/v1/bsvalias/pike/outputs/{alias}@{domain.tld}", response.Pike.Outputs)
-		require.Equal(t, "https://examples.com/v1/bsvalias/contact/invite/{alias}@{domain.tld}", response.Pike.Invite)
+		require.Equal(t, "https://examples.com/v1/bsvalias/pike/outputs/{alias}@{domain.tld}", *response.Pike.Outputs)
+		require.Equal(t, "https://examples.com/v1/bsvalias/contact/invite/{alias}@{domain.tld}", *response.Pike.Invite)
 	})
 }
 
@@ -665,7 +665,7 @@ func ExampleCapabilitiesPayload_ExtractPikeOutputsURL() {
 
 	outputsURL := capabilities.ExtractPikeOutputsURL()
 	fmt.Printf("found PIKE Outputs URL: %v", outputsURL)
-	// Output:found PIKE Outputs URL: https://domain.com/bsvalias/pike/outputs/{alias}@{domain.tld}
+	// Output:found PIKE Outputs URL: https://test.com/bsvalias/pike/outputs/{alias}@{domain.tld}
 }
 
 // TestClient_AddInviteRequest will test the method AddInviteRequest()
