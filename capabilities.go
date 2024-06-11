@@ -35,8 +35,8 @@ type CapabilitiesPayload struct {
 
 // PikeCapability represents the structure of the PIKE capability
 type PikeCapability struct {
-	Invite  string `json:"invite,omitempty"`
-	Outputs string `json:"outputs,omitempty"`
+	Invite  *string `json:"invite,omitempty"`
+	Outputs *string `json:"outputs,omitempty"`
 }
 
 // PikeOutputs represents the structure of the PIKE outputs
@@ -163,7 +163,7 @@ func (c *Client) GetCapabilities(target string, port int) (response *Capabilitie
 // ExtractPikeOutputsURL extracts the outputs URL from the PIKE capability
 func (c *CapabilitiesPayload) ExtractPikeOutputsURL() string {
 	if c.Pike != nil {
-		return c.Pike.Outputs
+		return *c.Pike.Outputs
 	}
 	return ""
 }
@@ -171,7 +171,7 @@ func (c *CapabilitiesPayload) ExtractPikeOutputsURL() string {
 // ExtractPikeInviteURL extracts the invite URL from the PIKE capability
 func (c *CapabilitiesPayload) ExtractPikeInviteURL() string {
 	if c.Pike != nil {
-		return c.Pike.Invite
+		return *c.Pike.Invite
 	}
 	return ""
 }
@@ -179,28 +179,15 @@ func (c *CapabilitiesPayload) ExtractPikeInviteURL() string {
 // parsePikeCapability parses the PIKE capability from the capabilities response
 func parsePikeCapability(response *CapabilitiesResponse) error {
 	if pike, ok := response.Capabilities[BRFCPike].(map[string]interface{}); ok {
-		var (
-			invite, outputs string
-			errMsgs         []string
-		)
+		response.Pike = &PikeCapability{}
 
 		if inviteStr, ok := pike["invite"].(string); ok {
-			invite = inviteStr
+			response.Pike.Invite = &inviteStr
 		}
 
+		// TODO: make outputs required when PIKE transaction will be implemented
 		if outputsStr, ok := pike["outputs"].(string); ok {
-			outputs = outputsStr
-		} else {
-			errMsgs = append(errMsgs, "missing outputs URL in PIKE capability")
-		}
-
-		if len(errMsgs) > 0 {
-			return fmt.Errorf(strings.Join(errMsgs, "; "))
-		}
-
-		response.Pike = &PikeCapability{
-			Invite:  invite,
-			Outputs: outputs,
+			response.Pike.Outputs = &outputsStr
 		}
 	}
 	return nil
