@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.18.0](https://github.com/bitcoin-sv/go-paymail/compare/v0.17.0...v0.18.0) (2024-06-12)
+
+
+### Features
+
+* **SPV-000:** force release new version ([#101](https://github.com/bitcoin-sv/go-paymail/issues/101)) ([66ad390](https://github.com/bitcoin-sv/go-paymail/commit/66ad390a8c14ad717b1743bd11119beb3bd0f3fc))
+
 ## [0.17.0](https://github.com/bitcoin-sv/go-paymail/compare/v0.16.0...v0.17.0) (2024-06-12)
 
 
