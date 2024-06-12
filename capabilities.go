@@ -185,7 +185,7 @@ func parsePikeCapability(response *CapabilitiesResponse) error {
 			response.Pike.Invite = &inviteStr
 		}
 
-		// TODO: make outputs required when PIKE transaction will be implemented
+		// TODO: Ensure the outputs field is required when the 'PIKE' transaction with linked keys is implemented.
 		if outputsStr, ok := pike["outputs"].(string); ok {
 			response.Pike.Outputs = &outputsStr
 		}
