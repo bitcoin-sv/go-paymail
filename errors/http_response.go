@@ -13,6 +13,10 @@ func ErrorResponse(c *gin.Context, err error) {
 }
 
 func getError(err error) (models.ResponseError, int) {
+	if err == nil {
+		return models.ResponseError{Code: models.UnknownErrorCode, Message: "No error information available"}, 500
+	}
+
 	var errDetails models.SPVError
 	ok := errors.As(err, &errDetails)
 	if !ok {
