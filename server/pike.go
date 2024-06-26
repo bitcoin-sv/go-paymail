@@ -2,7 +2,7 @@ package server
 
 import (
 	"encoding/json"
-	"fmt"
+	"github.com/bitcoin-sv/go-paymail/errors"
 	"net/http"
 
 	"github.com/bitcoin-sv/go-paymail"
@@ -15,12 +15,12 @@ func (c *Configuration) pikeNewContact(rc *gin.Context) {
 	var requesterContact paymail.PikeContactRequestPayload
 	err := json.NewDecoder(rc.Request.Body).Decode(&requesterContact)
 	if err != nil {
-		ErrorResponse(rc, ErrorInvalidParameter, err.Error(), http.StatusBadRequest)
+		errors.ErrorResponse(rc, errors.ErrCannotBindRequest)
 		return
 	}
 
 	if err = c.pikeContactActions.AddContact(rc.Request.Context(), receiverPaymail, &requesterContact); err != nil {
-		ErrorResponse(rc, ErrorAddContactRequest, err.Error(), http.StatusExpectationFailed)
+		errors.ErrorResponse(rc, err)
 		return
 	}
 
@@ -34,7 +34,7 @@ func (c *Configuration) pikeGetOutputTemplates(rc *gin.Context) {
 		_ = rc.Request.Body.Close()
 	}()
 	if err != nil {
-		ErrorResponse(rc, ErrorInvalidParameter, err.Error(), http.StatusBadRequest)
+		errors.ErrorResponse(rc, errors.ErrCannotBindRequest)
 		return
 	}
 
@@ -46,7 +46,7 @@ func (c *Configuration) pikeGetOutputTemplates(rc *gin.Context) {
 
 	pki, err := getPKI(paymentDestinationRequest.SenderPaymail)
 	if err != nil {
-		ErrorResponse(rc, ErrorScript, "error getting pki: "+err.Error(), http.StatusExpectationFailed)
+		errors.ErrorResponse(rc, err)
 		return
 	}
 
@@ -54,7 +54,7 @@ func (c *Configuration) pikeGetOutputTemplates(rc *gin.Context) {
 	if response, err = c.pikePaymentActions.CreatePikeOutputResponse(
 		rc.Request.Context(), alias, domain, pki.PubKey, paymentDestinationRequest.Amount, md,
 	); err != nil {
-		ErrorResponse(rc, ErrorScript, "error creating output script(s): "+err.Error(), http.StatusExpectationFailed)
+		errors.ErrorResponse(rc, err)
 		return
 	}
 
@@ -64,7 +64,7 @@ func (c *Configuration) pikeGetOutputTemplates(rc *gin.Context) {
 func getPKI(paymailAddress string) (*paymail.PKIResponse, error) {
 	alias, domain, paymailAddress := paymail.SanitizePaymail(paymailAddress)
 	if len(paymailAddress) == 0 {
-		return nil, fmt.Errorf("invalid paymail: %s", paymailAddress)
+		return nil, errors.ErrInvalidPaymail
 	}
 
 	client, err := paymail.NewClient()

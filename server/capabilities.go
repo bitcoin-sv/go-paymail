@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"github.com/bitcoin-sv/go-paymail/errors"
 	"net/http"
 	"strings"
 
@@ -139,13 +140,13 @@ func (c *Configuration) showCapabilities(context *gin.Context) {
 	}
 
 	if !c.IsAllowedDomain(host) {
-		ErrorResponse(context, ErrorUnknownDomain, "domain unknown: "+host, http.StatusBadRequest)
+		errors.ErrorResponse(context, errors.ErrDomainUnknown)
 		return
 	}
 
 	capabilities, err := c.EnrichCapabilities(host)
 	if err != nil {
-		ErrorResponse(context, ErrorEncodingResponse, err.Error(), http.StatusBadRequest)
+		errors.ErrorResponse(context, err)
 		return
 	}
 
@@ -173,7 +174,7 @@ func (c *Configuration) EnrichCapabilities(host string) (*paymail.CapabilitiesPa
 		for nestedKey, nestedCap := range cap {
 			nestedObj, ok := payload.Capabilities[key].(map[string]interface{})
 			if !ok {
-				return nil, fmt.Errorf("failed to cast nested capabilities")
+				return nil, errors.ErrCastingNestedCapabilities
 			}
 			nestedObj[nestedKey] = serviceUrl + nestedCap.Path
 		}
@@ -183,7 +184,7 @@ func (c *Configuration) EnrichCapabilities(host string) (*paymail.CapabilitiesPa
 
 func generateServiceURL(prefix, domain, apiVersion, serviceName string) (string, error) {
 	if len(prefix) == 0 || len(domain) == 0 {
-		return "", ErrPrefixOrDomainMissing
+		return "", errors.ErrPrefixOrDomainMissing
 	}
 	strBuilder := new(strings.Builder)
 	strBuilder.WriteString(prefix)

@@ -2,8 +2,8 @@ package server
 
 import (
 	"github.com/bitcoin-sv/go-paymail"
+	"github.com/bitcoin-sv/go-paymail/errors"
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
 // GetPaymailAndCreateMetadata is a helper function to get the paymail from the request, check it in database and create the metadata based on that.
@@ -13,11 +13,11 @@ func (c *Configuration) GetPaymailAndCreateMetadata(context *gin.Context, satosh
 	// Parse, sanitize and basic validation
 	alias, domain, paymailAddress := paymail.SanitizePaymail(incomingPaymail)
 	if len(paymailAddress) == 0 {
-		ErrorResponse(context, ErrorInvalidParameter, "invalid paymail: "+incomingPaymail, http.StatusBadRequest)
+		errors.ErrorResponse(context, errors.ErrInvalidPaymail)
 		return
 	}
 	if !c.IsAllowedDomain(domain) {
-		ErrorResponse(context, ErrorUnknownDomain, "domain unknown: "+domain, http.StatusBadRequest)
+		errors.ErrorResponse(context, errors.ErrDomainUnknown)
 		return
 	}
 
@@ -28,7 +28,7 @@ func (c *Configuration) GetPaymailAndCreateMetadata(context *gin.Context, satosh
 
 	// Did we get some satoshis?
 	if paymentRequest.Satoshis == 0 {
-		ErrorResponse(context, ErrorMissingField, "missing parameter: satoshis", http.StatusBadRequest)
+		errors.ErrorResponse(context, errors.ErrMissingFieldSatoshis)
 		return
 	}
 
@@ -39,11 +39,11 @@ func (c *Configuration) GetPaymailAndCreateMetadata(context *gin.Context, satosh
 	// Get from the data layer
 	foundPaymail, err := c.actions.GetPaymailByAlias(context.Request.Context(), alias, domain, md)
 	if err != nil {
-		ErrorResponse(context, ErrorFindingPaymail, err.Error(), http.StatusExpectationFailed)
+		errors.ErrorResponse(context, err)
 		return
 	}
 	if foundPaymail == nil {
-		ErrorResponse(context, ErrorPaymailNotFound, "paymail not found", http.StatusNotFound)
+		errors.ErrorResponse(context, errors.ErrCouldNotFindPaymail)
 		return
 	}
 
