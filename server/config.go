@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/bitcoin-sv/go-paymail/errors"
 	"github.com/rs/zerolog"
 	"slices"
 	"strings"
@@ -47,12 +48,12 @@ func (c *Configuration) Validate() error {
 
 	// Requires domains for the server to run
 	if len(c.PaymailDomains) == 0 && !c.PaymailDomainsValidationDisabled {
-		return ErrDomainMissing
+		return errors.ErrDomainMissing
 	}
 
 	// Requires a port
 	if c.Port <= 0 {
-		return ErrPortMissing
+		return errors.ErrPortMissing
 	}
 
 	// todo: validate the []domains
@@ -60,15 +61,15 @@ func (c *Configuration) Validate() error {
 	// Sanitize and standardize the service name
 	c.ServiceName = paymail.SanitizePathName(c.ServiceName)
 	if len(c.ServiceName) == 0 {
-		return ErrServiceNameMissing
+		return errors.ErrServiceNameMissing
 	}
 
 	if c.BSVAliasVersion == "" {
-		return ErrBsvAliasMissing
+		return errors.ErrBsvAliasMissing
 	}
 
 	if c.callableCapabilities == nil || len(c.callableCapabilities) == 0 {
-		return ErrCapabilitiesMissing
+		return errors.ErrCapabilitiesMissing
 	}
 
 	return nil
@@ -96,7 +97,7 @@ func (c *Configuration) AddDomain(domain string) (err error) {
 
 	// Sanity check
 	if len(domain) == 0 {
-		return ErrDomainMissing
+		return errors.ErrDomainMissing
 	}
 
 	// Sanitize and standardize
@@ -121,7 +122,7 @@ func NewConfig(serviceProvider *PaymailServiceLocator, opts ...ConfigOps) (*Conf
 
 	// Check that a service provider is set
 	if serviceProvider == nil {
-		return nil, ErrServiceProviderNil
+		return nil, errors.ErrServiceProviderNil
 	}
 
 	// Create the base configuration

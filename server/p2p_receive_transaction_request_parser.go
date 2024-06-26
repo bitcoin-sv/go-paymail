@@ -2,22 +2,19 @@ package server
 
 import (
 	"encoding/json"
+	"github.com/bitcoin-sv/go-paymail/errors"
 	"net/http"
 
 	"github.com/bitcoin-sv/go-paymail"
 )
 
-type parseError struct {
-	code, msg string
-}
-
-func parseP2pReceiveTxRequest(c *Configuration, req *http.Request, incomingPaymail string, format p2pPayloadFormat) (*p2pReceiveTxReqPayload, *parseError) {
+func parseP2pReceiveTxRequest(c *Configuration, req *http.Request, incomingPaymail string, format p2pPayloadFormat) (*p2pReceiveTxReqPayload, error) {
 	alias, domain, paymailAddress := paymail.SanitizePaymail(incomingPaymail)
 	if len(paymailAddress) == 0 {
-		return nil, &parseError{ErrorInvalidParameter, "invalid paymail: " + incomingPaymail}
+		return nil, errors.ErrInvalidPaymail
 
 	} else if !c.IsAllowedDomain(domain) {
-		return nil, &parseError{ErrorUnknownDomain, "domain unknown: " + domain}
+		return nil, errors.ErrDomainUnknown
 	}
 
 	requestData := p2pReceiveTxReqPayload{
@@ -28,18 +25,18 @@ func parseP2pReceiveTxRequest(c *Configuration, req *http.Request, incomingPayma
 	var p2pTransaction paymail.P2PTransaction
 	err := json.NewDecoder(req.Body).Decode(&p2pTransaction)
 	if err != nil {
-		return nil, &parseError{ErrorInvalidParameter, "invalid request"}
+		return nil, errors.ErrCannotBindRequest
 	}
 	if len(p2pTransaction.Reference) == 0 {
-		return nil, &parseError{ErrorMissingField, "missing parameter: reference"}
+		return nil, errors.ErrMissingFieldReference
 	}
 	if format == basicP2pPayload {
 		if len(p2pTransaction.Hex) == 0 {
-			return nil, &parseError{ErrorMissingField, "missing parameter: hex"}
+			return nil, errors.ErrMissingFieldHex
 		}
 	} else if format == beefP2pPayload {
 		if len(p2pTransaction.Beef) == 0 {
-			return nil, &parseError{ErrorMissingField, "missing parameter: beef"}
+			return nil, errors.ErrMissingFieldBEEF
 		}
 	}
 	vErr := validateMetadata(c, p2pTransaction.MetaData)
@@ -52,17 +49,17 @@ func parseP2pReceiveTxRequest(c *Configuration, req *http.Request, incomingPayma
 	return &requestData, nil
 }
 
-func validateMetadata(c *Configuration, metadata *paymail.P2PMetaData) *parseError {
+func validateMetadata(c *Configuration, metadata *paymail.P2PMetaData) error {
 	// Check signature if: 1) sender validation enabled or 2) a signature was given (optional)
 	if c.SenderValidationEnabled || len(metadata.Signature) > 0 {
 
 		// Check required fields for signature validation
 		if len(metadata.Signature) == 0 {
-			return &parseError{ErrorMissingField, "missing parameter: signature"}
+			return errors.ErrMissingFieldSignature
 		}
 
 		if len(metadata.PubKey) == 0 {
-			return &parseError{ErrorMissingField, "missing parameter: pubkey"}
+			return errors.ErrMissingFieldPubKey
 		}
 	}
 

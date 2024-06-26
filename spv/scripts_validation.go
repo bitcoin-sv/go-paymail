@@ -1,9 +1,8 @@
 package spv
 
 import (
-	"errors"
-
 	"github.com/bitcoin-sv/go-paymail/beef"
+	"github.com/bitcoin-sv/go-paymail/errors"
 	"github.com/libsv/go-bt/v2"
 	"github.com/libsv/go-bt/v2/bscript/interpreter"
 )
@@ -12,12 +11,12 @@ func validateScripts(tx *bt.Tx, inputTxs []*beef.TxData) error {
 	for i, input := range tx.Inputs {
 		inputParentTx := findParentForInput(input, inputTxs)
 		if inputParentTx == nil {
-			return errors.New("invalid parent transactions, no matching trasactions for input")
+			return errors.ErrNoMatchingTransactionsForInput
 		}
 
 		err := verifyScripts(tx, inputParentTx.Transaction, i)
 		if err != nil {
-			return errors.New("invalid script")
+			return errors.ErrInvalidScript
 		}
 	}
 

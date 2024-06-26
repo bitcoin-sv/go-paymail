@@ -1,8 +1,7 @@
 package spv
 
 import (
-	"errors"
-	"fmt"
+	"github.com/bitcoin-sv/go-paymail/errors"
 
 	"github.com/bitcoin-sv/go-paymail/beef"
 	"github.com/libsv/go-bt/v2"
@@ -16,7 +15,7 @@ func ensureAncestorsArePresentInBump(tx *bt.Tx, dBeef *beef.DecodedBEEF) error {
 
 	for _, tx := range ancestors {
 		if !existsInBumps(tx, dBeef.BUMPs) {
-			return errors.New("invalid BUMP - input mined ancestor is not present in BUMPs")
+			return errors.ErrBUMPAncestorNotPresent
 		}
 	}
 
@@ -39,7 +38,7 @@ func findMinedAncestors(tx *bt.Tx, ancestors []*beef.TxData) (map[string]*beef.T
 func findMinedAncestorsForInput(input *bt.Input, ancestors []*beef.TxData, ma map[string]*beef.TxData) error {
 	parent := findParentForInput(input, ancestors)
 	if parent == nil {
-		return fmt.Errorf("invalid BUMP - cannot find mined parent for input %s", input.String())
+		return errors.ErrBUMPCouldNotFindMindParent
 	}
 
 	if !parent.Unmined() {

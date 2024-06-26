@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/bitcoin-sv/go-paymail/errors"
 	"github.com/gin-gonic/gin"
 	"net/http"
 
@@ -17,16 +18,16 @@ func (c *Configuration) verifyPubKey(context *gin.Context) {
 	// Parse, sanitize and basic validation
 	alias, domain, address := paymail.SanitizePaymail(incomingPaymail)
 	if len(address) == 0 {
-		ErrorResponse(context, ErrorInvalidParameter, "invalid paymail: "+incomingPaymail, http.StatusBadRequest)
+		errors.ErrorResponse(context, errors.ErrInvalidPaymail)
 		return
 	} else if !c.IsAllowedDomain(domain) {
-		ErrorResponse(context, ErrorUnknownDomain, "domain unknown: "+domain, http.StatusBadRequest)
+		errors.ErrorResponse(context, errors.ErrDomainUnknown)
 		return
 	}
 
 	// Basic validation on pubkey
 	if len(incomingPubKey) != paymail.PubKeyLength {
-		ErrorResponse(context, ErrorInvalidPubKey, "invalid pubkey: "+incomingPubKey, http.StatusBadRequest)
+		errors.ErrorResponse(context, errors.ErrInvalidPubKey)
 		return
 	}
 
@@ -36,10 +37,10 @@ func (c *Configuration) verifyPubKey(context *gin.Context) {
 	// Get from the data layer
 	foundPaymail, err := c.actions.GetPaymailByAlias(context.Request.Context(), alias, domain, md)
 	if err != nil {
-		ErrorResponse(context, ErrorFindingPaymail, err.Error(), http.StatusExpectationFailed)
+		errors.ErrorResponse(context, err)
 		return
 	} else if foundPaymail == nil {
-		ErrorResponse(context, ErrorPaymailNotFound, "paymail not found: "+incomingPaymail, http.StatusBadRequest)
+		errors.ErrorResponse(context, errors.ErrCouldNotFindPaymail)
 		return
 	}
 

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/bitcoin-sv/go-paymail/errors"
 	"github.com/gin-gonic/gin"
 	"net"
 	"net/http"
@@ -34,38 +35,38 @@ func (c *Configuration) resolveAddress(context *gin.Context) {
 	alias, domain, paymailAddress := paymail.SanitizePaymail(incomingPaymail)
 	if len(paymailAddress) == 0 {
 		context.JSON(http.StatusBadRequest, "invalid paymail: "+incomingPaymail)
-		ErrorResponse(context, ErrorInvalidParameter, "invalid paymail: "+incomingPaymail, http.StatusBadRequest)
+		errors.ErrorResponse(context, errors.ErrInvalidPaymail)
 		return
 	} else if !c.IsAllowedDomain(domain) {
-		ErrorResponse(context, ErrorUnknownDomain, "domain unknown: "+domain, http.StatusBadRequest)
+		errors.ErrorResponse(context, errors.ErrDomainUnknown)
 		return
 	}
 
 	var senderRequest paymail.SenderRequest
 	err := context.Bind(&senderRequest)
 	if err != nil {
-		ErrorResponse(context, ErrorInvalidParameter, "invalid request body: "+err.Error(), http.StatusBadRequest)
+		errors.ErrorResponse(context, errors.ErrCannotBindRequest)
 		return
 	}
 
 	// Check for required fields
 	if len(senderRequest.SenderHandle) == 0 {
-		ErrorResponse(context, ErrorInvalidSenderHandle, "senderHandle is empty", http.StatusBadRequest)
+		errors.ErrorResponse(context, errors.ErrSenderHandleEmpty)
 		return
 	} else if len(senderRequest.Dt) == 0 {
-		ErrorResponse(context, ErrorInvalidDt, "dt is empty", http.StatusBadRequest)
+		errors.ErrorResponse(context, errors.ErrDtEmpty)
 		return
 	}
 
 	// Validate the timestamp
 	if err = paymail.ValidateTimestamp(senderRequest.Dt); err != nil {
-		ErrorResponse(context, ErrorInvalidDt, "invalid dt: "+err.Error(), http.StatusBadRequest)
+		errors.ErrorResponse(context, errors.ErrInvalidTimestamp)
 		return
 	}
 
 	// Basic validation on sender handle
 	if err = paymail.ValidatePaymail(senderRequest.SenderHandle); err != nil {
-		ErrorResponse(context, ErrorInvalidSenderHandle, "invalid senderHandle: "+err.Error(), http.StatusBadRequest)
+		errors.ErrorResponse(context, errors.ErrInvalidSenderHandle)
 		return
 	}
 
@@ -77,24 +78,24 @@ func (c *Configuration) resolveAddress(context *gin.Context) {
 			var senderPubKey *bec.PublicKey
 			senderPubKey, err = getSenderPubKey(senderRequest.SenderHandle)
 			if err != nil {
-				ErrorResponse(context, ErrorInvalidSenderHandle, "invalid senderHandle: "+err.Error(), http.StatusBadRequest)
+				errors.ErrorResponse(context, err)
 				return
 			}
 
 			// Derive address from pubKey
 			var rawAddress *bscript.Address
 			if rawAddress, err = bitcoin.GetAddressFromPubKey(senderPubKey, true); err != nil {
-				ErrorResponse(context, ErrorInvalidSenderHandle, "invalid senderHandle: "+err.Error(), http.StatusBadRequest)
+				errors.ErrorResponse(context, errors.ErrInvalidSenderHandle)
 				return
 			}
 
 			// Verify the signature
 			if err = senderRequest.Verify(rawAddress.AddressString, senderRequest.Signature); err != nil {
-				ErrorResponse(context, ErrorInvalidSignature, "invalid signature: "+err.Error(), http.StatusBadRequest)
+				errors.ErrorResponse(context, errors.ErrInvalidSignature)
 				return
 			}
 		} else {
-			ErrorResponse(context, ErrorInvalidSignature, "missing required signature", http.StatusBadRequest)
+			errors.ErrorResponse(context, errors.ErrMissingFieldSignature)
 			return
 		}
 	}
@@ -106,10 +107,10 @@ func (c *Configuration) resolveAddress(context *gin.Context) {
 	// Get from the data layer
 	foundPaymail, err := c.actions.GetPaymailByAlias(context.Request.Context(), alias, domain, md)
 	if err != nil {
-		ErrorResponse(context, ErrorFindingPaymail, err.Error(), http.StatusExpectationFailed)
+		errors.ErrorResponse(context, err)
 		return
 	} else if foundPaymail == nil {
-		ErrorResponse(context, ErrorPaymailNotFound, "paymail not found", http.StatusNotFound)
+		errors.ErrorResponse(context, errors.ErrCouldNotFindPaymail)
 		return
 	}
 
@@ -118,7 +119,7 @@ func (c *Configuration) resolveAddress(context *gin.Context) {
 	if response, err = c.actions.CreateAddressResolutionResponse(
 		context.Request.Context(), alias, domain, c.SenderValidationEnabled, md,
 	); err != nil {
-		ErrorResponse(context, ErrorScript, "error creating output script: "+err.Error(), http.StatusExpectationFailed)
+		errors.ErrorResponse(context, err)
 		return
 	}
 

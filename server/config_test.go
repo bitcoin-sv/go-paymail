@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/bitcoin-sv/go-paymail/errors"
 	"testing"
 	"time"
 
@@ -34,7 +35,7 @@ func TestConfiguration_Validate(t *testing.T) {
 		c := &Configuration{}
 		err := c.Validate()
 		require.Error(t, err)
-		assert.ErrorIs(t, err, ErrDomainMissing)
+		assert.ErrorIs(t, err, errors.ErrDomainMissing)
 	})
 
 	t.Run("missing port", func(t *testing.T) {
@@ -43,7 +44,7 @@ func TestConfiguration_Validate(t *testing.T) {
 		}
 		err := c.Validate()
 		require.Error(t, err)
-		assert.ErrorIs(t, err, ErrPortMissing)
+		assert.ErrorIs(t, err, errors.ErrPortMissing)
 	})
 
 	t.Run("missing service name", func(t *testing.T) {
@@ -53,7 +54,7 @@ func TestConfiguration_Validate(t *testing.T) {
 		}
 		err := c.Validate()
 		require.Error(t, err)
-		assert.ErrorIs(t, err, ErrServiceNameMissing)
+		assert.ErrorIs(t, err, errors.ErrServiceNameMissing)
 	})
 
 	t.Run("invalid service name", func(t *testing.T) {
@@ -64,7 +65,7 @@ func TestConfiguration_Validate(t *testing.T) {
 		}
 		err := c.Validate()
 		require.Error(t, err)
-		assert.ErrorIs(t, err, ErrServiceNameMissing)
+		assert.ErrorIs(t, err, errors.ErrServiceNameMissing)
 	})
 
 	t.Run("missing bsv alias", func(t *testing.T) {
@@ -75,7 +76,7 @@ func TestConfiguration_Validate(t *testing.T) {
 		}
 		err := c.Validate()
 		require.Error(t, err)
-		assert.ErrorIs(t, err, ErrBsvAliasMissing)
+		assert.ErrorIs(t, err, errors.ErrBsvAliasMissing)
 	})
 
 	t.Run("missing capabilities", func(t *testing.T) {
@@ -89,7 +90,7 @@ func TestConfiguration_Validate(t *testing.T) {
 		}
 		err := c.Validate()
 		require.Error(t, err)
-		assert.ErrorIs(t, err, ErrCapabilitiesMissing)
+		assert.ErrorIs(t, err, errors.ErrCapabilitiesMissing)
 	})
 
 	t.Run("zero capabilities", func(t *testing.T) {
@@ -103,7 +104,7 @@ func TestConfiguration_Validate(t *testing.T) {
 		}
 		err := c.Validate()
 		require.Error(t, err)
-		assert.ErrorIs(t, err, ErrCapabilitiesMissing)
+		assert.ErrorIs(t, err, errors.ErrCapabilitiesMissing)
 	})
 
 	t.Run("basic valid configuration", func(t *testing.T) {
@@ -133,7 +134,7 @@ func TestConfiguration_Validate(t *testing.T) {
 		c.SetGenericCapabilities()
 		assert.False(t, c.PaymailDomainsValidationDisabled)
 		err := c.Validate()
-		assert.ErrorIs(t, err, ErrDomainMissing)
+		assert.ErrorIs(t, err, errors.ErrDomainMissing)
 
 		c.PaymailDomainsValidationDisabled = true
 		err = c.Validate()
@@ -234,7 +235,7 @@ func TestConfiguration_AddDomain(t *testing.T) {
 
 		err := c.AddDomain("")
 		assert.Error(t, err)
-		assert.ErrorIs(t, err, ErrDomainMissing)
+		assert.ErrorIs(t, err, errors.ErrDomainMissing)
 	})
 
 	t.Run("sanitized domain", func(t *testing.T) {
@@ -316,14 +317,14 @@ func TestNewConfig(t *testing.T) {
 	t.Run("no values and no provider", func(t *testing.T) {
 		c, err := NewConfig(nil)
 		require.Error(t, err)
-		assert.ErrorIs(t, err, ErrServiceProviderNil)
+		assert.ErrorIs(t, err, errors.ErrServiceProviderNil)
 		assert.Nil(t, c)
 	})
 
 	t.Run("missing domain", func(t *testing.T) {
 		c, err := NewConfig(&PaymailServiceLocator{})
 		require.Error(t, err)
-		assert.ErrorIs(t, err, ErrDomainMissing)
+		assert.ErrorIs(t, err, errors.ErrDomainMissing)
 		assert.Nil(t, c)
 	})
 

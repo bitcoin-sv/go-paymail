@@ -2,7 +2,7 @@ package server
 
 import (
 	"context"
-	"fmt"
+	"github.com/bitcoin-sv/go-paymail/errors"
 	"github.com/rs/zerolog"
 	"net/http"
 
@@ -19,38 +19,29 @@ type p2pReceiveTxReqPayload struct {
 	incomingPaymailAlias, incomingPaymailDomain string
 }
 
-type processingError struct {
-	*parseError
-	httpResponseCode int
-}
-
 func processP2pReceiveTxRequest(c *Configuration, req *http.Request, incomingPaymail string, format p2pPayloadFormat) (
-	*p2pReceiveTxReqPayload, *beef.DecodedBEEF, *RequestMetadata, *processingError,
+	*p2pReceiveTxReqPayload, *beef.DecodedBEEF, *RequestMetadata, error,
 ) {
-	payload, vErr := parseP2pReceiveTxRequest(c, req, incomingPaymail, format)
-	if vErr != nil {
-		return returnError(&processingError{vErr, http.StatusBadRequest})
+	payload, err := parseP2pReceiveTxRequest(c, req, incomingPaymail, format)
+	if err != nil {
+		return returnError(err)
 	}
 
 	md := CreateMetadata(req, payload.incomingPaymailAlias, payload.incomingPaymailDomain, "")
-	vErr = verifyIncomingPaymail(req.Context(), c, md, payload.incomingPaymailAlias, payload.incomingPaymailDomain)
+	err = verifyIncomingPaymail(req.Context(), c, md, payload.incomingPaymailAlias, payload.incomingPaymailDomain)
 
-	if vErr != nil {
-		if vErr.code == ErrorPaymailNotFound {
-			return returnError(&processingError{vErr, http.StatusNotFound})
-		}
-
-		return returnError(&processingError{vErr, http.StatusExpectationFailed})
+	if err != nil {
+		return returnError(err)
 	}
 
-	tx, beefData, pErr := getProcessedTxData(payload, format, c.Logger)
-	if pErr != nil {
-		return returnError(pErr)
+	tx, beefData, err := getProcessedTxData(payload, format, c.Logger)
+	if err != nil {
+		return returnError(err)
 	}
 
 	if c.SenderValidationEnabled || len(payload.MetaData.Signature) > 0 {
-		if vErr = verifySignature(payload.MetaData, tx.TxID()); vErr != nil {
-			return returnError(&processingError{vErr, http.StatusBadRequest})
+		if err = verifySignature(payload.MetaData, tx.TxID()); err != nil {
+			return returnError(err)
 		}
 	}
 
@@ -62,7 +53,7 @@ func processP2pReceiveTxRequest(c *Configuration, req *http.Request, incomingPay
 	return payload, beefData, md, nil
 }
 
-func getProcessedTxData(payload *p2pReceiveTxReqPayload, format p2pPayloadFormat, log *zerolog.Logger) (*bt.Tx, *beef.DecodedBEEF, *processingError) {
+func getProcessedTxData(payload *p2pReceiveTxReqPayload, format p2pPayloadFormat, log *zerolog.Logger) (*bt.Tx, *beef.DecodedBEEF, error) {
 	var processedTx *bt.Tx
 	var beefData *beef.DecodedBEEF
 	var err error
@@ -71,17 +62,15 @@ func getProcessedTxData(payload *p2pReceiveTxReqPayload, format p2pPayloadFormat
 	case basicP2pPayload:
 		processedTx, err = bitcoin.TxFromHex(payload.Hex)
 		if err != nil {
-			errorMsg := fmt.Sprintf("error while parsing hex: %s", err.Error())
-			log.Error().Msg(errorMsg)
-			return nil, nil, &processingError{&parseError{ErrorInvalidParameter, errorMsg}, http.StatusBadRequest}
+			log.Error().Msgf("error while parsing hex: %s", err.Error())
+			return nil, nil, errors.ErrProcessingHex
 		}
 
 	case beefP2pPayload:
 		beefData, err = beef.DecodeBEEF(payload.Beef)
 		if err != nil {
-			errorMsg := fmt.Sprintf("error while parsing beef: %s", err.Error())
-			log.Error().Msg(errorMsg)
-			return nil, nil, &processingError{&parseError{ErrorInvalidParameter, errorMsg}, http.StatusBadRequest}
+			log.Error().Msgf("error while parsing beef: %s", err.Error())
+			return nil, nil, errors.ErrProcessingBEEF
 		}
 
 		processedTx = beefData.GetLatestTx()
@@ -93,39 +82,39 @@ func getProcessedTxData(payload *p2pReceiveTxReqPayload, format p2pPayloadFormat
 	return processedTx, beefData, nil
 }
 
-func verifyIncomingPaymail(ctx context.Context, c *Configuration, md *RequestMetadata, alias, domain string) *parseError {
+func verifyIncomingPaymail(ctx context.Context, c *Configuration, md *RequestMetadata, alias, domain string) error {
 	var foundPaymail *paymail.AddressInformation
 	var err error
 
 	foundPaymail, err = c.actions.GetPaymailByAlias(ctx, alias, domain, md)
 	if err != nil {
-		return &parseError{ErrorFindingPaymail, err.Error()}
+		return err
 	} else if foundPaymail == nil {
-		return &parseError{ErrorPaymailNotFound, "paymail not found"}
+		return errors.ErrCouldNotFindPaymail
 	}
 
 	return nil
 }
 
-func verifySignature(metadata *paymail.P2PMetaData, txID string) *parseError {
+func verifySignature(metadata *paymail.P2PMetaData, txID string) error {
 	// Get the address from pubKey
 	var rawAddress *bscript.Address
 	var err error
 
 	if rawAddress, err = bitcoin.GetAddressFromPubKeyString(metadata.PubKey, true); err != nil {
-		return &parseError{ErrorInvalidPubKey, "invalid pubkey: " + err.Error()}
+		return errors.ErrInvalidPubKey
 	}
 
 	// Validate the signature of the tx id
 	if err = bitcoin.VerifyMessage(rawAddress.AddressString, metadata.Signature, txID); err != nil {
-		return &parseError{ErrorInvalidSignature, "invalid signature: " + err.Error()}
+		return errors.ErrInvalidSignature
 	}
 
 	return nil
 }
 
-func returnError(err *processingError) (
-	*p2pReceiveTxReqPayload, *beef.DecodedBEEF, *RequestMetadata, *processingError,
+func returnError(err error) (
+	*p2pReceiveTxReqPayload, *beef.DecodedBEEF, *RequestMetadata, error,
 ) {
 	return nil, nil, nil, err
 }

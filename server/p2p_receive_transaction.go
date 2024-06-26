@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/bitcoin-sv/go-paymail/errors"
 	"github.com/gin-gonic/gin"
 	"net/http"
 
@@ -37,9 +38,9 @@ func (c *Configuration) p2pReceiveTx(context *gin.Context) {
 
 	incomingPaymail := context.Param(PaymailAddressParamName)
 
-	requestPayload, _, md, vErr := processP2pReceiveTxRequest(c, context.Request, incomingPaymail, p2pFormat)
-	if vErr != nil {
-		ErrorResponse(context, vErr.code, vErr.msg, vErr.httpResponseCode)
+	requestPayload, _, md, err := processP2pReceiveTxRequest(c, context.Request, incomingPaymail, p2pFormat)
+	if err != nil {
+		errors.ErrorResponse(context, err)
 		return
 	}
 
@@ -48,11 +49,10 @@ func (c *Configuration) p2pReceiveTx(context *gin.Context) {
 	}
 
 	var response *paymail.P2PTransactionPayload
-	var err error
 	if response, err = c.actions.RecordTransaction(
 		context.Request.Context(), requestPayload.P2PTransaction, md,
 	); err != nil {
-		ErrorResponse(context, ErrorRecordingTx, err.Error(), http.StatusExpectationFailed)
+		errors.ErrorResponse(context, err)
 		return
 	}
 
@@ -77,9 +77,9 @@ func (c *Configuration) p2pReceiveBeefTx(context *gin.Context) {
 	p2pFormat := beefP2pPayload
 	incomingPaymail := context.Param(PaymailAddressParamName)
 
-	requestPayload, dBeef, md, vErr := processP2pReceiveTxRequest(c, context.Request, incomingPaymail, p2pFormat)
-	if vErr != nil {
-		ErrorResponse(context, vErr.code, vErr.msg, vErr.httpResponseCode)
+	requestPayload, dBeef, md, err := processP2pReceiveTxRequest(c, context.Request, incomingPaymail, p2pFormat)
+	if err != nil {
+		errors.ErrorResponse(context, err)
 		return
 	}
 
@@ -91,9 +91,9 @@ func (c *Configuration) p2pReceiveBeefTx(context *gin.Context) {
 		panic("empty beef after parsing!")
 	}
 
-	err := spv.ExecuteSimplifiedPaymentVerification(context.Request.Context(), dBeef, c.actions)
+	err = spv.ExecuteSimplifiedPaymentVerification(context.Request.Context(), dBeef, c.actions)
 	if err != nil {
-		ErrorResponse(context, ErrorSimplifiedPaymentVerification, err.Error(), http.StatusExpectationFailed)
+		errors.ErrorResponse(context, errors.ErrNoOutputs)
 		return
 	}
 
@@ -101,7 +101,7 @@ func (c *Configuration) p2pReceiveBeefTx(context *gin.Context) {
 	if response, err = c.actions.RecordTransaction(
 		context.Request.Context(), requestPayload.P2PTransaction, md,
 	); err != nil {
-		ErrorResponse(context, ErrorRecordingTx, err.Error(), http.StatusExpectationFailed)
+		errors.ErrorResponse(context, err)
 		return
 	}
 
