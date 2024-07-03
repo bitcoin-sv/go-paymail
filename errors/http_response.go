@@ -12,15 +12,16 @@ func ErrorResponse(c *gin.Context, err error) {
 }
 
 func getError(err error) (ResponseError, int) {
-	if err == nil {
-		return ResponseError{Code: UnknownErrorCode, Message: "No error information available"}, 500
+	var extendedErr ExtendedError
+	if errors.As(err, &extendedErr) {
+		return ResponseError{
+			Code:    extendedErr.GetCode(),
+			Message: extendedErr.GetMessage(),
+		}, extendedErr.GetStatusCode()
 	}
 
-	var errDetails SPVError
-	ok := errors.As(err, &errDetails)
-	if !ok {
-		return ResponseError{Code: UnknownErrorCode, Message: "Unable to get information about error"}, 500
-	}
-
-	return ResponseError{Code: errDetails.Code, Message: errDetails.Message}, errDetails.StatusCode
+	return ResponseError{
+		Code:    UnknownErrorCode,
+		Message: "Unable to get information about error",
+	}, 500
 }
