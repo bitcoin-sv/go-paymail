@@ -2,7 +2,6 @@ package errors
 
 import (
 	"errors"
-	"github.com/bitcoin-sv/spv-wallet/models"
 	"github.com/gin-gonic/gin"
 )
 
@@ -12,16 +11,16 @@ func ErrorResponse(c *gin.Context, err error) {
 	c.JSON(statusCode, response)
 }
 
-func getError(err error) (models.ResponseError, int) {
+func getError(err error) (ResponseError, int) {
 	if err == nil {
-		return models.ResponseError{Code: models.UnknownErrorCode, Message: "No error information available"}, 500
+		return ResponseError{Code: UnknownErrorCode, Message: "No error information available"}, 500
 	}
 
-	var errDetails models.SPVError
+	var errDetails SPVError
 	ok := errors.As(err, &errDetails)
 	if !ok {
-		return models.ResponseError{Code: models.UnknownErrorCode, Message: "Unable to get information about error"}, 500
+		return ResponseError{Code: UnknownErrorCode, Message: "Unable to get information about error"}, 500
 	}
 
-	return models.ResponseError{Code: errDetails.Code, Message: errDetails.Message}, errDetails.StatusCode
+	return ResponseError{Code: errDetails.Code, Message: errDetails.Message}, errDetails.StatusCode
 }

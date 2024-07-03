@@ -38,7 +38,7 @@ func findMinedAncestors(tx *bt.Tx, ancestors []*beef.TxData) (map[string]*beef.T
 func findMinedAncestorsForInput(input *bt.Input, ancestors []*beef.TxData, ma map[string]*beef.TxData) error {
 	parent := findParentForInput(input, ancestors)
 	if parent == nil {
-		return errors.ErrBUMPCouldNotFindMindParent
+		return errors.ErrBUMPCouldNotFindMinedParent
 	}
 
 	if !parent.Unmined() {

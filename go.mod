@@ -1,9 +1,8 @@
 module github.com/bitcoin-sv/go-paymail
 
-go 1.22.4
+go 1.21.5
 
 require (
-	github.com/bitcoin-sv/spv-wallet/models v1.0.0-beta.14
 	github.com/bitcoinschema/go-bitcoin/v2 v2.0.5
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-resty/resty/v2 v2.13.1
@@ -54,6 +53,3 @@ require (
 	google.golang.org/protobuf v1.34.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-// TODO: remove this
-replace github.com/bitcoin-sv/spv-wallet/models => ./../spv-wallet/models
