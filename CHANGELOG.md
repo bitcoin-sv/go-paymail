@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.19.0](https://github.com/bitcoin-sv/go-paymail/compare/v0.18.0...v0.19.0) (2024-07-04)
+
+
+### Features
+
+* **SPV-846:** refactor how the errors are returned ([#105](https://github.com/bitcoin-sv/go-paymail/issues/105)) ([869de71](https://github.com/bitcoin-sv/go-paymail/commit/869de717d1973d96028b1a49bdf3a1cb079dc289))
+
 ## [0.18.0](https://github.com/bitcoin-sv/go-paymail/compare/v0.17.0...v0.18.0) (2024-06-12)
 
 
