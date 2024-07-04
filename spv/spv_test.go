@@ -2,7 +2,7 @@ package spv
 
 import (
 	"context"
-	"errors"
+	"github.com/bitcoin-sv/go-paymail/errors"
 	"testing"
 
 	"github.com/bitcoin-sv/go-paymail/beef"
@@ -67,43 +67,43 @@ func TestExecuteSimplifiedPaymentVerification_CorruptedTransaction_ReturnError(t
 		{
 			name:          "SPV on someone else UTXOs (full mined)",
 			beef:          someoneElse,
-			expectedError: errors.New("invalid script"),
+			expectedError: errors.ErrInvalidScript,
 		},
 		{
 			name:          "SPV on trying to spend more satoshis in outputs then in inputs (full mined)",
 			beef:          tooMuch,
-			expectedError: errors.New("invalid input and output sum, outputs can not be larger than inputs"),
+			expectedError: errors.ErrOutputValueTooHigh,
 		},
 		{
 			name:          "SPV on unsupported LockTime and unsupported Sequence (full mined)",
 			beef:          nlockNseq,
-			expectedError: errors.New("nLocktime is set and nSequence is not max, therefore this could be a non-final tx which is not currently supported"),
+			expectedError: errors.ErrLockTimeAndSequence,
 		},
 		{
 			name:          "SPV on valid BUMP from other tx (full mined)",
 			beef:          bump,
-			expectedError: errors.New("invalid BUMP - input mined ancestor is not present in BUMPs"),
+			expectedError: errors.ErrBUMPAncestorNotPresent,
 		},
 
 		{
 			name:          "SPV on someone else UTXOs (not mined)",
 			beef:          nm_someoneElse,
-			expectedError: errors.New("invalid script"),
+			expectedError: errors.ErrInvalidScript,
 		},
 		{
 			name:          "SPV on trying to spend more satoshis in outputs then in inputs (not mined)",
 			beef:          nm_tooMuch,
-			expectedError: errors.New("invalid input and output sum, outputs can not be larger than inputs"),
+			expectedError: errors.ErrOutputValueTooHigh,
 		},
 		{
 			name:          "SPV on unsupported LockTime (not mined)",
 			beef:          nm_nlockNseq,
-			expectedError: errors.New("nLocktime is set and nSequence is not max, therefore this could be a non-final tx which is not currently supported"),
+			expectedError: errors.ErrLockTimeAndSequence,
 		},
 		{
 			name:          "SPV on valid BUMP from other tx (not mined)",
 			beef:          bump,
-			expectedError: errors.New("invalid BUMP - input mined ancestor is not present in BUMPs"),
+			expectedError: errors.ErrBUMPAncestorNotPresent,
 		},
 	}
 

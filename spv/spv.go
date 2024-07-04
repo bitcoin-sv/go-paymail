@@ -2,7 +2,7 @@ package spv
 
 import (
 	"context"
-	"errors"
+	"github.com/bitcoin-sv/go-paymail/errors"
 
 	"github.com/bitcoin-sv/go-paymail/beef"
 	"github.com/libsv/go-bt/v2"
@@ -29,11 +29,11 @@ func ExecuteSimplifiedPaymentVerification(ctx context.Context, dBeef *beef.Decod
 		tx := txDt.Transaction
 
 		if len(tx.Outputs) == 0 {
-			return errors.New("invalid output, no outputs")
+			return errors.ErrNoOutputs
 		}
 
 		if len(tx.Inputs) == 0 {
-			return errors.New("invalid input, no inputs")
+			return errors.ErrNoInputs
 		}
 
 		if err := validateLockTime(tx); err != nil {
@@ -64,7 +64,7 @@ func validateLockTime(tx *bt.Tx) error {
 	}
 	for _, input := range tx.Inputs {
 		if input.SequenceNumber != 0xffffffff {
-			return errors.New("nLocktime is set and nSequence is not max, therefore this could be a non-final tx which is not currently supported")
+			return errors.ErrLockTimeAndSequence
 		}
 	}
 	return nil
@@ -77,7 +77,7 @@ func validateSatoshisSum(tx *bt.Tx, inputTxs []*beef.TxData) error {
 		inputParentTx := findParentForInput(input, inputTxs)
 
 		if inputParentTx == nil {
-			return errors.New("invalid parent transactions, no matching trasactions for input")
+			return errors.ErrInvalidParentTransactions
 		}
 
 		inputSum += inputParentTx.Transaction.Outputs[input.PreviousTxOutIndex].Satoshis
@@ -87,7 +87,7 @@ func validateSatoshisSum(tx *bt.Tx, inputTxs []*beef.TxData) error {
 	}
 
 	if inputSum <= outputSum {
-		return errors.New("invalid input and output sum, outputs can not be larger than inputs")
+		return errors.ErrOutputValueTooHigh
 	}
 
 	return nil

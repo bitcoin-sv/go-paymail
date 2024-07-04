@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/bitcoin-sv/go-paymail/errors"
 	"github.com/gin-gonic/gin"
 	"net/http"
 
@@ -25,7 +26,7 @@ func (c *Configuration) p2pDestination(context *gin.Context) {
 	var b p2pDestinationRequestBody
 	err := context.Bind(&b)
 	if err != nil {
-		ErrorResponse(context, ErrorInvalidParameter, "error decoding body: "+err.Error(), http.StatusBadRequest)
+		errors.ErrorResponse(context, errors.ErrCannotBindRequest)
 		return
 	}
 
@@ -39,7 +40,7 @@ func (c *Configuration) p2pDestination(context *gin.Context) {
 	if response, err = c.actions.CreateP2PDestinationResponse(
 		context.Request.Context(), alias, domain, b.Satoshis, md,
 	); err != nil {
-		ErrorResponse(context, ErrorScript, "error creating output script(s): "+err.Error(), http.StatusExpectationFailed)
+		errors.ErrorResponse(context, err)
 		return
 	}
 
