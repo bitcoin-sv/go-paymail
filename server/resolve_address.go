@@ -1,17 +1,22 @@
 package server
 
 import (
-	"github.com/bitcoin-sv/go-paymail/errors"
-	"github.com/gin-gonic/gin"
 	"net"
 	"net/http"
 	"time"
 
+	"github.com/bitcoin-sv/go-paymail/errors"
+	"github.com/gin-gonic/gin"
+
 	"github.com/bitcoin-sv/go-paymail"
 	"github.com/bitcoinschema/go-bitcoin/v2"
-	"github.com/libsv/go-bk/bec"
-	"github.com/libsv/go-bt/v2/bscript"
+
+	ec "github.com/bitcoin-sv/go-sdk/primitives/ec"
+	script "github.com/bitcoin-sv/go-sdk/script"
 )
+
+// TODO: bitcoin.PubKeyFromString
+// TODO: bitcoin.GetAddressFromPubKey
 
 /*
 Incoming Data Object Example:
@@ -75,7 +80,7 @@ func (c *Configuration) resolveAddress(context *gin.Context) {
 		if len(senderRequest.Signature) > 0 {
 
 			// Get the pubKey from the corresponding sender paymail address
-			var senderPubKey *bec.PublicKey
+			var senderPubKey *ec.PublicKey
 			senderPubKey, err = getSenderPubKey(senderRequest.SenderHandle)
 			if err != nil {
 				errors.ErrorResponse(context, err)
@@ -83,7 +88,7 @@ func (c *Configuration) resolveAddress(context *gin.Context) {
 			}
 
 			// Derive address from pubKey
-			var rawAddress *bscript.Address
+			var rawAddress *script.Address
 			if rawAddress, err = bitcoin.GetAddressFromPubKey(senderPubKey, true); err != nil {
 				errors.ErrorResponse(context, errors.ErrInvalidSenderHandle)
 				return
@@ -128,7 +133,7 @@ func (c *Configuration) resolveAddress(context *gin.Context) {
 }
 
 // getSenderPubKey will fetch the pubKey from a PKI request for the sender handle
-func getSenderPubKey(senderPaymailAddress string) (*bec.PublicKey, error) {
+func getSenderPubKey(senderPaymailAddress string) (*ec.PublicKey, error) {
 
 	// Sanitize and break apart
 	alias, domain, _ := paymail.SanitizePaymail(senderPaymailAddress)
@@ -167,6 +172,6 @@ func getSenderPubKey(senderPaymailAddress string) (*bec.PublicKey, error) {
 		return nil, err
 	}
 
-	// Convert the string pubKey to a bec.PubKey
+	// Convert the string pubKey to a ec.PubKey
 	return bitcoin.PubKeyFromString(pki.PubKey)
 }

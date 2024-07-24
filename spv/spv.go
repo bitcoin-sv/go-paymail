@@ -2,10 +2,12 @@ package spv
 
 import (
 	"context"
+
 	"github.com/bitcoin-sv/go-paymail/errors"
 
 	"github.com/bitcoin-sv/go-paymail/beef"
-	"github.com/libsv/go-bt/v2"
+
+	trx "github.com/bitcoin-sv/go-sdk/transaction"
 )
 
 type MerkleRootVerifier interface {
@@ -58,7 +60,7 @@ func ExecuteSimplifiedPaymentVerification(ctx context.Context, dBeef *beef.Decod
 	return nil
 }
 
-func validateLockTime(tx *bt.Tx) error {
+func validateLockTime(tx *trx.Transaction) error {
 	if tx.LockTime == 0 {
 		return nil
 	}
@@ -70,7 +72,7 @@ func validateLockTime(tx *bt.Tx) error {
 	return nil
 }
 
-func validateSatoshisSum(tx *bt.Tx, inputTxs []*beef.TxData) error {
+func validateSatoshisSum(tx *trx.Transaction, inputTxs []*beef.TxData) error {
 	inputSum, outputSum := uint64(0), uint64(0)
 
 	for _, input := range tx.Inputs {
@@ -80,7 +82,7 @@ func validateSatoshisSum(tx *bt.Tx, inputTxs []*beef.TxData) error {
 			return errors.ErrInvalidParentTransactions
 		}
 
-		inputSum += inputParentTx.Transaction.Outputs[input.PreviousTxOutIndex].Satoshis
+		inputSum += inputParentTx.Transaction.Outputs[input.SourceTxOutIndex].Satoshis
 	}
 	for _, output := range tx.Outputs {
 		outputSum += output.Satoshis
@@ -93,7 +95,7 @@ func validateSatoshisSum(tx *bt.Tx, inputTxs []*beef.TxData) error {
 	return nil
 }
 
-func findParentForInput(input *bt.Input, parentTxs []*beef.TxData) *beef.TxData {
+func findParentForInput(input *trx.TransactionInput, parentTxs []*beef.TxData) *beef.TxData {
 	parentID := input.PreviousTxIDStr()
 
 	for _, ptx := range parentTxs {

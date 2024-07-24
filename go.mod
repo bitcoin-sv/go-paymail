@@ -1,6 +1,8 @@
 module github.com/bitcoin-sv/go-paymail
 
-go 1.21.5
+go 1.22
+
+toolchain go1.22.5
 
 require (
 	github.com/bitcoinschema/go-bitcoin/v2 v2.0.5
@@ -18,6 +20,7 @@ require (
 )
 
 require (
+	github.com/bitcoin-sv/go-sdk v0.0.0-20240723152403-6fa5c8714bb9 // indirect
 	github.com/bitcoinsv/bsvd v0.0.0-20190609155523-4c29707f7173 // indirect
 	github.com/bytedance/sonic v1.11.9 // indirect
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
