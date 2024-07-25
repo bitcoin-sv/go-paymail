@@ -6,7 +6,7 @@ import (
 	"github.com/libsv/go-bc"
 )
 
-// TODO: MerkleTreeParentStr -> No direct replacement
+// TODO: bc.MerkleTreeParentStr -> No direct replacement
 
 // BUMPs represents a slice of BUMPs - BSV Unified Merkle Paths
 type BUMPs []*BUMP

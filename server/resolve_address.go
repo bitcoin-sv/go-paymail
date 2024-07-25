@@ -15,8 +15,8 @@ import (
 	script "github.com/bitcoin-sv/go-sdk/script"
 )
 
-// TODO: bitcoin.PubKeyFromString
-// TODO: bitcoin.GetAddressFromPubKey
+// TODO: bitcoin.PubKeyFromString -> PubKeyFromSignature?
+// TODO: bitcoin.GetAddressFromPubKey -> NewAddressFromPublicKeyString?
 
 /*
 Incoming Data Object Example:

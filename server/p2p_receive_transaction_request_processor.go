@@ -12,12 +12,13 @@ import (
 	"github.com/bitcoin-sv/go-paymail"
 	"github.com/bitcoin-sv/go-paymail/beef"
 
+	bsm "github.com/bitcoin-sv/go-sdk/compat/bsm"
 	script "github.com/bitcoin-sv/go-sdk/script"
 	trx "github.com/bitcoin-sv/go-sdk/transaction"
 )
 
-// TODO: bitcoin.TxFromHex
-// TODO: bitcoin.GetAddressFromPubKeyString
+// TODO: bitcoin.TxFromHex -> trx.NewTransactionFromHex?
+// TODO: bitcoin.GetAddressFromPubKeyString -> script.NewAddressFromPublicKeyString?
 
 type p2pReceiveTxReqPayload struct {
 	*paymail.P2PTransaction
@@ -111,7 +112,7 @@ func verifySignature(metadata *paymail.P2PMetaData, txID string) error {
 	}
 
 	// Validate the signature of the tx id
-	if err = bitcoin.VerifyMessage(rawAddress.AddressString, metadata.Signature, txID); err != nil {
+	if err = bsm.VerifyMessage(rawAddress.AddressString, metadata.Signature, txID); err != nil {
 		return errors.ErrInvalidSignature
 	}
 

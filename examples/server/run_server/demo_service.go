@@ -6,11 +6,15 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/bitcoin-sv/go-paymail/logging"
 	"strings"
+
+	"github.com/bitcoin-sv/go-paymail/logging"
 
 	"github.com/bitcoin-sv/go-paymail"
 	"github.com/bitcoinschema/go-bitcoin/v2"
+
+	bsm "github.com/bitcoin-sv/go-sdk/compat/bsm"
+	ec "github.com/bitcoin-sv/go-sdk/primitives/ec"
 )
 
 // paymailAddressTable is the demo data for the example server (table: paymail_address)
@@ -118,10 +122,15 @@ func DemoCreateAddressResolutionResponse(_ context.Context, alias, domain string
 		return nil, errors.New("error generating script: " + err.Error())
 	}
 
+	privateKeyFromHex, err := ec.PrivateKeyFromHex(p.PrivateKey)
+	if err != nil {
+		return nil, errors.New("unable to decode private key: " + err.Error())
+	}
+
 	// Create a signature of output if senderValidation is enabled
 	if senderValidation {
-		if response.Signature, err = bitcoin.SignMessage(
-			p.PrivateKey, response.Output, false,
+		if response.Signature, err = bsm.SignMessage(
+			privateKeyFromHex, response.Output, false,
 		); err != nil {
 			return nil, errors.New("invalid signature: " + err.Error())
 		}
