@@ -2,17 +2,23 @@ package server
 
 import (
 	"context"
-	"github.com/bitcoin-sv/go-paymail/errors"
-	"github.com/rs/zerolog"
 	"net/http"
 
+	"github.com/bitcoin-sv/go-paymail/errors"
+	"github.com/rs/zerolog"
+
 	"github.com/bitcoinschema/go-bitcoin/v2"
-	"github.com/libsv/go-bt/v2"
-	"github.com/libsv/go-bt/v2/bscript"
 
 	"github.com/bitcoin-sv/go-paymail"
 	"github.com/bitcoin-sv/go-paymail/beef"
+
+	bsm "github.com/bitcoin-sv/go-sdk/compat/bsm"
+	script "github.com/bitcoin-sv/go-sdk/script"
+	trx "github.com/bitcoin-sv/go-sdk/transaction"
 )
+
+// TODO: bitcoin.TxFromHex -> trx.NewTransactionFromHex?
+// TODO: bitcoin.GetAddressFromPubKeyString -> script.NewAddressFromPublicKeyString?
 
 type p2pReceiveTxReqPayload struct {
 	*paymail.P2PTransaction
@@ -53,8 +59,8 @@ func processP2pReceiveTxRequest(c *Configuration, req *http.Request, incomingPay
 	return payload, beefData, md, nil
 }
 
-func getProcessedTxData(payload *p2pReceiveTxReqPayload, format p2pPayloadFormat, log *zerolog.Logger) (*bt.Tx, *beef.DecodedBEEF, error) {
-	var processedTx *bt.Tx
+func getProcessedTxData(payload *p2pReceiveTxReqPayload, format p2pPayloadFormat, log *zerolog.Logger) (*trx.Transaction, *beef.DecodedBEEF, error) {
+	var processedTx *trx.Transaction
 	var beefData *beef.DecodedBEEF
 	var err error
 
@@ -98,7 +104,7 @@ func verifyIncomingPaymail(ctx context.Context, c *Configuration, md *RequestMet
 
 func verifySignature(metadata *paymail.P2PMetaData, txID string) error {
 	// Get the address from pubKey
-	var rawAddress *bscript.Address
+	var rawAddress *script.Address
 	var err error
 
 	if rawAddress, err = bitcoin.GetAddressFromPubKeyString(metadata.PubKey, true); err != nil {
@@ -106,7 +112,7 @@ func verifySignature(metadata *paymail.P2PMetaData, txID string) error {
 	}
 
 	// Validate the signature of the tx id
-	if err = bitcoin.VerifyMessage(rawAddress.AddressString, metadata.Signature, txID); err != nil {
+	if err = bsm.VerifyMessage(rawAddress.AddressString, metadata.Signature, txID); err != nil {
 		return errors.ErrInvalidSignature
 	}
 

@@ -3,7 +3,8 @@ package paymail
 import (
 	"fmt"
 
-	"github.com/bitcoinschema/go-bitcoin/v2"
+	bsm "github.com/bitcoin-sv/go-sdk/compat/bsm"
+	ec "github.com/bitcoin-sv/go-sdk/primitives/ec"
 )
 
 /*
@@ -44,7 +45,7 @@ func (s *SenderRequest) Verify(keyAddress, signature string) error {
 	}
 
 	// Concatenate & verify the message
-	return bitcoin.VerifyMessage(keyAddress, signature, fmt.Sprintf("%s%d%s%s", s.SenderHandle, s.Amount, s.Dt, s.Purpose))
+	return bsm.VerifyMessage(keyAddress, signature, fmt.Sprintf("%s%d%s%s", s.SenderHandle, s.Amount, s.Dt, s.Purpose))
 }
 
 // Sign will sign the given components in the ResolveAddress() request
@@ -63,9 +64,14 @@ func (s *SenderRequest) Sign(privateKey string) (string, error) {
 		return "", fmt.Errorf("missing senderHandle")
 	}
 
+	privateKeyFromHex, err := ec.PrivateKeyFromHex(privateKey)
+	if err != nil {
+		return "", fmt.Errorf("unable to decode private key")
+	}
+
 	// Concatenate & sign message
-	return bitcoin.SignMessage(
-		privateKey,
+	return bsm.SignMessage(
+		privateKeyFromHex,
 		fmt.Sprintf("%s%d%s%s", s.SenderHandle, s.Amount, s.Dt, s.Purpose),
 		false,
 	)
