@@ -300,7 +300,7 @@ func ExampleClient_GetCapabilities() {
 	// Get the capabilities
 	capabilities, err := client.GetCapabilities(testDomain, DefaultPort)
 	if err != nil {
-		fmt.Printf("error getting capabilities: " + err.Error())
+		fmt.Printf("error getting capabilities: %v\n", err)
 		return
 	}
 	fmt.Printf("found %d capabilities", len(capabilities.Capabilities))
