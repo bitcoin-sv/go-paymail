@@ -239,7 +239,7 @@ func ExampleClient_GetPKI() {
 	// Get the pki
 	pki, err := client.GetPKI(testServerURL+"id/{alias}@{domain.tld}", testAlias, testDomain)
 	if err != nil {
-		fmt.Printf("error getting pki: " + err.Error())
+		fmt.Printf("error getting pki: %v\n", err)
 		return
 	}
 	fmt.Printf("found %s handle with pubkey: %s", pki.Handle, pki.PubKey)

@@ -1,11 +1,12 @@
 package server
 
 import (
-	"github.com/bitcoin-sv/go-paymail/errors"
-	"github.com/rs/zerolog"
 	"slices"
 	"strings"
 	"time"
+
+	"github.com/bitcoin-sv/go-paymail/errors"
+	"github.com/rs/zerolog"
 
 	"github.com/bitcoin-sv/go-paymail"
 )
@@ -68,7 +69,7 @@ func (c *Configuration) Validate() error {
 		return errors.ErrBsvAliasMissing
 	}
 
-	if c.callableCapabilities == nil || len(c.callableCapabilities) == 0 {
+	if len(c.callableCapabilities) == 0 {
 		return errors.ErrCapabilitiesMissing
 	}
 

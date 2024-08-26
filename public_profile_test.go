@@ -159,7 +159,7 @@ func ExampleClient_GetPublicProfile() {
 	// Get profile
 	profile, err := client.GetPublicProfile(testServerURL+"public-profile/{alias}@{domain.tld}", testAlias, testDomain)
 	if err != nil {
-		fmt.Printf("error getting profile: " + err.Error())
+		fmt.Printf("error getting profile:  %v\n", err)
 		return
 	}
 	fmt.Printf("found profile for: %s", profile.Name)

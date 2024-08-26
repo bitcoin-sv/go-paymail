@@ -296,7 +296,7 @@ func ExampleClient_VerifyPubKey() {
 		testAlias, testDomain, testPubKey,
 	)
 	if err != nil {
-		fmt.Printf("error getting verification: " + err.Error())
+		fmt.Printf("error getting verification: %v\n", err)
 		return
 	}
 	fmt.Printf("verified %s handle with pubkey: %s", verification.Handle, verification.PubKey)
