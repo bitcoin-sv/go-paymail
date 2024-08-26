@@ -69,7 +69,7 @@ func (c *Configuration) Validate() error {
 		return errors.ErrBsvAliasMissing
 	}
 
-	if c.callableCapabilities == nil {
+	if len(c.callableCapabilities) == 0 {
 		return errors.ErrCapabilitiesMissing
 	}
 
