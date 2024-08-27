@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.20.1](https://github.com/bitcoin-sv/go-paymail/compare/v0.20.0...v0.20.1) (2024-08-26)
+
+
+### Bug Fixes
+
+* **SPV-000:** fixes lint errors ([#118](https://github.com/bitcoin-sv/go-paymail/issues/118)) ([611f5ec](https://github.com/bitcoin-sv/go-paymail/commit/611f5ec5a73e35e51897aef0e39660a2cb868fa7))
+
 ## [0.19.0](https://github.com/bitcoin-sv/go-paymail/compare/v0.18.0...v0.19.0) (2024-07-04)
 
 
