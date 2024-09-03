@@ -414,7 +414,7 @@ func ExampleClient_GetP2PPaymentDestination() {
 		return
 	}
 	if len(destination.Outputs) > 0 {
-		fmt.Printf("payment destination: " + destination.Outputs[0].Script)
+		fmt.Printf("payment destination: %s\n", destination.Outputs[0].Script)
 	}
 	// Output:payment destination: 76a9143e2d1d795f8acaa7957045cc59376177eb04a3c588ac
 }
