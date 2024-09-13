@@ -96,7 +96,7 @@ func validateSatoshisSum(tx *trx.Transaction, inputTxs []*beef.TxData) error {
 }
 
 func findParentForInput(input *trx.TransactionInput, parentTxs []*beef.TxData) *beef.TxData {
-	parentID := input.PreviousTxIDStr()
+	parentID := input.SourceTXID.String()
 
 	for _, ptx := range parentTxs {
 		if ptx.GetTxID() == parentID {

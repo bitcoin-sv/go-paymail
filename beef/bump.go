@@ -2,8 +2,6 @@ package beef
 
 import (
 	"errors"
-
-	"github.com/libsv/go-bc"
 )
 
 // TODO: bc.MerkleTreeParentStr -> No direct replacement
@@ -69,7 +67,8 @@ func calculateMerkleRoot(baseLeaf BUMPLeaf, bump BUMP) (string, error) {
 
 		leftNode, rightNode := prepareNodes(baseLeaf, offset, *leafInPair, newOffset)
 
-		str, err := bc.MerkleTreeParentStr(leftNode, rightNode)
+		str, err := merkleTreeParentStr(leftNode, rightNode)
+
 		if err != nil {
 			return "", err
 		}

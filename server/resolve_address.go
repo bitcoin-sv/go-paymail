@@ -9,7 +9,6 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/bitcoin-sv/go-paymail"
-	"github.com/bitcoinschema/go-bitcoin/v2"
 
 	ec "github.com/bitcoin-sv/go-sdk/primitives/ec"
 	script "github.com/bitcoin-sv/go-sdk/script"
@@ -89,13 +88,13 @@ func (c *Configuration) resolveAddress(context *gin.Context) {
 
 			// Derive address from pubKey
 			var rawAddress *script.Address
-			if rawAddress, err = bitcoin.GetAddressFromPubKey(senderPubKey, true); err != nil {
+			if rawAddress, err = script.NewAddressFromPublicKey(senderPubKey, true); err != nil {
 				errors.ErrorResponse(context, errors.ErrInvalidSenderHandle)
 				return
 			}
 
 			// Verify the signature
-			if err = senderRequest.Verify(rawAddress.AddressString, senderRequest.Signature); err != nil {
+			if err = senderRequest.Verify(rawAddress.AddressString, []byte(senderRequest.Signature)); err != nil {
 				errors.ErrorResponse(context, errors.ErrInvalidSignature)
 				return
 			}
@@ -173,5 +172,5 @@ func getSenderPubKey(senderPaymailAddress string) (*ec.PublicKey, error) {
 	}
 
 	// Convert the string pubKey to a ec.PubKey
-	return bitcoin.PubKeyFromString(pki.PubKey)
+	return ec.PublicKeyFromString(pki.PubKey)
 }

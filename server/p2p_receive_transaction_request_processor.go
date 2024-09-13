@@ -7,8 +7,6 @@ import (
 	"github.com/bitcoin-sv/go-paymail/errors"
 	"github.com/rs/zerolog"
 
-	"github.com/bitcoinschema/go-bitcoin/v2"
-
 	"github.com/bitcoin-sv/go-paymail"
 	"github.com/bitcoin-sv/go-paymail/beef"
 
@@ -46,7 +44,8 @@ func processP2pReceiveTxRequest(c *Configuration, req *http.Request, incomingPay
 	}
 
 	if c.SenderValidationEnabled || len(payload.MetaData.Signature) > 0 {
-		if err = verifySignature(payload.MetaData, tx.TxID()); err != nil {
+		err = verifySignature(payload.MetaData, tx.TxID().String())
+		if err != nil {
 			return returnError(err)
 		}
 	}
@@ -66,7 +65,7 @@ func getProcessedTxData(payload *p2pReceiveTxReqPayload, format p2pPayloadFormat
 
 	switch format {
 	case basicP2pPayload:
-		processedTx, err = bitcoin.TxFromHex(payload.Hex)
+		processedTx, err = trx.NewTransactionFromHex(payload.Hex)
 		if err != nil {
 			log.Error().Msgf("error while parsing hex: %s", err.Error())
 			return nil, nil, errors.ErrProcessingHex
@@ -107,12 +106,12 @@ func verifySignature(metadata *paymail.P2PMetaData, txID string) error {
 	var rawAddress *script.Address
 	var err error
 
-	if rawAddress, err = bitcoin.GetAddressFromPubKeyString(metadata.PubKey, true); err != nil {
+	if rawAddress, err = script.NewAddressFromPublicKeyString(metadata.PubKey, true); err != nil {
 		return errors.ErrInvalidPubKey
 	}
 
 	// Validate the signature of the tx id
-	if err = bsm.VerifyMessage(rawAddress.AddressString, metadata.Signature, txID); err != nil {
+	if err = bsm.VerifyMessage(rawAddress.AddressString, []byte(metadata.Signature), []byte(txID)); err != nil {
 		return errors.ErrInvalidSignature
 	}
 

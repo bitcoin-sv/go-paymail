@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-
-	"github.com/bitcoinschema/go-bitcoin/v2"
 )
 
 // ResolutionResponse is the response from the ResolveAddress() request
@@ -97,7 +95,7 @@ func (c *Client) ResolveAddress(resolutionURL, alias, domain string, senderReque
 	}
 
 	// Extract the address
-	response.Address, err = bitcoin.GetAddressFromScript(response.Output)
+	response.Address, err = GetAddressFromScript(response.Output)
 
 	return
 }

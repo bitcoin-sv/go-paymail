@@ -5,13 +5,9 @@ go 1.22
 toolchain go1.22.5
 
 require (
-	github.com/bitcoinschema/go-bitcoin/v2 v2.0.5
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-resty/resty/v2 v2.14.0
 	github.com/jarcoal/httpmock v1.3.1
-	github.com/libsv/go-bc v0.1.29
-	github.com/libsv/go-bk v0.1.6
-	github.com/libsv/go-bt/v2 v2.2.5
 	github.com/miekg/dns v1.1.62
 	github.com/rs/zerolog v1.33.0
 	github.com/stretchr/testify v1.9.0
@@ -20,7 +16,7 @@ require (
 )
 
 require (
-	github.com/bitcoin-sv/go-sdk v0.0.0-20240723152403-6fa5c8714bb9 // indirect
+	github.com/bitcoin-sv/go-sdk v1.1.7 // indirect
 	github.com/bitcoinsv/bsvd v0.0.0-20190609155523-4c29707f7173 // indirect
 	github.com/bytedance/sonic v1.12.0 // indirect
 	github.com/bytedance/sonic/loader v0.2.0 // indirect

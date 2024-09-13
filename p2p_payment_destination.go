@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-
-	"github.com/bitcoinschema/go-bitcoin/v2"
 )
 
 /*
@@ -137,7 +135,7 @@ func (c *Client) GetP2PPaymentDestination(p2pURL, alias, domain string,
 		}
 
 		// Extract the address
-		if response.Outputs[index].Address, err = bitcoin.GetAddressFromScript(
+		if response.Outputs[index].Address, err = GetAddressFromScript(
 			out.Script,
 		); err != nil {
 			return

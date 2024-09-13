@@ -39,7 +39,7 @@ func (td *TxData) Unmined() bool {
 
 func (td *TxData) GetTxID() string {
 	if len(td.txID) == 0 {
-		td.txID = td.Transaction.TxID()
+		td.txID = td.Transaction.TxID().String()
 	}
 
 	return td.txID
