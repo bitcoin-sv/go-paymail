@@ -27,47 +27,48 @@ func TestSenderRequest_Sign(t *testing.T) {
 		Purpose:      testMessage,
 	}
 
-	var signature []byte
+	var sigBytes []byte
 
 	t.Run("invalid key - empty", func(t *testing.T) {
-		signature, err = senderRequest.Sign("")
+		sigBytes, err = senderRequest.Sign("")
 		assert.Error(t, err)
-		assert.Equal(t, len(signature), 0)
+		assert.Equal(t, len(sigBytes), 0)
 	})
 
 	t.Run("invalid key - 0", func(t *testing.T) {
-		signature, err = senderRequest.Sign("0")
+		sigBytes, err = senderRequest.Sign("0")
 		assert.Error(t, err)
-		assert.Equal(t, len(signature), 0)
+		assert.Equal(t, len(sigBytes), 0)
 	})
 
 	t.Run("invalid dt", func(t *testing.T) {
 		senderRequest.Dt = ""
-		signature, err = senderRequest.Sign(hex.EncodeToString((key.Serialize())))
+		sigBytes, err = senderRequest.Sign(hex.EncodeToString((key.Serialize())))
 		assert.Error(t, err)
-		assert.Equal(t, len(signature), 0)
+		assert.Equal(t, len(sigBytes), 0)
 	})
 
 	t.Run("invalid sender handle", func(t *testing.T) {
 		senderRequest.Dt = time.Now().UTC().Format(time.RFC3339)
 		senderRequest.SenderHandle = ""
-		signature, err = senderRequest.Sign(hex.EncodeToString((key.Serialize())))
+		sigBytes, err = senderRequest.Sign(hex.EncodeToString((key.Serialize())))
 		assert.Error(t, err)
-		assert.Equal(t, len(signature), 0)
+		assert.Equal(t, len(sigBytes), 0)
 	})
 
 	t.Run("valid signature", func(t *testing.T) {
 		senderRequest.SenderHandle = testAlias + "@" + testDomain
-		signature, err = senderRequest.Sign(hex.EncodeToString((key.Serialize())))
+		hexKey := hex.EncodeToString((key.Serialize()))
+		sigBytes, err = senderRequest.Sign(hexKey)
 		assert.NoError(t, err)
-		assert.NotEqual(t, len(signature), 0)
+		assert.NotEqual(t, len(sigBytes), 0)
 
 		// Get address for verification
-		address, err := script.NewAddressFromPublicKey(key.PubKey(), false)
+		address, err := script.NewAddressFromPublicKey(key.PubKey(), true)
 		assert.NoError(t, err)
 
 		// Verify the signature
-		err = senderRequest.Verify(address.AddressString, signature)
+		err = senderRequest.Verify(address.AddressString, EncodeSignature(sigBytes))
 		assert.NoError(t, err)
 	})
 }
@@ -136,10 +137,10 @@ func TestSenderRequest_Verify(t *testing.T) {
 	}
 
 	// Sign
-	var signature []byte
-	signature, err = senderRequest.Sign(hex.EncodeToString((key.Serialize())))
+	var sigBytes []byte
+	sigBytes, err = senderRequest.Sign(hex.EncodeToString((key.Serialize())))
 	assert.NoError(t, err)
-	assert.NotEqual(t, 0, len(signature))
+	assert.NotEqual(t, 0, len(sigBytes))
 
 	// Get address from private key
 	address, err := script.NewAddressFromPublicKey(key.PubKey(), true)
@@ -147,27 +148,27 @@ func TestSenderRequest_Verify(t *testing.T) {
 	assert.NotNil(t, address)
 
 	t.Run("valid verification", func(t *testing.T) {
-		err = senderRequest.Verify(address.AddressString, signature)
+		err = senderRequest.Verify(address.AddressString, EncodeSignature(sigBytes))
 		assert.NoError(t, err)
 	})
 
 	t.Run("invalid - empty address", func(t *testing.T) {
-		err = senderRequest.Verify("", signature)
+		err = senderRequest.Verify("", string(sigBytes))
 		assert.Error(t, err)
 	})
 
 	t.Run("invalid - empty signature", func(t *testing.T) {
-		err = senderRequest.Verify(address.AddressString, []byte(""))
+		err = senderRequest.Verify(address.AddressString, "")
 		assert.Error(t, err)
 	})
 
 	t.Run("invalid - wrong signature - hex short", func(t *testing.T) {
-		err = senderRequest.Verify(address.AddressString, []byte("0"))
+		err = senderRequest.Verify(address.AddressString, "0")
 		assert.Error(t, err)
 	})
 
 	t.Run("invalid - wrong signature", func(t *testing.T) {
-		err = senderRequest.Verify(address.AddressString, []byte("73646661736466736466617364667364666173646673646661736466"))
+		err = senderRequest.Verify(address.AddressString, "73646661736466736466617364667364666173646673646661736466")
 		assert.Error(t, err)
 	})
 }
@@ -188,7 +189,7 @@ func ExampleSenderRequest_Verify() {
 	// Try verifying (valid) (using an address and a signature - previously generated for example)
 	if err := senderRequest.Verify(
 		"1LqWAxSaKdXRKATAj7ELk34ioyT1T8gXgU",
-		[]byte("G70DPE2p8xtCehUjRkQF2gI26kDu59JsQ6KKUmJyHi1XFGkeoIokgzN/kiMy+lujpXOi+C35sZUwgSMqOYRDXPQ="),
+		"G70DPE2p8xtCehUjRkQF2gI26kDu59JsQ6KKUmJyHi1XFGkeoIokgzN/kiMy+lujpXOi+C35sZUwgSMqOYRDXPQ=",
 	); err != nil {
 		fmt.Printf("error occurred in Verify: %s", err.Error())
 		return
@@ -212,7 +213,7 @@ func BenchmarkSenderRequest_Verify(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		_ = senderRequest.Verify(
 			"1LqWAxSaKdXRKATAj7ELk34ioyT1T8gXgU",
-			[]byte("G70DPE2p8xtCehUjRkQF2gI26kDu59JsQ6KKUmJyHi1XFGkeoIokgzN/kiMy+lujpXOi+C35sZUwgSMqOYRDXPQ="),
+			"G70DPE2p8xtCehUjRkQF2gI26kDu59JsQ6KKUmJyHi1XFGkeoIokgzN/kiMy+lujpXOi+C35sZUwgSMqOYRDXPQ=",
 		)
 	}
 }

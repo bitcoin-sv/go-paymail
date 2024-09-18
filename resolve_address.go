@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+
+	"github.com/bitcoin-sv/go-sdk/script"
 )
 
 // ResolutionResponse is the response from the ResolveAddress() request
@@ -94,8 +96,18 @@ func (c *Client) ResolveAddress(resolutionURL, alias, domain string, senderReque
 		return
 	}
 
-	// Extract the address
-	response.Address, err = GetAddressFromScript(response.Output)
+	script, err := script.NewFromHex(response.Output)
+	if err != nil {
+		return
+	}
+
+	addresses, err := script.Addresses()
+	if err != nil || len(addresses) == 0 {
+		err = errors.New("invalid output script, missing an address")
+		return
+	}
+
+	response.Address = addresses[0]
 
 	return
 }

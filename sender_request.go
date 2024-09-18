@@ -35,7 +35,7 @@ type SenderRequest struct {
 //
 // Source: https://github.com/moneybutton/paymail-client/blob/master/src/VerifiableMessage.js
 // Specs: http://bsvalias.org/04-01-basic-address-resolution.html#signature-field
-func (s *SenderRequest) Verify(keyAddress string, signature []byte) error {
+func (s *SenderRequest) Verify(keyAddress string, signature string) error {
 	// Basic checks before trying the signature verification
 	if len(keyAddress) == 0 {
 		return fmt.Errorf("missing key address")
@@ -43,10 +43,14 @@ func (s *SenderRequest) Verify(keyAddress string, signature []byte) error {
 		return fmt.Errorf("missing a signature to verify")
 	}
 
-	data := []byte(fmt.Sprintf("%s%d%s%s", s.SenderHandle, s.Amount, s.Dt, s.Purpose))
+	data := fmt.Sprintf("%s%d%s%s", s.SenderHandle, s.Amount, s.Dt, s.Purpose)
+	decodedSig, err := DecodeSignature(signature)
+	if err != nil {
+		return err
+	}
 
 	// Concatenate & verify the message
-	return bsm.VerifyMessage(keyAddress, signature, data)
+	return bsm.VerifyMessage(keyAddress, decodedSig, []byte(data))
 }
 
 // Sign will sign the given components in the ResolveAddress() request

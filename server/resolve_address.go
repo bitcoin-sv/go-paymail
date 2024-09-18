@@ -94,7 +94,7 @@ func (c *Configuration) resolveAddress(context *gin.Context) {
 			}
 
 			// Verify the signature
-			if err = senderRequest.Verify(rawAddress.AddressString, []byte(senderRequest.Signature)); err != nil {
+			if err = senderRequest.Verify(rawAddress.AddressString, senderRequest.Signature); err != nil {
 				errors.ErrorResponse(context, errors.ErrInvalidSignature)
 				return
 			}

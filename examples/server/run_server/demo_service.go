@@ -11,10 +11,11 @@ import (
 	"github.com/bitcoin-sv/go-paymail/logging"
 
 	"github.com/bitcoin-sv/go-paymail"
-	"github.com/bitcoinschema/go-bitcoin/v2"
 
 	bsm "github.com/bitcoin-sv/go-sdk/compat/bsm"
 	ec "github.com/bitcoin-sv/go-sdk/primitives/ec"
+	"github.com/bitcoin-sv/go-sdk/script"
+	"github.com/bitcoin-sv/go-sdk/transaction/template/p2pkh"
 )
 
 // paymailAddressTable is the demo data for the example server (table: paymail_address)
@@ -68,23 +69,19 @@ func generateDemoPaymail(alias, domain, avatar, name, id string) (err error) {
 	}
 
 	// Generate new private key
-	if row.PrivateKey, err = bitcoin.CreatePrivateKeyString(); err != nil {
+	key, err := ec.NewPrivateKey()
+	if err != nil {
 		return
 	}
 
-	// Get address
-	if row.LastAddress, err = bitcoin.GetAddressFromPrivateKeyString(
-		row.PrivateKey, true,
-	); err != nil {
+	row.PrivateKey = hex.EncodeToString((key.Serialize()))
+
+	addr, err := script.NewAddressFromPublicKey(key.PubKey(), true)
+	if err != nil {
 		return
 	}
 
-	// Derive a pubkey from private key
-	if row.PubKey, err = bitcoin.PubKeyFromPrivateKeyString(
-		row.PrivateKey, true,
-	); err != nil {
-		return
-	}
+	row.LastAddress = addr.AddressString
 
 	// Add to the table
 	demoPaymailAddressTable = append(demoPaymailAddressTable, row)
@@ -116,11 +113,10 @@ func DemoCreateAddressResolutionResponse(_ context.Context, alias, domain string
 	response := &paymail.ResolutionPayload{}
 
 	// Generate the script
-	if response.Output, err = bitcoin.ScriptFromAddress(
-		p.LastAddress,
-	); err != nil {
-		return nil, errors.New("error generating script: " + err.Error())
-	}
+	sc, _ := script.NewAddressFromString(p.LastAddress)
+	ls, _ := p2pkh.Lock(sc)
+
+	response.Output = ls.String()
 
 	privateKeyFromHex, err := ec.PrivateKeyFromHex(p.PrivateKey)
 	if err != nil {
@@ -129,11 +125,11 @@ func DemoCreateAddressResolutionResponse(_ context.Context, alias, domain string
 
 	// Create a signature of output if senderValidation is enabled
 	if senderValidation {
-		if response.Signature, err = bsm.SignMessage(
-			privateKeyFromHex, response.Output, false,
-		); err != nil {
+		sigBytes, err := bsm.SignMessage(privateKeyFromHex, ls.Bytes())
+		if err != nil {
 			return nil, errors.New("invalid signature: " + err.Error())
 		}
+		response.Signature = paymail.EncodeSignature(sigBytes)
 	}
 
 	return response, nil
@@ -154,12 +150,9 @@ func DemoCreateP2PDestinationResponse(_ context.Context, alias, domain string,
 		Satoshis: satoshis,
 	}
 
-	// Generate the script
-	if output.Script, err = bitcoin.ScriptFromAddress(
-		p.LastAddress,
-	); err != nil {
-		return nil, err
-	}
+	sc, _ := script.NewAddressFromString(p.LastAddress)
+	ls, _ := p2pkh.Lock(sc)
+	output.Script = ls.String()
 
 	// Create the response
 	return &paymail.PaymentDestinationPayload{
