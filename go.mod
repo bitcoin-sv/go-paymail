@@ -16,7 +16,7 @@ require (
 )
 
 require (
-	github.com/bitcoin-sv/go-sdk v1.1.7 // indirect
+	github.com/bitcoin-sv/go-sdk v1.1.8 // indirect
 	github.com/bitcoinsv/bsvd v0.0.0-20190609155523-4c29707f7173 // indirect
 	github.com/bytedance/sonic v1.12.0 // indirect
 	github.com/bytedance/sonic/loader v0.2.0 // indirect
