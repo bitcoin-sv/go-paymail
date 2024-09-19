@@ -10,8 +10,6 @@ import (
 	trx "github.com/bitcoin-sv/go-sdk/transaction"
 )
 
-// TODO: fix tests (comments in Inputs)
-
 func TestDecodeBEEF_DecodeBEEF_HappyPaths(t *testing.T) {
 	testCases := []struct {
 		name                       string
@@ -59,10 +57,9 @@ func TestDecodeBEEF_DecodeBEEF_HappyPaths(t *testing.T) {
 							LockTime: 0,
 							Inputs: []*trx.TransactionInput{
 								{
-									// PreviousTxSatoshis: 0,
-									// PreviousTxOutIndex: 1,
-									SequenceNumber: 4294967295,
-									// PreviousTxScript:   nil,
+									SourceTxOutIndex:        1,
+									SequenceNumber:          4294967295,
+									UnlockingScriptTemplate: nil,
 								},
 							},
 							Outputs: []*trx.TransactionOutput{
@@ -81,10 +78,9 @@ func TestDecodeBEEF_DecodeBEEF_HappyPaths(t *testing.T) {
 							LockTime: 0,
 							Inputs: []*trx.TransactionInput{
 								{
-									// PreviousTxSatoshis: 0,
-									// PreviousTxOutIndex: 0,
-									SequenceNumber: 4294967295,
-									// PreviousTxScript:   nil,
+									SourceTxOutIndex:        0,
+									SequenceNumber:          4294967295,
+									UnlockingScriptTemplate: nil,
 								},
 							},
 							Outputs: []*trx.TransactionOutput{
