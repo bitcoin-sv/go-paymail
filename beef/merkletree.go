@@ -7,10 +7,12 @@ import (
 	"github.com/bitcoin-sv/go-sdk/util"
 )
 
-// INFO: This function is moved to go-paymail from go-bt
+// INFO: This function is moved to go-paymail from go-bc
+// https://github.com/libsv/go-bc/blob/master/merkletreeparent.go
 // try to use go-sdk implementation when available
 
 // merkleTreeParentStr returns the Merkle Tree parent of two Merkle
+// Tree children using hex strings instead of just bytes.
 func merkleTreeParentStr(leftNode, rightNode string) (string, error) {
 	l, err := hex.DecodeString(leftNode)
 	if err != nil {
@@ -24,8 +26,7 @@ func merkleTreeParentStr(leftNode, rightNode string) (string, error) {
 	return hex.EncodeToString(merkleTreeParent(l, r)), nil
 }
 
-// merkleTreeParent returns the Merkle Tree parent of two Merkle
-// Tree children.
+// merkleTreeParent returns the Merkle Tree parent of two Merkle tree children.
 func merkleTreeParent(leftNode, rightNode []byte) []byte {
 	// swap endianness before concatenating
 	l := util.ReverseBytes(leftNode)
