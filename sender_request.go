@@ -43,14 +43,13 @@ func (s *SenderRequest) Verify(keyAddress string, signature string) error {
 		return fmt.Errorf("missing a signature to verify")
 	}
 
-	data := fmt.Sprintf("%s%d%s%s", s.SenderHandle, s.Amount, s.Dt, s.Purpose)
 	decodedSig, err := DecodeSignature(signature)
 	if err != nil {
 		return err
 	}
 
 	// Concatenate & verify the message
-	return bsm.VerifyMessage(keyAddress, decodedSig, []byte(data))
+	return bsm.VerifyMessage(keyAddress, decodedSig, prepareMessage(s))
 }
 
 // Sign will sign the given components in the ResolveAddress() request
@@ -68,7 +67,6 @@ func (s *SenderRequest) Sign(privateKey string) ([]byte, error) {
 		return nil, fmt.Errorf("missing senderHandle")
 	}
 
-	data := []byte(fmt.Sprintf("%s%d%s%s", s.SenderHandle, s.Amount, s.Dt, s.Purpose))
 	privKey, err := primitives.PrivateKeyFromHex(privateKey)
 	if err != nil {
 		return nil, err
@@ -77,6 +75,10 @@ func (s *SenderRequest) Sign(privateKey string) ([]byte, error) {
 	// Concatenate & sign message
 	return bsm.SignMessage(
 		privKey,
-		data,
+		prepareMessage(s),
 	)
+}
+
+func prepareMessage(senderRequest *SenderRequest) []byte {
+	return []byte(fmt.Sprintf("%s%d%s%s", senderRequest.SenderHandle, senderRequest.Amount, senderRequest.Dt, senderRequest.Purpose))
 }
