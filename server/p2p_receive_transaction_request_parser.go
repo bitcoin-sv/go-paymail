@@ -2,8 +2,9 @@ package server
 
 import (
 	"encoding/json"
-	"github.com/bitcoin-sv/go-paymail/errors"
 	"net/http"
+
+	"github.com/bitcoin-sv/go-paymail/errors"
 
 	"github.com/bitcoin-sv/go-paymail"
 )
@@ -58,7 +59,7 @@ func validateMetadata(c *Configuration, metadata *paymail.P2PMetaData) error {
 			return errors.ErrMissingFieldSignature
 		}
 
-		if len(metadata.PubKey) == 0 {
+		if len(metadata.PublicKey) == 0 {
 			return errors.ErrMissingFieldPubKey
 		}
 	}

@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/bitcoin-sv/go-paymail"
 	"log"
+
+	"github.com/bitcoin-sv/go-paymail"
 )
 
 func main() {
@@ -41,7 +42,7 @@ func main() {
 		MetaData: &paymail.P2PMetaData{
 			Note:      "Thanks for dinner Satchmo!",
 			Sender:    "mrz@moneybutton.com",
-			PubKey:    "insert-pubkey-for-sender", // todo: replace with a real pubkey for the Sender
+			PublicKey: "insert-pubkey-for-sender", // todo: replace with a real pubkey for the Sender
 			Signature: "insert-signature-if-txid", // todo: replace with a real signature of the txid by the sender
 		},
 		Reference: destination.Reference,

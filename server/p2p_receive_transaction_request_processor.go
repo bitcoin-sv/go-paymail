@@ -103,7 +103,7 @@ func verifySignature(metadata *paymail.P2PMetaData, txID string) error {
 	var rawAddress *script.Address
 	var err error
 
-	if rawAddress, err = script.NewAddressFromPublicKeyString(metadata.PubKey, true); err != nil {
+	if rawAddress, err = script.NewAddressFromPublicKeyString(metadata.PublicKey, true); err != nil {
 		return errors.ErrInvalidPubKey
 	}
 
