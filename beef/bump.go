@@ -64,7 +64,6 @@ func calculateMerkleRoot(baseLeaf BUMPLeaf, bump BUMP) (string, error) {
 		}
 
 		leftNode, rightNode := prepareNodes(baseLeaf, offset, *leafInPair, newOffset)
-
 		str, err := merkleTreeParentStr(leftNode, rightNode)
 
 		if err != nil {
