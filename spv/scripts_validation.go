@@ -5,10 +5,10 @@ import (
 	"github.com/bitcoin-sv/go-paymail/errors"
 
 	interpreter "github.com/bitcoin-sv/go-sdk/script/interpreter"
-	trx "github.com/bitcoin-sv/go-sdk/transaction"
+	sdk "github.com/bitcoin-sv/go-sdk/transaction"
 )
 
-func validateScripts(tx *trx.Transaction, inputTxs []*beef.TxData) error {
+func validateScripts(tx *sdk.Transaction, inputTxs []*beef.TxData) error {
 	for i, input := range tx.Inputs {
 		inputParentTx := findParentForInput(input, inputTxs)
 		if inputParentTx == nil {
@@ -25,7 +25,7 @@ func validateScripts(tx *trx.Transaction, inputTxs []*beef.TxData) error {
 }
 
 // Verify locking and unlocking scripts pair
-func verifyScripts(tx, prevTx *trx.Transaction, inputIdx int) error {
+func verifyScripts(tx, prevTx *sdk.Transaction, inputIdx int) error {
 	input := tx.InputIdx(inputIdx)
 	prevOutput := prevTx.OutputIdx(int(input.SourceTxOutIndex))
 

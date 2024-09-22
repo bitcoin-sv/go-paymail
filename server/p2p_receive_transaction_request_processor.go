@@ -12,11 +12,8 @@ import (
 
 	bsm "github.com/bitcoin-sv/go-sdk/compat/bsm"
 	script "github.com/bitcoin-sv/go-sdk/script"
-	trx "github.com/bitcoin-sv/go-sdk/transaction"
+	sdk "github.com/bitcoin-sv/go-sdk/transaction"
 )
-
-// TODO: bitcoin.TxFromHex -> trx.NewTransactionFromHex?
-// TODO: bitcoin.GetAddressFromPubKeyString -> script.NewAddressFromPublicKeyString?
 
 type p2pReceiveTxReqPayload struct {
 	*paymail.P2PTransaction
@@ -58,14 +55,14 @@ func processP2pReceiveTxRequest(c *Configuration, req *http.Request, incomingPay
 	return payload, beefData, md, nil
 }
 
-func getProcessedTxData(payload *p2pReceiveTxReqPayload, format p2pPayloadFormat, log *zerolog.Logger) (*trx.Transaction, *beef.DecodedBEEF, error) {
-	var processedTx *trx.Transaction
+func getProcessedTxData(payload *p2pReceiveTxReqPayload, format p2pPayloadFormat, log *zerolog.Logger) (*sdk.Transaction, *beef.DecodedBEEF, error) {
+	var processedTx *sdk.Transaction
 	var beefData *beef.DecodedBEEF
 	var err error
 
 	switch format {
 	case basicP2pPayload:
-		processedTx, err = trx.NewTransactionFromHex(payload.Hex)
+		processedTx, err = sdk.NewTransactionFromHex(payload.Hex)
 		if err != nil {
 			log.Error().Msgf("error while parsing hex: %s", err.Error())
 			return nil, nil, errors.ErrProcessingHex

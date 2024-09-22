@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	trx "github.com/bitcoin-sv/go-sdk/transaction"
+	sdk "github.com/bitcoin-sv/go-sdk/transaction"
 	util "github.com/bitcoin-sv/go-sdk/util"
 )
 
@@ -27,8 +27,8 @@ const (
 )
 
 type TxData struct {
-	Transaction *trx.Transaction
-	BumpIndex   *trx.VarInt
+	Transaction *sdk.Transaction
+	BumpIndex   *sdk.VarInt
 
 	txID string
 }
@@ -72,7 +72,7 @@ func DecodeBEEF(beefHex string) (*DecodedBEEF, error) {
 	}, nil
 }
 
-func (d *DecodedBEEF) GetLatestTx() *trx.Transaction {
+func (d *DecodedBEEF) GetLatestTx() *sdk.Transaction {
 	return d.Transactions[len(d.Transactions)-1].Transaction // get the last transaction as the processed transaction - it should be the last one because of khan's ordering
 }
 
@@ -81,7 +81,7 @@ func decodeBUMPs(beefBytes []byte) ([]*BUMP, []byte, error) {
 		return nil, nil, errors.New("cannot decode BUMP - no bytes provided")
 	}
 
-	nBump, bytesUsed := trx.NewVarIntFromBytes(beefBytes)
+	nBump, bytesUsed := sdk.NewVarIntFromBytes(beefBytes)
 
 	if nBump == 0 {
 		return nil, nil, errors.New("invalid BEEF- lack of BUMPs")
@@ -94,7 +94,7 @@ func decodeBUMPs(beefBytes []byte) ([]*BUMP, []byte, error) {
 		if len(beefBytes) == 0 {
 			return nil, nil, errors.New("insufficient bytes to extract BUMP blockHeight")
 		}
-		blockHeight, bytesUsed := trx.NewVarIntFromBytes(beefBytes)
+		blockHeight, bytesUsed := sdk.NewVarIntFromBytes(beefBytes)
 		beefBytes = beefBytes[bytesUsed:]
 
 		treeHeight := beefBytes[0]
@@ -127,7 +127,7 @@ func decodeBUMPPathsFromStream(treeHeight int, hexBytes []byte) ([][]BUMPLeaf, [
 		if len(hexBytes) == 0 {
 			return nil, nil, errors.New("cannot decode BUMP paths number of leaves from stream - no bytes provided")
 		}
-		nLeaves, bytesUsed := trx.NewVarIntFromBytes(hexBytes)
+		nLeaves, bytesUsed := sdk.NewVarIntFromBytes(hexBytes)
 		hexBytes = hexBytes[bytesUsed:]
 		bumpPath, remainingBytes, err := decodeBUMPLevel(nLeaves, hexBytes)
 		if err != nil {
@@ -140,14 +140,14 @@ func decodeBUMPPathsFromStream(treeHeight int, hexBytes []byte) ([][]BUMPLeaf, [
 	return bumpPaths, hexBytes, nil
 }
 
-func decodeBUMPLevel(nLeaves trx.VarInt, hexBytes []byte) ([]BUMPLeaf, []byte, error) {
+func decodeBUMPLevel(nLeaves sdk.VarInt, hexBytes []byte) ([]BUMPLeaf, []byte, error) {
 	bumpPath := make([]BUMPLeaf, 0)
 	for i := 0; i < int(nLeaves); i++ {
 		if len(hexBytes) == 0 {
 			return nil, nil, fmt.Errorf("insufficient bytes to extract offset for %d leaf of %d leaves", i, int(nLeaves))
 		}
 
-		offset, bytesUsed := trx.NewVarIntFromBytes(hexBytes)
+		offset, bytesUsed := sdk.NewVarIntFromBytes(hexBytes)
 		hexBytes = hexBytes[bytesUsed:]
 
 		if len(hexBytes) == 0 {
@@ -191,7 +191,7 @@ func decodeBUMPLevel(nLeaves trx.VarInt, hexBytes []byte) ([]BUMPLeaf, []byte, e
 }
 
 func decodeTransactionsWithPathIndexes(bytes []byte) ([]*TxData, error) {
-	nTransactions, offset := trx.NewVarIntFromBytes(bytes)
+	nTransactions, offset := sdk.NewVarIntFromBytes(bytes)
 
 	if nTransactions < 2 {
 		return nil, errors.New("invalid BEEF- not enough transactions provided to decode BEEF")
@@ -202,16 +202,16 @@ func decodeTransactionsWithPathIndexes(bytes []byte) ([]*TxData, error) {
 	transactions := make([]*TxData, 0, int(nTransactions))
 
 	for i := 0; i < int(nTransactions); i++ {
-		tx, offset, err := trx.NewTransactionFromStream(bytes)
+		tx, offset, err := sdk.NewTransactionFromStream(bytes)
 		if err != nil {
 			return nil, err
 		}
 		bytes = bytes[offset:]
 
-		var pathIndex *trx.VarInt
+		var pathIndex *sdk.VarInt
 
 		if bytes[0] == HasBump {
-			value, offset := trx.NewVarIntFromBytes(bytes[1:])
+			value, offset := sdk.NewVarIntFromBytes(bytes[1:])
 			pathIndex = &value
 			bytes = bytes[1+offset:]
 		} else if bytes[0] == HasNoBump {

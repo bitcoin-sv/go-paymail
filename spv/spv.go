@@ -7,7 +7,7 @@ import (
 
 	"github.com/bitcoin-sv/go-paymail/beef"
 
-	trx "github.com/bitcoin-sv/go-sdk/transaction"
+	sdk "github.com/bitcoin-sv/go-sdk/transaction"
 )
 
 type MerkleRootVerifier interface {
@@ -60,7 +60,7 @@ func ExecuteSimplifiedPaymentVerification(ctx context.Context, dBeef *beef.Decod
 	return nil
 }
 
-func validateLockTime(tx *trx.Transaction) error {
+func validateLockTime(tx *sdk.Transaction) error {
 	if tx.LockTime == 0 {
 		return nil
 	}
@@ -72,7 +72,7 @@ func validateLockTime(tx *trx.Transaction) error {
 	return nil
 }
 
-func validateSatoshisSum(tx *trx.Transaction, inputTxs []*beef.TxData) error {
+func validateSatoshisSum(tx *sdk.Transaction, inputTxs []*beef.TxData) error {
 	inputSum, outputSum := uint64(0), uint64(0)
 
 	for _, input := range tx.Inputs {
@@ -95,7 +95,7 @@ func validateSatoshisSum(tx *trx.Transaction, inputTxs []*beef.TxData) error {
 	return nil
 }
 
-func findParentForInput(input *trx.TransactionInput, parentTxs []*beef.TxData) *beef.TxData {
+func findParentForInput(input *sdk.TransactionInput, parentTxs []*beef.TxData) *beef.TxData {
 	parentID := input.SourceTXID.String()
 
 	for _, ptx := range parentTxs {

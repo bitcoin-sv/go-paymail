@@ -5,10 +5,10 @@ import (
 
 	"github.com/bitcoin-sv/go-paymail/beef"
 
-	trx "github.com/bitcoin-sv/go-sdk/transaction"
+	sdk "github.com/bitcoin-sv/go-sdk/transaction"
 )
 
-func ensureAncestorsArePresentInBump(tx *trx.Transaction, dBeef *beef.DecodedBEEF) error {
+func ensureAncestorsArePresentInBump(tx *sdk.Transaction, dBeef *beef.DecodedBEEF) error {
 	ancestors, err := findMinedAncestors(tx, dBeef.Transactions)
 	if err != nil {
 		return err
@@ -23,7 +23,7 @@ func ensureAncestorsArePresentInBump(tx *trx.Transaction, dBeef *beef.DecodedBEE
 	return nil
 }
 
-func findMinedAncestors(tx *trx.Transaction, ancestors []*beef.TxData) (map[string]*beef.TxData, error) {
+func findMinedAncestors(tx *sdk.Transaction, ancestors []*beef.TxData) (map[string]*beef.TxData, error) {
 	am := make(map[string]*beef.TxData)
 
 	for _, input := range tx.Inputs {
@@ -36,7 +36,7 @@ func findMinedAncestors(tx *trx.Transaction, ancestors []*beef.TxData) (map[stri
 	return am, nil
 }
 
-func findMinedAncestorsForInput(input *trx.TransactionInput, ancestors []*beef.TxData, ma map[string]*beef.TxData) error {
+func findMinedAncestorsForInput(input *sdk.TransactionInput, ancestors []*beef.TxData, ma map[string]*beef.TxData) error {
 	parent := findParentForInput(input, ancestors)
 	if parent == nil {
 		return errors.ErrBUMPCouldNotFindMinedParent

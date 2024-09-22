@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	script "github.com/bitcoin-sv/go-sdk/script"
-	trx "github.com/bitcoin-sv/go-sdk/transaction"
+	sdk "github.com/bitcoin-sv/go-sdk/transaction"
 )
 
 func TestDecodeBEEF_DecodeBEEF_HappyPaths(t *testing.T) {
@@ -15,7 +15,7 @@ func TestDecodeBEEF_DecodeBEEF_HappyPaths(t *testing.T) {
 		name                       string
 		hexStream                  string
 		expectedDecodedBEEF        *DecodedBEEF
-		pathIndexForTheOldestInput *trx.VarInt
+		pathIndexForTheOldestInput *sdk.VarInt
 	}{
 		{
 			name:      "valid BEEF with 1 BUMP and 1 input transaction",
@@ -52,38 +52,38 @@ func TestDecodeBEEF_DecodeBEEF_HappyPaths(t *testing.T) {
 				},
 				Transactions: []*TxData{
 					{
-						Transaction: &trx.Transaction{
+						Transaction: &sdk.Transaction{
 							Version:  1,
 							LockTime: 0,
-							Inputs: []*trx.TransactionInput{
+							Inputs: []*sdk.TransactionInput{
 								{
 									SourceTxOutIndex:        1,
 									SequenceNumber:          4294967295,
 									UnlockingScriptTemplate: nil,
 								},
 							},
-							Outputs: []*trx.TransactionOutput{
+							Outputs: []*sdk.TransactionOutput{
 								{
 									Satoshis:      26174,
 									LockingScript: script.NewFromBytes([]byte("76a9146bfd5c7fbe21529d45803dbcf0c87dd3c71efbc288ac")),
 								},
 							},
 						},
-						BumpIndex: func(v trx.VarInt) *trx.VarInt { return &v }(0x0),
+						BumpIndex: func(v sdk.VarInt) *sdk.VarInt { return &v }(0x0),
 					},
 
 					{
-						Transaction: &trx.Transaction{
+						Transaction: &sdk.Transaction{
 							Version:  1,
 							LockTime: 0,
-							Inputs: []*trx.TransactionInput{
+							Inputs: []*sdk.TransactionInput{
 								{
 									SourceTxOutIndex:        0,
 									SequenceNumber:          4294967295,
 									UnlockingScriptTemplate: nil,
 								},
 							},
-							Outputs: []*trx.TransactionOutput{
+							Outputs: []*sdk.TransactionOutput{
 								{
 									Satoshis:      26172,
 									LockingScript: script.NewFromBytes([]byte("76a9146bfd5c7fbe21529d45803dbcf0c87dd3c71efbc288ac")),
@@ -94,7 +94,7 @@ func TestDecodeBEEF_DecodeBEEF_HappyPaths(t *testing.T) {
 					},
 				},
 			},
-			pathIndexForTheOldestInput: func(v trx.VarInt) *trx.VarInt { return &v }(0x0),
+			pathIndexForTheOldestInput: func(v sdk.VarInt) *sdk.VarInt { return &v }(0x0),
 		},
 	}
 	for _, tc := range testCases {
