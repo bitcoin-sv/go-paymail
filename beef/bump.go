@@ -2,8 +2,6 @@ package beef
 
 import (
 	"errors"
-
-	"github.com/libsv/go-bc"
 )
 
 // BUMPs represents a slice of BUMPs - BSV Unified Merkle Paths
@@ -66,8 +64,8 @@ func calculateMerkleRoot(baseLeaf BUMPLeaf, bump BUMP) (string, error) {
 		}
 
 		leftNode, rightNode := prepareNodes(baseLeaf, offset, *leafInPair, newOffset)
+		str, err := merkleTreeParentStr(leftNode, rightNode)
 
-		str, err := bc.MerkleTreeParentStr(leftNode, rightNode)
 		if err != nil {
 			return "", err
 		}

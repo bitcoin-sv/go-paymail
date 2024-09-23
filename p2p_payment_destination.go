@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/bitcoinschema/go-bitcoin/v2"
+	"github.com/bitcoin-sv/go-sdk/script"
 )
 
 /*
@@ -129,19 +129,26 @@ func (c *Client) GetP2PPaymentDestination(p2pURL, alias, domain string,
 
 	// Loop all outputs
 	for index, out := range response.Outputs {
-
 		// No script returned
 		if len(out.Script) == 0 {
 			err = fmt.Errorf("script was missing from output: %d", index)
 			return
 		}
 
-		// Extract the address
-		if response.Outputs[index].Address, err = bitcoin.GetAddressFromScript(
-			out.Script,
-		); err != nil {
+		var sc *script.Script
+		sc, err = script.NewFromHex(out.Script)
+		if err != nil {
 			return
 		}
+
+		var addresses []string
+		addresses, err = sc.Addresses()
+		if err != nil || len(addresses) == 0 {
+			err = errors.New("invalid output script, missing an address")
+			return
+		}
+
+		response.Outputs[index].Address = addresses[0]
 	}
 
 	return

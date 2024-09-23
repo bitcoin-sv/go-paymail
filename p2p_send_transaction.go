@@ -36,7 +36,7 @@ type P2PTransaction struct {
 // P2PMetaData is an object containing data associated with the P2P transaction
 type P2PMetaData struct {
 	Note      string `json:"note,omitempty"`      // A human-readable bit of information about the payment
-	PubKey    string `json:"pubkey,omitempty"`    // Public key to validate the signature (if signature is given)
+	PublicKey string `json:"pubkey,omitempty"`    // Public key to validate the signature (if signature is given)
 	Sender    string `json:"sender,omitempty"`    // The paymail of the person that originated the transaction
 	Signature string `json:"signature,omitempty"` // A signature of the tx id made by the sender
 }

@@ -1,15 +1,12 @@
 module github.com/bitcoin-sv/go-paymail
 
-go 1.21.5
+go 1.22.5
 
 require (
-	github.com/bitcoinschema/go-bitcoin/v2 v2.0.5
+	github.com/bitcoin-sv/go-sdk v1.1.8
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-resty/resty/v2 v2.14.0
 	github.com/jarcoal/httpmock v1.3.1
-	github.com/libsv/go-bc v0.1.29
-	github.com/libsv/go-bk v0.1.6
-	github.com/libsv/go-bt/v2 v2.2.5
 	github.com/miekg/dns v1.1.62
 	github.com/rs/zerolog v1.33.0
 	github.com/stretchr/testify v1.9.0
@@ -18,7 +15,6 @@ require (
 )
 
 require (
-	github.com/bitcoinsv/bsvd v0.0.0-20190609155523-4c29707f7173 // indirect
 	github.com/bytedance/sonic v1.12.0 // indirect
 	github.com/bytedance/sonic/loader v0.2.0 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
@@ -33,7 +29,6 @@ require (
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.8 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
-	github.com/libsv/go-p2p v0.3.2 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect

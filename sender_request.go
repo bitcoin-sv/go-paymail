@@ -3,7 +3,8 @@ package paymail
 import (
 	"fmt"
 
-	"github.com/bitcoinschema/go-bitcoin/v2"
+	bsm "github.com/bitcoin-sv/go-sdk/compat/bsm"
+	primitives "github.com/bitcoin-sv/go-sdk/primitives/ec"
 )
 
 /*
@@ -34,8 +35,7 @@ type SenderRequest struct {
 //
 // Source: https://github.com/moneybutton/paymail-client/blob/master/src/VerifiableMessage.js
 // Specs: http://bsvalias.org/04-01-basic-address-resolution.html#signature-field
-func (s *SenderRequest) Verify(keyAddress, signature string) error {
-
+func (s *SenderRequest) Verify(keyAddress string, signature string) error {
 	// Basic checks before trying the signature verification
 	if len(keyAddress) == 0 {
 		return fmt.Errorf("missing key address")
@@ -43,8 +43,13 @@ func (s *SenderRequest) Verify(keyAddress, signature string) error {
 		return fmt.Errorf("missing a signature to verify")
 	}
 
+	decodedSig, err := DecodeSignature(signature)
+	if err != nil {
+		return err
+	}
+
 	// Concatenate & verify the message
-	return bitcoin.VerifyMessage(keyAddress, signature, fmt.Sprintf("%s%d%s%s", s.SenderHandle, s.Amount, s.Dt, s.Purpose))
+	return bsm.VerifyMessage(keyAddress, decodedSig, prepareMessage(s))
 }
 
 // Sign will sign the given components in the ResolveAddress() request
@@ -52,21 +57,28 @@ func (s *SenderRequest) Verify(keyAddress, signature string) error {
 // Source: https://github.com/moneybutton/paymail-client/blob/master/src/VerifiableMessage.js
 // Specs: http://bsvalias.org/04-01-basic-address-resolution.html#signature-field
 // Additional Specs: http://bsvalias.org/04-02-sender-validation.html
-func (s *SenderRequest) Sign(privateKey string) (string, error) {
-
+func (s *SenderRequest) Sign(privateKey string) ([]byte, error) {
 	// Basic checks before trying to sign the request
 	if len(privateKey) == 0 {
-		return "", fmt.Errorf("missing private key")
+		return nil, fmt.Errorf("missing private key")
 	} else if len(s.Dt) == 0 {
-		return "", fmt.Errorf("missing dt")
+		return nil, fmt.Errorf("missing dt")
 	} else if len(s.SenderHandle) == 0 {
-		return "", fmt.Errorf("missing senderHandle")
+		return nil, fmt.Errorf("missing senderHandle")
+	}
+
+	privKey, err := primitives.PrivateKeyFromHex(privateKey)
+	if err != nil {
+		return nil, err
 	}
 
 	// Concatenate & sign message
-	return bitcoin.SignMessage(
-		privateKey,
-		fmt.Sprintf("%s%d%s%s", s.SenderHandle, s.Amount, s.Dt, s.Purpose),
-		false,
+	return bsm.SignMessage(
+		privKey,
+		prepareMessage(s),
 	)
+}
+
+func prepareMessage(senderRequest *SenderRequest) []byte {
+	return []byte(fmt.Sprintf("%s%d%s%s", senderRequest.SenderHandle, senderRequest.Amount, senderRequest.Dt, senderRequest.Purpose))
 }

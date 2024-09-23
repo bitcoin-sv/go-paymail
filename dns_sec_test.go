@@ -7,7 +7,6 @@ import (
 
 // TestClient_CheckDNSSEC will test the method CheckDNSSEC()
 func TestClient_CheckDNSSEC(t *testing.T) {
-
 	// t.Parallel() (turned off - race condition)
 
 	// Integration test (requires internet connection)

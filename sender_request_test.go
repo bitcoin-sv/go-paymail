@@ -1,11 +1,13 @@
 package paymail
 
 import (
+	"encoding/hex"
 	"fmt"
 	"testing"
 	"time"
 
-	"github.com/bitcoinschema/go-bitcoin/v2"
+	primitives "github.com/bitcoin-sv/go-sdk/primitives/ec"
+	"github.com/bitcoin-sv/go-sdk/script"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -13,7 +15,7 @@ import (
 func TestSenderRequest_Sign(t *testing.T) {
 
 	// Create key
-	key, err := bitcoin.CreatePrivateKeyString()
+	key, err := primitives.NewPrivateKey()
 	assert.NoError(t, err)
 	assert.NotNil(t, key)
 
@@ -25,48 +27,48 @@ func TestSenderRequest_Sign(t *testing.T) {
 		Purpose:      testMessage,
 	}
 
-	var signature string
+	var sigBytes []byte
 
 	t.Run("invalid key - empty", func(t *testing.T) {
-		signature, err = senderRequest.Sign("")
+		sigBytes, err = senderRequest.Sign("")
 		assert.Error(t, err)
-		assert.Equal(t, len(signature), 0)
+		assert.Equal(t, len(sigBytes), 0)
 	})
 
 	t.Run("invalid key - 0", func(t *testing.T) {
-		signature, err = senderRequest.Sign("0")
+		sigBytes, err = senderRequest.Sign("0")
 		assert.Error(t, err)
-		assert.Equal(t, len(signature), 0)
+		assert.Equal(t, len(sigBytes), 0)
 	})
 
 	t.Run("invalid dt", func(t *testing.T) {
 		senderRequest.Dt = ""
-		signature, err = senderRequest.Sign(key)
+		sigBytes, err = senderRequest.Sign(hex.EncodeToString((key.Serialize())))
 		assert.Error(t, err)
-		assert.Equal(t, len(signature), 0)
+		assert.Equal(t, len(sigBytes), 0)
 	})
 
 	t.Run("invalid sender handle", func(t *testing.T) {
 		senderRequest.Dt = time.Now().UTC().Format(time.RFC3339)
 		senderRequest.SenderHandle = ""
-		signature, err = senderRequest.Sign(key)
+		sigBytes, err = senderRequest.Sign(hex.EncodeToString((key.Serialize())))
 		assert.Error(t, err)
-		assert.Equal(t, len(signature), 0)
+		assert.Equal(t, len(sigBytes), 0)
 	})
 
 	t.Run("valid signature", func(t *testing.T) {
 		senderRequest.SenderHandle = testAlias + "@" + testDomain
-		signature, err = senderRequest.Sign(key)
+		hexKey := hex.EncodeToString((key.Serialize()))
+		sigBytes, err = senderRequest.Sign(hexKey)
 		assert.NoError(t, err)
-		assert.NotEqual(t, len(signature), 0)
+		assert.NotEqual(t, len(sigBytes), 0)
 
 		// Get address for verification
-		var address string
-		address, err = bitcoin.GetAddressFromPrivateKeyString(key, false)
+		address, err := script.NewAddressFromPublicKey(key.PubKey(), true)
 		assert.NoError(t, err)
 
 		// Verify the signature
-		err = senderRequest.Verify(address, signature)
+		err = senderRequest.Verify(address.AddressString, EncodeSignature(sigBytes))
 		assert.NoError(t, err)
 	})
 }
@@ -122,7 +124,7 @@ func BenchmarkSenderRequest_Sign(b *testing.B) {
 func TestSenderRequest_Verify(t *testing.T) {
 
 	// Create key
-	key, err := bitcoin.CreatePrivateKeyString()
+	key, err := primitives.NewPrivateKey()
 	assert.NoError(t, err)
 	assert.NotNil(t, key)
 
@@ -135,39 +137,38 @@ func TestSenderRequest_Verify(t *testing.T) {
 	}
 
 	// Sign
-	var signature string
-	signature, err = senderRequest.Sign(key)
+	var sigBytes []byte
+	sigBytes, err = senderRequest.Sign(hex.EncodeToString((key.Serialize())))
 	assert.NoError(t, err)
-	assert.NotEqual(t, 0, len(signature))
+	assert.NotEqual(t, 0, len(sigBytes))
 
 	// Get address from private key
-	var address string
-	address, err = bitcoin.GetAddressFromPrivateKeyString(key, false)
+	address, err := script.NewAddressFromPublicKey(key.PubKey(), true)
 	assert.NoError(t, err)
 	assert.NotNil(t, address)
 
 	t.Run("valid verification", func(t *testing.T) {
-		err = senderRequest.Verify(address, signature)
+		err = senderRequest.Verify(address.AddressString, EncodeSignature(sigBytes))
 		assert.NoError(t, err)
 	})
 
 	t.Run("invalid - empty address", func(t *testing.T) {
-		err = senderRequest.Verify("", signature)
+		err = senderRequest.Verify("", string(sigBytes))
 		assert.Error(t, err)
 	})
 
 	t.Run("invalid - empty signature", func(t *testing.T) {
-		err = senderRequest.Verify(address, "")
+		err = senderRequest.Verify(address.AddressString, "")
 		assert.Error(t, err)
 	})
 
 	t.Run("invalid - wrong signature - hex short", func(t *testing.T) {
-		err = senderRequest.Verify(address, "0")
+		err = senderRequest.Verify(address.AddressString, "0")
 		assert.Error(t, err)
 	})
 
 	t.Run("invalid - wrong signature", func(t *testing.T) {
-		err = senderRequest.Verify(address, "73646661736466736466617364667364666173646673646661736466")
+		err = senderRequest.Verify(address.AddressString, "73646661736466736466617364667364666173646673646661736466")
 		assert.Error(t, err)
 	})
 }

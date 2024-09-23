@@ -4,9 +4,10 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/libsv/go-bt/v2"
-	"github.com/libsv/go-bt/v2/bscript"
 	"github.com/stretchr/testify/assert"
+
+	script "github.com/bitcoin-sv/go-sdk/script"
+	sdk "github.com/bitcoin-sv/go-sdk/transaction"
 )
 
 func TestDecodeBEEF_DecodeBEEF_HappyPaths(t *testing.T) {
@@ -14,7 +15,7 @@ func TestDecodeBEEF_DecodeBEEF_HappyPaths(t *testing.T) {
 		name                       string
 		hexStream                  string
 		expectedDecodedBEEF        *DecodedBEEF
-		pathIndexForTheOldestInput *bt.VarInt
+		pathIndexForTheOldestInput *sdk.VarInt
 	}{
 		{
 			name:      "valid BEEF with 1 BUMP and 1 input transaction",
@@ -51,43 +52,41 @@ func TestDecodeBEEF_DecodeBEEF_HappyPaths(t *testing.T) {
 				},
 				Transactions: []*TxData{
 					{
-						Transaction: &bt.Tx{
+						Transaction: &sdk.Transaction{
 							Version:  1,
 							LockTime: 0,
-							Inputs: []*bt.Input{
+							Inputs: []*sdk.TransactionInput{
 								{
-									PreviousTxSatoshis: 0,
-									PreviousTxOutIndex: 1,
-									SequenceNumber:     4294967295,
-									PreviousTxScript:   nil,
+									SourceTxOutIndex:        1,
+									SequenceNumber:          4294967295,
+									UnlockingScriptTemplate: nil,
 								},
 							},
-							Outputs: []*bt.Output{
+							Outputs: []*sdk.TransactionOutput{
 								{
 									Satoshis:      26174,
-									LockingScript: bscript.NewFromBytes([]byte("76a9146bfd5c7fbe21529d45803dbcf0c87dd3c71efbc288ac")),
+									LockingScript: script.NewFromBytes([]byte("76a9146bfd5c7fbe21529d45803dbcf0c87dd3c71efbc288ac")),
 								},
 							},
 						},
-						BumpIndex: func(v bt.VarInt) *bt.VarInt { return &v }(0x0),
+						BumpIndex: func(v sdk.VarInt) *sdk.VarInt { return &v }(0x0),
 					},
 
 					{
-						Transaction: &bt.Tx{
+						Transaction: &sdk.Transaction{
 							Version:  1,
 							LockTime: 0,
-							Inputs: []*bt.Input{
+							Inputs: []*sdk.TransactionInput{
 								{
-									PreviousTxSatoshis: 0,
-									PreviousTxOutIndex: 0,
-									SequenceNumber:     4294967295,
-									PreviousTxScript:   nil,
+									SourceTxOutIndex:        0,
+									SequenceNumber:          4294967295,
+									UnlockingScriptTemplate: nil,
 								},
 							},
-							Outputs: []*bt.Output{
+							Outputs: []*sdk.TransactionOutput{
 								{
 									Satoshis:      26172,
-									LockingScript: bscript.NewFromBytes([]byte("76a9146bfd5c7fbe21529d45803dbcf0c87dd3c71efbc288ac")),
+									LockingScript: script.NewFromBytes([]byte("76a9146bfd5c7fbe21529d45803dbcf0c87dd3c71efbc288ac")),
 								},
 							},
 						},
@@ -95,7 +94,7 @@ func TestDecodeBEEF_DecodeBEEF_HappyPaths(t *testing.T) {
 					},
 				},
 			},
-			pathIndexForTheOldestInput: func(v bt.VarInt) *bt.VarInt { return &v }(0x0),
+			pathIndexForTheOldestInput: func(v sdk.VarInt) *sdk.VarInt { return &v }(0x0),
 		},
 	}
 	for _, tc := range testCases {
