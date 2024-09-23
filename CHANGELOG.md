@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.21.0](https://github.com/bitcoin-sv/go-paymail/compare/v0.20.1...v0.21.0) (2024-09-23)
+
+
+### Features
+
+* **SPV-937:** upgrade to go-sdk ([#110](https://github.com/bitcoin-sv/go-paymail/issues/110)) ([b1a379f](https://github.com/bitcoin-sv/go-paymail/commit/b1a379f2bbf5ff3eaf233ccf1f09f44af3419dde))
+
 ## [0.20.1](https://github.com/bitcoin-sv/go-paymail/compare/v0.20.0...v0.20.1) (2024-08-26)
 
 
