@@ -134,4 +134,7 @@ var (
 
 	// ErrNoMatchingTransactionsForInput is when no matching transaction for input can be found
 	ErrNoMatchingTransactionsForInput = SPVError{Message: "invalid parent transactions, no matching transactions for input", StatusCode: 417, Code: "error-spv-bump-ancestor-not-present"}
+
+	// ErrSPVFailed is when the SPV returns an error
+	ErrSPVFailed = SPVError{Message: "simplified payment verification has failed", StatusCode: 417, Code: "error-spv-failed"}
 )
