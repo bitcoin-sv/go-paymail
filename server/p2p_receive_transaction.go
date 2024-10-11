@@ -93,7 +93,7 @@ func (c *Configuration) p2pReceiveBeefTx(context *gin.Context) {
 
 	err = spv.ExecuteSimplifiedPaymentVerification(context.Request.Context(), dBeef, c.actions)
 	if err != nil {
-		errors.ErrorResponse(context, errors.ErrNoOutputs)
+		errors.ErrorResponse(context, errors.ErrSPVFailed)
 		return
 	}
 
