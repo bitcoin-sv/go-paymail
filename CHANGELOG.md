@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.21.1](https://github.com/bitcoin-sv/go-paymail/compare/v0.21.0...v0.21.1) (2024-10-18)
+
+
+### Bug Fixes
+
+* **SPV-000:** proper error on SPV failure ([#125](https://github.com/bitcoin-sv/go-paymail/issues/125)) ([5e6ad17](https://github.com/bitcoin-sv/go-paymail/commit/5e6ad1758f3b313a9d4973bb2bbd7c685fa6987c))
+
 ## [0.21.0](https://github.com/bitcoin-sv/go-paymail/compare/v0.20.1...v0.21.0) (2024-10-11)
 
 
