@@ -1,5 +1,5 @@
-github.com/bitcoin-sv/go-sdk v1.1.9 h1:N/LlZUMHNYKjEBuY72c3XSlzUI/q7IN34R0p6J0Qtjc=
-github.com/bitcoin-sv/go-sdk v1.1.9/go.mod h1:NOAkJLbjqKOLuxJmb9ABG86ExTZp4HS8+iygiDIUps4=
+github.com/bitcoin-sv/go-sdk v1.1.11 h1:naorpG4vwGA6hPg3xEgW686lHyKDLQyJuEFSEkiOVDQ=
+github.com/bitcoin-sv/go-sdk v1.1.11/go.mod h1:NOAkJLbjqKOLuxJmb9ABG86ExTZp4HS8+iygiDIUps4=
 github.com/bytedance/sonic v1.12.0 h1:YGPgxF9xzaCNvd/ZKdQ28yRovhfMFZQjuk6fKBzZ3ls=
 github.com/bytedance/sonic v1.12.0/go.mod h1:B8Gt/XvtZ3Fqj+iSKMypzymZxw/FVwgIGKzMzT9r/rk=
 github.com/bytedance/sonic/loader v0.1.1/go.mod h1:ncP89zfokxS5LZrJxl5z0UJcsk4M4yY2JpfqGeCtNLU=
