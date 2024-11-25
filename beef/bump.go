@@ -67,14 +67,14 @@ func calculateMerkleRoot(baseLeaf BUMPLeaf, bump BUMP) (string, error) {
 		newOffset := getOffsetPair(offset)
 		leafInPair := findLeafByOffset(newOffset, bLevel)
 		if leafInPair == nil {
-			var err error
-			if previousBLevel != nil {
-				leafInPair, err = calculateFromChildren(newOffset, previousBLevel)
-				if err != nil {
-					return "", err
-				}
-			} else {
+			if previousBLevel == nil {
 				return "", errors.New("cannot compute leaf from children at base level")
+			}
+
+			var err error
+			leafInPair, err = calculateFromChildren(newOffset, previousBLevel)
+			if err != nil {
+				return "", err
 			}
 		}
 
@@ -117,15 +117,18 @@ func calculateFromChildren(offset uint64, bumpLeaves []BUMPLeaf) (*BUMPLeaf, err
 	if leaf == nil {
 		return nil, errors.New("could not find child")
 	}
+
 	leafInPair := findLeafByOffset(offsetChildPair, bumpLeaves)
 	if leafInPair == nil {
 		return nil, errors.New("could not find child")
 	}
+
 	leftNode, rightNode := prepareNodes(*leaf, offset, *leafInPair, offsetChildPair)
 	str, err := merkleTreeParentStr(leftNode, rightNode)
 	if err != nil {
 		return nil, errors.New("could not find pair")
 	}
+
 	return &BUMPLeaf{
 		Hash:   str,
 		Offset: offset,
