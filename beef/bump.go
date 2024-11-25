@@ -28,6 +28,7 @@ const (
 	txIDFlag
 )
 
+// CalculateMerkleRoot will calculate the merkle root for the BUMP
 func (b BUMP) CalculateMerkleRoot() (string, error) {
 	merkleRoot := ""
 
@@ -56,23 +57,34 @@ func calculateMerkleRoot(baseLeaf BUMPLeaf, bump BUMP) (string, error) {
 	calculatedHash := baseLeaf.Hash
 	offset := baseLeaf.Offset
 
-	for _, bLevel := range bump.Path {
+	for i := 0; i < len(bump.Path); i++ {
+		bLevel := bump.Path[i]
+		var previousBLevel []BUMPLeaf
+
+		if i-1 >= 0 {
+			previousBLevel = bump.Path[i-1]
+		}
 		newOffset := getOffsetPair(offset)
 		leafInPair := findLeafByOffset(newOffset, bLevel)
 		if leafInPair == nil {
-			return "", errors.New("could not find pair")
+			var err error
+			if previousBLevel != nil {
+				leafInPair, err = calculateFromChildren(newOffset, previousBLevel)
+				if err != nil {
+					return "", err
+				}
+			} else {
+				return "", errors.New("cannot compute leaf from children at base level")
+			}
 		}
 
 		leftNode, rightNode := prepareNodes(baseLeaf, offset, *leafInPair, newOffset)
 		str, err := merkleTreeParentStr(leftNode, rightNode)
-
 		if err != nil {
 			return "", err
 		}
 		calculatedHash = str
-
 		offset = offset / 2
-
 		baseLeaf = BUMPLeaf{
 			Hash:   calculatedHash,
 			Offset: offset,
@@ -96,6 +108,28 @@ func findLeafByOffset(offset uint64, bumpLeaves []BUMPLeaf) *BUMPLeaf {
 		}
 	}
 	return nil
+}
+
+func calculateFromChildren(offset uint64, bumpLeaves []BUMPLeaf) (*BUMPLeaf, error) {
+	offsetChild := offset * 2
+	offsetChildPair := offsetChild + 1
+	leaf := findLeafByOffset(offsetChild, bumpLeaves)
+	if leaf == nil {
+		return nil, errors.New("could not find child")
+	}
+	leafInPair := findLeafByOffset(offsetChildPair, bumpLeaves)
+	if leafInPair == nil {
+		return nil, errors.New("could not find child")
+	}
+	leftNode, rightNode := prepareNodes(*leaf, offset, *leafInPair, offsetChildPair)
+	str, err := merkleTreeParentStr(leftNode, rightNode)
+	if err != nil {
+		return nil, errors.New("could not find pair")
+	}
+	return &BUMPLeaf{
+		Hash:   str,
+		Offset: offset,
+	}, nil
 }
 
 func prepareNodes(baseLeaf BUMPLeaf, offset uint64, leafInPair BUMPLeaf, newOffset uint64) (string, string) {
