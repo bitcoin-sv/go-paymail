@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.21.3](https://github.com/bitcoin-sv/go-paymail/compare/v0.21.2...v0.21.3) (2024-11-26)
+
+
+### Bug Fixes
+
+* **SPV-000:** BUMP verification changes ([#132](https://github.com/bitcoin-sv/go-paymail/issues/132)) ([24f0ddf](https://github.com/bitcoin-sv/go-paymail/commit/24f0ddfa082f208bc9875f33e0ccf93e6c80c387))
+
 ## [0.21.1](https://github.com/bitcoin-sv/go-paymail/compare/v0.21.0...v0.21.1) (2024-10-18)
 
 
