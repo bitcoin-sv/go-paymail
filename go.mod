@@ -5,7 +5,7 @@ go 1.22.5
 require (
 	github.com/bitcoin-sv/go-sdk v1.1.17
 	github.com/gin-gonic/gin v1.10.0
-	github.com/go-resty/resty/v2 v2.16.2
+	github.com/go-resty/resty/v2 v2.16.3
 	github.com/jarcoal/httpmock v1.3.1
 	github.com/miekg/dns v1.1.62
 	github.com/rs/zerolog v1.33.0
