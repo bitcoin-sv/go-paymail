@@ -40,7 +40,7 @@ func (c *Configuration) p2pReceiveTx(context *gin.Context) {
 
 	requestPayload, _, md, err := processP2pReceiveTxRequest(c, context.Request, incomingPaymail, p2pFormat)
 	if err != nil {
-		errors.ErrorResponse(context, err)
+		errors.ErrorResponse(context, err, c.Logger)
 		return
 	}
 
@@ -52,7 +52,7 @@ func (c *Configuration) p2pReceiveTx(context *gin.Context) {
 	if response, err = c.actions.RecordTransaction(
 		context.Request.Context(), requestPayload.P2PTransaction, md,
 	); err != nil {
-		errors.ErrorResponse(context, err)
+		errors.ErrorResponse(context, err, c.Logger)
 		return
 	}
 
@@ -79,7 +79,7 @@ func (c *Configuration) p2pReceiveBeefTx(context *gin.Context) {
 
 	requestPayload, dBeef, md, err := processP2pReceiveTxRequest(c, context.Request, incomingPaymail, p2pFormat)
 	if err != nil {
-		errors.ErrorResponse(context, err)
+		errors.ErrorResponse(context, err, c.Logger)
 		return
 	}
 
@@ -93,7 +93,7 @@ func (c *Configuration) p2pReceiveBeefTx(context *gin.Context) {
 
 	err = spv.ExecuteSimplifiedPaymentVerification(context.Request.Context(), dBeef, c.actions)
 	if err != nil {
-		errors.ErrorResponse(context, errors.ErrSPVFailed)
+		errors.ErrorResponse(context, errors.ErrSPVFailed, c.Logger)
 		return
 	}
 
@@ -101,7 +101,7 @@ func (c *Configuration) p2pReceiveBeefTx(context *gin.Context) {
 	if response, err = c.actions.RecordTransaction(
 		context.Request.Context(), requestPayload.P2PTransaction, md,
 	); err != nil {
-		errors.ErrorResponse(context, err)
+		errors.ErrorResponse(context, err, c.Logger)
 		return
 	}
 

@@ -26,7 +26,7 @@ func (c *Configuration) p2pDestination(context *gin.Context) {
 	var b p2pDestinationRequestBody
 	err := context.Bind(&b)
 	if err != nil {
-		errors.ErrorResponse(context, errors.ErrCannotBindRequest)
+		errors.ErrorResponse(context, errors.ErrCannotBindRequest, c.Logger)
 		return
 	}
 
@@ -40,7 +40,7 @@ func (c *Configuration) p2pDestination(context *gin.Context) {
 	if response, err = c.actions.CreateP2PDestinationResponse(
 		context.Request.Context(), alias, domain, b.Satoshis, md,
 	); err != nil {
-		errors.ErrorResponse(context, err)
+		errors.ErrorResponse(context, err, c.Logger)
 		return
 	}
 

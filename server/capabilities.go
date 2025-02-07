@@ -140,13 +140,13 @@ func (c *Configuration) showCapabilities(context *gin.Context) {
 	}
 
 	if !c.IsAllowedDomain(host) {
-		errors.ErrorResponse(context, errors.ErrDomainUnknown)
+		errors.ErrorResponse(context, errors.ErrDomainUnknown, c.Logger)
 		return
 	}
 
 	capabilities, err := c.EnrichCapabilities(host)
 	if err != nil {
-		errors.ErrorResponse(context, err)
+		errors.ErrorResponse(context, err, c.Logger)
 		return
 	}
 
