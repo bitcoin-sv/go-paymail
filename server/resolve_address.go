@@ -39,38 +39,38 @@ func (c *Configuration) resolveAddress(context *gin.Context) {
 	alias, domain, paymailAddress := paymail.SanitizePaymail(incomingPaymail)
 	if len(paymailAddress) == 0 {
 		context.JSON(http.StatusBadRequest, "invalid paymail: "+incomingPaymail)
-		errors.ErrorResponse(context, errors.ErrInvalidPaymail)
+		errors.ErrorResponse(context, errors.ErrInvalidPaymail, c.Logger)
 		return
 	} else if !c.IsAllowedDomain(domain) {
-		errors.ErrorResponse(context, errors.ErrDomainUnknown)
+		errors.ErrorResponse(context, errors.ErrDomainUnknown, c.Logger)
 		return
 	}
 
 	var senderRequest paymail.SenderRequest
 	err := context.Bind(&senderRequest)
 	if err != nil {
-		errors.ErrorResponse(context, errors.ErrCannotBindRequest)
+		errors.ErrorResponse(context, errors.ErrCannotBindRequest, c.Logger)
 		return
 	}
 
 	// Check for required fields
 	if len(senderRequest.SenderHandle) == 0 {
-		errors.ErrorResponse(context, errors.ErrSenderHandleEmpty)
+		errors.ErrorResponse(context, errors.ErrSenderHandleEmpty, c.Logger)
 		return
 	} else if len(senderRequest.Dt) == 0 {
-		errors.ErrorResponse(context, errors.ErrDtEmpty)
+		errors.ErrorResponse(context, errors.ErrDtEmpty, c.Logger)
 		return
 	}
 
 	// Validate the timestamp
 	if err = paymail.ValidateTimestamp(senderRequest.Dt); err != nil {
-		errors.ErrorResponse(context, errors.ErrInvalidTimestamp)
+		errors.ErrorResponse(context, errors.ErrInvalidTimestamp, c.Logger)
 		return
 	}
 
 	// Basic validation on sender handle
 	if err = paymail.ValidatePaymail(senderRequest.SenderHandle); err != nil {
-		errors.ErrorResponse(context, errors.ErrInvalidSenderHandle)
+		errors.ErrorResponse(context, errors.ErrInvalidSenderHandle, c.Logger)
 		return
 	}
 
@@ -82,24 +82,24 @@ func (c *Configuration) resolveAddress(context *gin.Context) {
 			var senderPubKey *ec.PublicKey
 			senderPubKey, err = getSenderPubKey(senderRequest.SenderHandle)
 			if err != nil {
-				errors.ErrorResponse(context, err)
+				errors.ErrorResponse(context, err, c.Logger)
 				return
 			}
 
 			// Derive address from pubKey
 			var rawAddress *script.Address
 			if rawAddress, err = script.NewAddressFromPublicKey(senderPubKey, true); err != nil {
-				errors.ErrorResponse(context, errors.ErrInvalidSenderHandle)
+				errors.ErrorResponse(context, errors.ErrInvalidSenderHandle, c.Logger)
 				return
 			}
 
 			// Verify the signature
 			if err = senderRequest.Verify(rawAddress.AddressString, senderRequest.Signature); err != nil {
-				errors.ErrorResponse(context, errors.ErrInvalidSignature)
+				errors.ErrorResponse(context, errors.ErrInvalidSignature, c.Logger)
 				return
 			}
 		} else {
-			errors.ErrorResponse(context, errors.ErrMissingFieldSignature)
+			errors.ErrorResponse(context, errors.ErrMissingFieldSignature, c.Logger)
 			return
 		}
 	}
@@ -111,10 +111,10 @@ func (c *Configuration) resolveAddress(context *gin.Context) {
 	// Get from the data layer
 	foundPaymail, err := c.actions.GetPaymailByAlias(context.Request.Context(), alias, domain, md)
 	if err != nil {
-		errors.ErrorResponse(context, err)
+		errors.ErrorResponse(context, err, c.Logger)
 		return
 	} else if foundPaymail == nil {
-		errors.ErrorResponse(context, errors.ErrCouldNotFindPaymail)
+		errors.ErrorResponse(context, errors.ErrCouldNotFindPaymail, c.Logger)
 		return
 	}
 
@@ -123,7 +123,7 @@ func (c *Configuration) resolveAddress(context *gin.Context) {
 	if response, err = c.actions.CreateAddressResolutionResponse(
 		context.Request.Context(), alias, domain, c.SenderValidationEnabled, md,
 	); err != nil {
-		errors.ErrorResponse(context, err)
+		errors.ErrorResponse(context, err, c.Logger)
 		return
 	}
 
