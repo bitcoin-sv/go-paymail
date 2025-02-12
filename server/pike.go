@@ -15,12 +15,12 @@ func (c *Configuration) pikeNewContact(rc *gin.Context) {
 	var requesterContact paymail.PikeContactRequestPayload
 	err := json.NewDecoder(rc.Request.Body).Decode(&requesterContact)
 	if err != nil {
-		errors.ErrorResponse(rc, errors.ErrCannotBindRequest)
+		errors.ErrorResponse(rc, errors.ErrCannotBindRequest, c.Logger)
 		return
 	}
 
 	if err = c.pikeContactActions.AddContact(rc.Request.Context(), receiverPaymail, &requesterContact); err != nil {
-		errors.ErrorResponse(rc, err)
+		errors.ErrorResponse(rc, err, c.Logger)
 		return
 	}
 
@@ -34,7 +34,7 @@ func (c *Configuration) pikeGetOutputTemplates(rc *gin.Context) {
 		_ = rc.Request.Body.Close()
 	}()
 	if err != nil {
-		errors.ErrorResponse(rc, errors.ErrCannotBindRequest)
+		errors.ErrorResponse(rc, errors.ErrCannotBindRequest, c.Logger)
 		return
 	}
 
@@ -46,7 +46,7 @@ func (c *Configuration) pikeGetOutputTemplates(rc *gin.Context) {
 
 	pki, err := getPKI(paymentDestinationRequest.SenderPaymail)
 	if err != nil {
-		errors.ErrorResponse(rc, err)
+		errors.ErrorResponse(rc, err, c.Logger)
 		return
 	}
 
@@ -54,7 +54,7 @@ func (c *Configuration) pikeGetOutputTemplates(rc *gin.Context) {
 	if response, err = c.pikePaymentActions.CreatePikeOutputResponse(
 		rc.Request.Context(), alias, domain, pki.PubKey, paymentDestinationRequest.Amount, md,
 	); err != nil {
-		errors.ErrorResponse(rc, err)
+		errors.ErrorResponse(rc, err, c.Logger)
 		return
 	}
 

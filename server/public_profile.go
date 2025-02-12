@@ -17,10 +17,10 @@ func (c *Configuration) publicProfile(context *gin.Context) {
 	// Parse, sanitize and basic validation
 	alias, domain, address := paymail.SanitizePaymail(incomingPaymail)
 	if len(address) == 0 {
-		errors.ErrorResponse(context, errors.ErrInvalidPaymail)
+		errors.ErrorResponse(context, errors.ErrInvalidPaymail, c.Logger)
 		return
 	} else if !c.IsAllowedDomain(domain) {
-		errors.ErrorResponse(context, errors.ErrDomainUnknown)
+		errors.ErrorResponse(context, errors.ErrDomainUnknown, c.Logger)
 		return
 	}
 
@@ -30,10 +30,10 @@ func (c *Configuration) publicProfile(context *gin.Context) {
 	// Get from the data layer
 	foundPaymail, err := c.actions.GetPaymailByAlias(context.Request.Context(), alias, domain, md)
 	if err != nil {
-		errors.ErrorResponse(context, err)
+		errors.ErrorResponse(context, err, c.Logger)
 		return
 	} else if foundPaymail == nil {
-		errors.ErrorResponse(context, errors.ErrCouldNotFindPaymail)
+		errors.ErrorResponse(context, errors.ErrCouldNotFindPaymail, c.Logger)
 		return
 	}
 
