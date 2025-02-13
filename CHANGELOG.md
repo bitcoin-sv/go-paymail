@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.22.0](https://github.com/bitcoin-sv/go-paymail/compare/v0.21.3...v0.22.0) (2025-02-12)
+
+
+### Features
+
+* **SPV-1489:** log errors from http handler ([#143](https://github.com/bitcoin-sv/go-paymail/issues/143)) ([06d7a0c](https://github.com/bitcoin-sv/go-paymail/commit/06d7a0c103d184fccf982a48810e21a6addd4d87))
+
 ## [0.21.3](https://github.com/bitcoin-sv/go-paymail/compare/v0.21.2...v0.21.3) (2024-11-26)
 
 
