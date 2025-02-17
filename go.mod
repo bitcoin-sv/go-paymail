@@ -1,6 +1,6 @@
 module github.com/bitcoin-sv/go-paymail
 
-go 1.22.5
+go 1.24.0
 
 require (
 	github.com/bitcoin-sv/go-sdk v1.1.18
