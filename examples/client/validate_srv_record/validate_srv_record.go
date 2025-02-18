@@ -30,6 +30,6 @@ func main() {
 		context.Background(), srv, paymail.DefaultPort, 1, paymail.DefaultWeight,
 	)
 	if err != nil {
-		log.Fatalf("failed validating SRV record: " + err.Error())
+		log.Fatalf("failed validating SRV record: %s", err.Error())
 	}
 }
